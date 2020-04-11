@@ -15,8 +15,8 @@ namespace SBasic.SymbolTable
         public override string ToString()
         {
             var dimStr = "";
-            Dimensions.ForEach(dim => dimStr = dim.ToString() + dimStr + "\t");
-            return $"{Name}  {Scope}  {Type}    {dimStr}";
+            Dimensions.ForEach(dim => dimStr += dim.ToString() + " \t");
+            return base.ToString() + $" {dimStr}";
         }
     }
 }

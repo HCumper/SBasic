@@ -5,6 +5,7 @@ using Antlr4.Runtime;
 using Antlr4.Runtime.Tree;
 using Parsing;
 using SBasic.SymbolTable;
+using static SBasic.DebugSymbols;
 
 namespace SBasic
 {
@@ -12,6 +13,7 @@ namespace SBasic
     {
         static void Main()
         {
+            _ = DebugSymbols.names[7];
             string sourceFile = @"c:\users\hcump\source\repos\SBasic\Parsing\Q3.SB";
             StreamReader reader = File.OpenText(sourceFile);
 
@@ -40,7 +42,7 @@ namespace SBasic
             FindTypesVisitor<int> findTypesVisitor = new FindTypesVisitor<int>(symbolTable);
             findTypesVisitor.Visit(tree);
 
-
+            symbolTable.ListScope(SymbolTable<Symbol>.Global, "");
 
             // | Select On expr Equal(ID | literal | toexpr) : stmtlist
             //| select On ID Newline On

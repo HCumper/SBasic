@@ -2,7 +2,10 @@
 {
     public class Symbol: ISymbol
     {
-        public Symbol() { }
+        public Symbol() {
+            Name = "";
+            Scope = "";
+        }
         public Symbol(string name, string scope, int type)
         {
             Name = name;
@@ -16,7 +19,7 @@
 
         public override string ToString()
         {
-            return $"{Name}  {Scope}  {Type}";
+            return $"{Name.PadRight(20, ' ')}  {Scope.PadRight(20, ' ')}  {DebugSymbols.names[Type].PadRight(20, ' ')}";
         }
     }
 }

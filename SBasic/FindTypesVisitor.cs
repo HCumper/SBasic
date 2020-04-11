@@ -8,25 +8,30 @@ using System.Collections.Generic;
 
 namespace SBasic
 {
-    public class FindTypesVisitor<Result> : SBasicBaseVisitor<Result>
+    public class FindTypesVisitor<Result>: SBasicBaseVisitor<Result>
     {
-        // ReSharper disable once CollectionNeverQueried.Local
         private readonly IList<int> _lineNumbers = new List<int>();
         private bool _startOfLine = true;
         private readonly SymbolTable.SymbolTable<Symbol> _symbols;
-        private string _scope = "~GLOBAL";
+        private string _scope = SymbolTable<Symbol>.Global;
 
         public FindTypesVisitor(SymbolTable.SymbolTable<Symbol> symbolTable) => _symbols = symbolTable;
+
 
         public override Result VisitBinary(SBasicParser.BinaryContext context)
         {
             dynamic firstOperandType = Visit(context.children[0]);
             dynamic secondOperandTypeOpType = Visit(context.children[2]);
-            if (firstOperandType != secondOperandTypeOpType) throw new ParseError("Incompatible types");
-            ((SBasicToken) context.start).EvaluatedType = (int) firstOperandType;
+            if (firstOperandType != secondOperandTypeOpType)
+                throw new ParseError("Incompatible types");
+            ((SBasicToken)context.start).EvaluatedType = (int)firstOperandType;
             return firstOperandType;
-
         }
+        //public override Result VisitIdentifierOnly([NotNull] SBasicParser.IdentifierOnlyContext context)
+        //{
+        //    ((SBasicToken)context.start).EvaluatedType = SBasicLexer.ProcCall;
+        //    return (Result)Convert.ChangeType(SBasicLexer.ProcCall, typeof(int)); 
+        //}
 
         public override Result VisitAssignment([NotNull] SBasicParser.AssignmentContext context)
         {
@@ -37,7 +42,7 @@ namespace SBasic
                 throw new ParseError("Incompatible types");
             }
             ((SBasicToken)context.start).EvaluatedType = (int)firstOperandType;
-                return firstOperandType;
+            return firstOperandType;
         }
 
         public override Result VisitStmtlist([NotNull] SBasicParser.StmtlistContext context)
@@ -65,7 +70,7 @@ namespace SBasic
 
             if (token.Type == SBasicLexer.ID)
             {
-                var sym = _symbols.ReadAnySymbol(token.Text, token.Text != _scope ? _scope : "~GLOBAL").Item2;
+                var sym = _symbols.ReadAnySymbol(token.Text, token.Text != _scope ? _scope : SymbolTable<Symbol>.Global).Item2;
                 return (Result)Convert.ChangeType(sym.Type, typeof(int));
             }
             return (Result)Convert.ChangeType(token.Type, typeof(int));
@@ -76,7 +81,7 @@ namespace SBasic
             var tok = (SBasicToken)context.children[0].GetChild(1).GetChild(0).Payload;
             _scope = tok.Text;
             var result = base.VisitProc(context);
-            _scope = "~GLOBAL";
+            _scope = SymbolTable<Symbol>.Global;
             return result;
         }
 
@@ -85,7 +90,7 @@ namespace SBasic
             var tok = (SBasicToken)context.children[0].GetChild(1).GetChild(0).Payload;
             _scope = tok.Text;
             var result = base.VisitFunc(context);
-            _scope = "~GLOBAL";
+            _scope = SymbolTable<Symbol>.Global;
             return result;
         }
 

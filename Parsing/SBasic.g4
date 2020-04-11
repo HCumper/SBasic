@@ -38,7 +38,7 @@ prochdr : DefProc identifier parenthesizedlist? Newline											#Procheader
 	;
 
 funchdr : DefFunc identifier parenthesizedlist? Newline											#Funcheader
-	;
+	; 
 
 identifier :
 	ID (parenthesizedlist | unparenthesizedlist)?;
@@ -158,6 +158,7 @@ Unknowntype:;
 Void:;
 Scalar:;
 LineNumber:;
+ProcCall:;
 
 fragment LETTER : [a-zA-Z];
 fragment DIGIT : [0-9];

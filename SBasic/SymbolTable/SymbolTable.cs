@@ -1,6 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
+using Antlr4.Runtime;
+using Parsing;
 
 namespace SBasic.SymbolTable
 {
@@ -8,7 +11,7 @@ namespace SBasic.SymbolTable
     public enum SymbolStatus { AlreadyExists, NewlyAdded, Missing };
     public class SymbolTable<T>: ISymbolTable<T> where T : ISymbol, new()
     {
-        public string Global = "~Global";
+        public static string Global = "~Global";
         private readonly IDictionary<(string name, string scope), T> _table =
             new Dictionary<(string, string), T>();
 
@@ -40,7 +43,7 @@ namespace SBasic.SymbolTable
 : _table.ContainsKey((name, Global)) ? (SymbolStatus.AlreadyExists, _table[(name, Global)]) : (SymbolStatus.Missing, new T());
         }
 
-        public void ListScope(string scope)
+        public void ListScope(string scope, string indent)
         {
             IEnumerable<((string name, string scope), T)> selectedSymbols = from entry in _table
                                                                             where entry.Key.scope == scope
@@ -48,9 +51,11 @@ namespace SBasic.SymbolTable
 
             foreach (((string name, string scope), T value) sym in selectedSymbols)
             {
-                Console.WriteLine($"{sym.Item1.name}  {sym.Item1.scope} {sym.value}");
+                Console.WriteLine(indent + $"{sym.value}");
+                if (sym.Item2 is FuncSymbol)
+                    ListScope(sym.Item1.name, indent + "\t");
             }
-
         }
+
     }
 }

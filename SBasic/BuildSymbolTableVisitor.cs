@@ -9,10 +9,10 @@ using SBasic.SymbolTable;
 
 namespace SBasic
 {
-    public class BuildSymbolTableVisitor<TResult> : SBasicBaseVisitor<TResult>, ISBasicVisitor<TResult>
+    public class BuildSymbolTableVisitor<TResult> : SBasicBaseVisitor<TResult>, ISBasicVisitor<TResult> where TResult : notnull
     {
         private SymbolTable<Symbol> SymbolTable { get; set; }
-        private string FunctionScopeName { get; set; }
+        private string FunctionScopeName { get; set; } = SymbolTable<Symbol>.Global; 
         private bool FuncScopeActive { get; set; }
 
         private readonly ISet<string> ImplicitInts;
@@ -43,7 +43,7 @@ namespace SBasic
                 }
                 else
                 {
-                    localScope = "~GLOBAL";
+                    localScope = SymbolTable<Symbol>.Global;
                     if (FirstPass)
                     {
                         funcProc = true;
@@ -52,7 +52,9 @@ namespace SBasic
                 if (payload.Type == SBasicLexer.ID && (SymbolTable.ReadSymbol(payload.Text, FunctionScopeName).Item1) == SymbolStatus.Missing)
                 {
                     var name = payload.Text;
-                    int type = ExtractType(name);
+                    var extracted = ExtractType(name);
+                    name = extracted.Item1;
+                    var type = extracted.Item2;
                     Symbol symbol;
                     if (localScope == FunctionScopeName)
                     {
@@ -94,7 +96,10 @@ namespace SBasic
                 }
             }
             var name = (CommonToken)context.children[1].Payload;
-            Symbol symbol = new ArraySymbol(name.Text, ExtractType(name.Text), "~GLOBAL", dimensions);
+            var extracted = ExtractType(name.Text);
+            name.Text = extracted.Item1;
+            var type = extracted.Item2;
+            Symbol symbol = new ArraySymbol(name.Text, type, SymbolTable<Symbol>.Global, dimensions);
             SymbolTable.AddSymbol(symbol.Name, symbol.Scope, symbol);
             return base.VisitDim(context);
         }
@@ -148,7 +153,7 @@ namespace SBasic
                         var identCtx = ((IdentContext)child).children[0].Payload;
                         var terminalNode = ((IdentifierContext)identCtx).Payload.GetChild(0);
                         var name = ((TerminalNodeImpl)terminalNode).Payload.Text;
-                        if (implicitType == SBasicLexer.Integer)
+                        if (implicitType.Item2 == SBasicLexer.Integer)
                         {
                             ImplicitInts.Add(name);
                         }
@@ -184,16 +189,16 @@ namespace SBasic
             return base.VisitReference(context);
         }
 
-        private int ExtractType(string name)
+        private (string, int) ExtractType(string name)
         {
             if (ImplicitInts.Contains(name))
             {
-                return SBasicLexer.Integer;
+                return (name, SBasicLexer.Integer);
             }
 
             if (ImplicitStrings.Contains(name))
             {
-                return SBasicLexer.String;
+                return (name, SBasicLexer.String);
             }
 
             var type = SBasicLexer.Real;
@@ -201,13 +206,15 @@ namespace SBasic
             {
                 case "%":
                     type = SBasicLexer.Integer;
+                    name = name.Substring(0, name.Length - 1);
                     break;
                 case "$":
                     type = SBasicLexer.String;
+                    name = name.Substring(0, name.Length - 1);
                     break;
             }
 
-            return type;
+            return (name, type);
         }
 
         //public override TResult VisitAdditive([NotNull] AdditiveContext context)

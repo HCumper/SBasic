@@ -10,7 +10,7 @@
 
         public override string ToString()
         {
-            return $"{Name}  {Scope}  {Type}     {ReturnType}";
+            return base.ToString() + $"{DebugSymbols.names[ReturnType]}";
         }
 
         private int ReturnType { get; }

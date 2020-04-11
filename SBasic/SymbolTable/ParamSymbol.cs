@@ -10,7 +10,7 @@
         private bool Reference { get; }
         public override string ToString()
         {
-            return $"{Name}  {Scope}  {Type}     {Reference}";
+            return base.ToString() + $" {Reference}";
         }
     }
 }
