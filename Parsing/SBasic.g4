@@ -160,6 +160,8 @@ Scalar:;
 LineNumber:;
 ProcCall:;
 FuncCall:;
+Ignore:;
+
 
 fragment LETTER : [a-zA-Z];
 fragment DIGIT : [0-9];

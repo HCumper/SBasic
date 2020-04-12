@@ -9,8 +9,10 @@ namespace SBasic.SymbolTable
     public class SymbolTable<T>: ISymbolTable<T> where T : ISymbol, new()
     {
         public static string Global = "~Global";
-        private readonly IDictionary<(string name, string scope), T> _table =
+        private readonly IDictionary<(string name, string scope), T> table =
             new Dictionary<(string, string), T>();
+
+        public IDictionary<(string name, string scope), T> Table => table;
 
         public SymbolTable()
         {
@@ -18,31 +20,31 @@ namespace SBasic.SymbolTable
 
         public SymbolStatus AddSymbol(string name, string scope, T symbol)
         {
-            if (_table.ContainsKey((name, scope)))
+            if (Table.ContainsKey((name, scope)))
             {
                 return SymbolStatus.AlreadyExists;
             }
             else
             {
-                _table.Add(new KeyValuePair<(string name, string scope), T>((name, scope), symbol));
+                Table.Add(new KeyValuePair<(string name, string scope), T>((name, scope), symbol));
                 return SymbolStatus.NewlyAdded;
             }
         }
 
         public (SymbolStatus, T) ReadSymbol(string name, string scope)
         {
-            return _table.ContainsKey((name, scope)) ? (SymbolStatus.AlreadyExists, _table[(name, scope)]) : (SymbolStatus.Missing, new T());
+            return Table.ContainsKey((name, scope)) ? (SymbolStatus.AlreadyExists, Table[(name, scope)]) : (SymbolStatus.Missing, new T());
         }
 
         public (SymbolStatus, T) ReadAnySymbol(string name, string scope)
         {
-            return _table.ContainsKey((name, scope)) ? (SymbolStatus.AlreadyExists, _table[(name, scope)])
-: _table.ContainsKey((name, Global)) ? (SymbolStatus.AlreadyExists, _table[(name, Global)]) : (SymbolStatus.Missing, new T());
+            return Table.ContainsKey((name, scope)) ? (SymbolStatus.AlreadyExists, Table[(name, scope)])
+: Table.ContainsKey((name, Global)) ? (SymbolStatus.AlreadyExists, Table[(name, Global)]) : (SymbolStatus.Missing, new T());
         }
 
         public void ListScope(string scope, string indent)
         {
-            IEnumerable<((string name, string scope), T)> selectedSymbols = from entry in _table
+            IEnumerable<((string name, string scope), T)> selectedSymbols = from entry in Table
                                                                             where entry.Key.scope == scope
                                                                             select (entry.Key, entry.Value);
 

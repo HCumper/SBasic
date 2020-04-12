@@ -7,6 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Generated.cs" />
     <Compile Remove="MainWindow.xaml.cs" />
   </ItemGroup>
 
@@ -16,6 +17,7 @@
 
   <ItemGroup>
     <PackageReference Include="Antlr4.Runtime" Version="4.6.6" />
+    <PackageReference Include="StringTemplate4" Version="4.0.8" />
   </ItemGroup>
 
   <ItemGroup>
@@ -24,6 +26,10 @@
 
   <ItemGroup>
     <Folder Include="SymbolTable\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="Generated.cs" />
   </ItemGroup>
 
   <ItemGroup>

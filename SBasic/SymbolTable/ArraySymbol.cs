@@ -10,8 +10,7 @@ namespace SBasic.SymbolTable
             Dimensions = dimensions;
         }
 
-        private List<int> Dimensions { get; }
-
+        public List<int> Dimensions { get; }
         public override string ToString()
         {
             var dimStr = "";
