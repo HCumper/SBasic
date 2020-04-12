@@ -1,18 +1,18 @@
-﻿using Antlr4.Runtime;
+﻿using System;
+using System.Collections.Generic;
+using Antlr4.Runtime;
 using Antlr4.Runtime.Misc;
 using Antlr4.Runtime.Tree;
 using Parsing;
-using System;
-using System.Collections.Generic;
-using static Parsing.SBasicParser;
 using SBasic.SymbolTable;
+using static Parsing.SBasicParser;
 
 namespace SBasic
 {
-    public class BuildSymbolTableVisitor<TResult> : SBasicBaseVisitor<TResult>, ISBasicVisitor<TResult> where TResult : notnull
+    public class BuildSymbolTableVisitor<TResult>: SBasicBaseVisitor<TResult>, ISBasicVisitor<TResult> where TResult : notnull
     {
         private SymbolTable<Symbol> SymbolTable { get; set; }
-        private string FunctionScopeName { get; set; } = SymbolTable<Symbol>.Global; 
+        private string FunctionScopeName { get; set; } = SymbolTable<Symbol>.Global;
         private bool FuncScopeActive { get; set; }
 
         private readonly ISet<string> ImplicitInts;
@@ -30,7 +30,8 @@ namespace SBasic
 
         public override TResult VisitTerminal([NotNull] ITerminalNode node)
         {
-            if (node == null) throw new ArgumentNullException(nameof(node));
+            if (node == null)
+                throw new ArgumentNullException(nameof(node));
             bool funcProc = false;
             var payload = (CommonToken)node.Payload;
 
@@ -72,7 +73,7 @@ namespace SBasic
                             symbol = new Symbol(name, localScope, type);
                         }
                     }
-                    SymbolTable.AddSymbol(symbol.Name, symbol.Scope, symbol);  //???
+                    SymbolTable.AddSymbol(symbol.Name, symbol.Scope, symbol);
                 }
             }
             return default;
@@ -116,6 +117,7 @@ namespace SBasic
             FuncScopeActive = true;
             base.VisitFuncheader(context);
             FuncScopeActive = false;
+            References = new HashSet<string>();
             return default;
         }
 
@@ -213,23 +215,7 @@ namespace SBasic
                     name = name.Substring(0, name.Length - 1);
                     break;
             }
-
             return (name, type);
-        }
-
-        //public override TResult VisitAdditive([NotNull] AdditiveContext context)
-        //{
-        //    return base.VisitAdditive(context);
-        //}
-
-        public override TResult VisitExpr([NotNull] ExprContext context)
-        {
-            return base.VisitExpr(context);
-        }
-
-        public override TResult VisitLiteral([NotNull] LiteralContext context)
-        {
-            return base.VisitLiteral(context);
         }
     }
 }

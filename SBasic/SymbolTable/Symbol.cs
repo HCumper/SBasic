@@ -2,7 +2,8 @@
 {
     public class Symbol: ISymbol
     {
-        public Symbol() {
+        public Symbol()
+        {
             Name = "";
             Scope = "";
         }

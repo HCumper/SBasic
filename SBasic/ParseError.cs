@@ -9,7 +9,7 @@ namespace SBasic
         Info
     }
 
-    public class ParseError : Exception
+    public class ParseError: Exception
     {
         public ParseError(string message)
             : base(message)

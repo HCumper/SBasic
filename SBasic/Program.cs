@@ -9,13 +9,17 @@ using static SBasic.DebugSymbols;
 
 namespace SBasic
 {
-    class Program
+    public static class Program
     {
+        public static string SourceFile;
+
+    //    public static string SourceFile { get => sourceFile; set => sourceFile = value; }
+
         static void Main()
         {
             _ = DebugSymbols.names[7];
-            string sourceFile = @"c:\users\hcump\source\repos\SBasic\Parsing\Q3.SB";
-            StreamReader reader = File.OpenText(sourceFile);
+            SourceFile = @"c:\users\hcump\source\repos\SBasic\Parsing\Q3.SB";
+            StreamReader reader = File.OpenText(SourceFile);
 
             ICharStream cs = new AntlrInputStream(reader);
             SBasicTokenFactory factory = new SBasicTokenFactory();
@@ -44,14 +48,8 @@ namespace SBasic
 
             symbolTable.ListScope(SymbolTable<Symbol>.Global, "");
 
-            // | Select On expr Equal(ID | literal | toexpr) : stmtlist
-            //| select On ID Newline On
-             
-            /*(EndRepeat ID? | { _input.Lt(1).Type == EndDef }?)*/
-            //var name scope type
-            //array adds parameterlist
-            //function extends array adds astnode or delegate
-
+            GenerateCodeVisitor<int> generateCodeVisitor = new GenerateCodeVisitor<int>(symbolTable);
+            generateCodeVisitor.Visit(tree);
         }
     }
 }

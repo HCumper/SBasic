@@ -79,6 +79,7 @@ namespace SBasic
         public override Result VisitProc(SBasicParser.ProcContext context)
         {
             var tok = (SBasicToken)context.children[0].GetChild(1).GetChild(0).Payload;
+            tok.EvaluatedType = SBasicLexer.DefProc;
             _scope = tok.Text;
             var result = base.VisitProc(context);
             _scope = SymbolTable<Symbol>.Global;
@@ -88,6 +89,7 @@ namespace SBasic
         public override Result VisitFunc(SBasicParser.FuncContext context)
         {
             var tok = (SBasicToken)context.children[0].GetChild(1).GetChild(0).Payload;
+            tok.EvaluatedType = SBasicLexer.DefFunc;
             _scope = tok.Text;
             var result = base.VisitFunc(context);
             _scope = SymbolTable<Symbol>.Global;

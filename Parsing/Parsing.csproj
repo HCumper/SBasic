@@ -55,14 +55,27 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="Generated\MainWindow.g.i.cs" />
+    <None Include="Generated\SBasicBaseListener.cs" />
+    <None Include="Generated\SBasicBaseVisitor.cs" />
+    <None Include="Generated\SBasicLexer.cs" />
+    <None Include="Generated\SBasicListener.cs" />
+    <None Include="Generated\SBasicParser.cs" />
+    <None Include="Generated\SBasicVisitor.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <None Include="q3.SB" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\.editorconfig">
       <Link>.editorconfig</Link>
     </None>
+    <None Include="Generated\SBasic.tokens" />
+    <None Include="Generated\SBasicLexer.tokens" />
     <None Include="packages.config" />
     <Antlr4 Include="SBasic.g4" />
+  </ItemGroup>
+  <ItemGroup>
+    <Service Include="{508349B6-6B84-4DF5-91F0-309BEEBAD82D}" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">

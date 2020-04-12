@@ -1,0 +1,6 @@
+﻿<#@ template language="C#" #>
+<#@ import namespace="System.Linq" #>
+<#@ import namespace="System.Text" #>
+<#@ import namespace="System.Collections.Generic" #>
+<#@ assembly name="$(TargetPath)" #>
+// SuperBasic to C# Port of <#= new SBasic.ParseError("JJ") #> on <#= DateTime.Now.ToLongDateString()  #> 
