@@ -10,28 +10,46 @@ namespace SBasic
 {
     internal class GenerateCodeVisitor<TResult>: SBasicBaseVisitor<TResult>, ISBasicVisitor<TResult> where TResult : notnull
     {
-        private SymbolTable<Symbol> _symbols { get; set; }
-        private TemplateGroup _group;
+        private SymbolTable<Symbol> symbols;
+
+        private SymbolTable<Symbol> GetSymbols()
+        {
+            return symbols;
+        }
+
+        private void SetSymbols(SymbolTable<Symbol> value)
+        {
+            symbols = value;
+        }
+
         private TypeConverter _converter = TypeDescriptor.GetConverter(typeof (TResult));
-        private string output { get; set; } = "";
+        private string Output { get; set; } = "";
         protected override TResult DefaultResult => base.DefaultResult;
 
-        public TemplateGroup Group { get => _group; set => _group = value; }
         public TypeConverter Converter { get => _converter; set => _converter = value; }
 
-        public GenerateCodeVisitor(SymbolTable.SymbolTable<Symbol> symbolTable) { _symbols = symbolTable;
+        private readonly IDictionary<string, Template> _templates = new Dictionary<string, Template>();
+        private readonly TemplateGroupFile _group;
+
+        public GenerateCodeVisitor(SymbolTable.SymbolTable<Symbol> symbolTable)
+        {
+            SetSymbols(symbolTable);
             _group = new TemplateGroupFile(@"c:/users/hcump/source/repos/SBasic/SBasic/Templates.stg");
+
+            string[] templateNames = { "assignmentTemplate", "identifierOnlyTemplate" };
+            foreach (string templateName in templateNames)
+                _templates.Add(templateName, _group.GetInstanceOf(templateName));
         }
 
-        private TResult Convert(string text) => (TResult)_converter.ConvertFromString(text);
-        public override bool Equals(object? obj)
+        private TResult Convert(string text)
         {
-            return base.Equals(obj);
+            return (TResult)_converter.ConvertFromString(text);
         }
-
-        public override int GetHashCode()
+        private TResult Emit(Template template)
         {
-            return base.GetHashCode();
+            string strResult = template.Render() + "\n";
+            Output += strResult;
+            return Convert("");
         }
 
         public override string? ToString()
@@ -52,246 +70,41 @@ namespace SBasic
 
         public override TResult VisitTerminal([NotNull] ITerminalNode node)
         {
-//            if (node.Symbol.Text == "<EOF>")
-  //              return (TResult)_converter.ConvertFromString(output);
-            return (TResult)_converter.ConvertFromString(node.Symbol.Text);
-        }
-
-        public override TResult VisitErrorNode([NotNull] IErrorNode node)
-        {
-            return base.VisitErrorNode(node);
-        }
-
-        protected override TResult AggregateResult(TResult aggregate, TResult nextResult)
-        {
-            return base.AggregateResult(aggregate, nextResult);
-        }
-
-        protected override bool ShouldVisitNextChild([NotNull] IRuleNode node, TResult currentResult)
-        {
-            return base.ShouldVisitNextChild(node, currentResult);
-        }
-
-        public override TResult VisitParenthesizedl([NotNull] SBasicParser.ParenthesizedlContext context)
-        {
-            return base.VisitParenthesizedl(context);
-        }
-
-        public override TResult VisitUnparenthesized([NotNull] SBasicParser.UnparenthesizedContext context)
-        {
-            return base.VisitUnparenthesized(context);
-        }
-
-        public override TResult VisitProcheader([NotNull] SBasicParser.ProcheaderContext context)
-        {
-            return base.VisitProcheader(context);
-        }
-
-        public override TResult VisitFuncheader([NotNull] SBasicParser.FuncheaderContext context)
-        {
-            return base.VisitFuncheader(context);
-        }
-
-        public override TResult VisitNot([NotNull] SBasicParser.NotContext context)
-        {
-            return base.VisitNot(context);
-        }
-
-        public override TResult VisitUnaryAdditive([NotNull] SBasicParser.UnaryAdditiveContext context)
-        {
-            return base.VisitUnaryAdditive(context);
-        }
-
-        public override TResult VisitIdent([NotNull] SBasicParser.IdentContext context)
-        {
-            return base.VisitIdent(context);
-        }
-
-        public override TResult VisitInstr([NotNull] SBasicParser.InstrContext context)
-        {
-            return base.VisitInstr(context);
-        }
-
-        public override TResult VisitParenthesized([NotNull] SBasicParser.ParenthesizedContext context)
-        {
-            return base.VisitParenthesized(context);
-        }
-
-        public override TResult VisitLiteral([NotNull] SBasicParser.LiteralContext context)
-        {
-            return base.VisitLiteral(context);
-        }
-
-        public override TResult VisitBinary([NotNull] SBasicParser.BinaryContext context)
-        {
-            return base.VisitBinary(context);
-        }
-
-        public override TResult VisitLoc([NotNull] SBasicParser.LocContext context)
-        {
-            return base.VisitLoc(context);
-        }
-
-        public override TResult VisitLongselect([NotNull] SBasicParser.LongselectContext context)
-        {
-            return base.VisitLongselect(context);
-        }
-
-        public override TResult VisitExitstmt([NotNull] SBasicParser.ExitstmtContext context)
-        {
-            return base.VisitExitstmt(context);
-        }
-
-        public override TResult VisitFunc([NotNull] SBasicParser.FuncContext context)
-        {
-            return base.VisitFunc(context);
-        }
-
-        public override TResult VisitReference([NotNull] SBasicParser.ReferenceContext context)
-        {
-            return base.VisitReference(context);
-        }
-
-        public override TResult VisitDim([NotNull] SBasicParser.DimContext context)
-        {
-            return base.VisitDim(context);
-        }
-
-        public override TResult VisitLongfor([NotNull] SBasicParser.LongforContext context)
-        {
-            return base.VisitLongfor(context);
-        }
-
-        public override TResult VisitProc([NotNull] SBasicParser.ProcContext context)
-        {
-            return base.VisitProc(context);
+            return base.VisitTerminal(node);
         }
 
         public override TResult VisitAssignment([NotNull] SBasicParser.AssignmentContext context)
         {
             var tok = (SBasicToken)(context.GetChild(0).GetChild(0).Payload);
-            if (tok.Template == null) tok.Template = _group.GetInstanceOf("assignmentTemplate");
+            var template = _group.GetInstanceOf("assignmentTemplate");
             tok.Text = tok.Text.TrimEnd('$');
             tok.Text = tok.Text.TrimEnd('%');
-            tok.Template.Add("left", tok.Text);
-            tok.Template.Add("right", base.VisitAssignment(context));
-            string strResult = tok.Template.Render();
-            output += strResult + "\n";
-            return Convert(output);
-        }
-
-        public override TResult VisitOnselect([NotNull] SBasicParser.OnselectContext context)
-        {
-            return base.VisitOnselect(context);
-        }
-
-        public override TResult VisitShortif([NotNull] SBasicParser.ShortifContext context)
-        {
-            return base.VisitShortif(context);
-        }
-
-        public override TResult VisitLongif([NotNull] SBasicParser.LongifContext context)
-        {
-            return base.VisitLongif(context);
+            template.Add("left", tok.Text);
+            template.Add("right", base.VisitAssignment(context));
+            return Emit(template);
         }
 
         public override TResult VisitIdentifierOnly([NotNull] SBasicParser.IdentifierOnlyContext context)
         {
-            var tok = (SBasicToken)(context.GetChild(0).GetChild(0).Payload);
-            if (tok.Template == null)
-                tok.Template = _group.GetInstanceOf("identifierOnlyTemplate");
-            tok.Text = tok.Text.TrimEnd('$');
-            tok.Text = tok.Text.TrimEnd('%');
-            tok.Template.Add("id", tok.Text);
-            string strResult = tok.Template.Render() + "\n";
-            output += strResult;
-            return (TResult)_converter.ConvertFromString(strResult);
-        }
-
-        public override TResult VisitShortrepeat([NotNull] SBasicParser.ShortrepeatContext context)
-        {
-            return base.VisitShortrepeat(context);
-        }
-
-        public override TResult VisitImplicit([NotNull] SBasicParser.ImplicitContext context)
-        {
-            return base.VisitImplicit(context);
+            TResult id = base.VisitIdentifierOnly(context);
+            var template = _group.GetInstanceOf("identifierOnlyTemplate");
+            template.Add("id", id);
+            return Emit(template);
         }
 
         public override TResult VisitShortfor([NotNull] SBasicParser.ShortforContext context)
         {
-            return base.VisitShortfor(context);
-        }
-
-        public override TResult VisitLongrepeat([NotNull] SBasicParser.LongrepeatContext context)
-        {
-            return base.VisitLongrepeat(context);
+            TResult forVar = base.VisitShortfor(context);
+            var template = _group.GetInstanceOf("shortForTemplate");
+            //template.Add("id", id);
+            return Emit(template);
         }
 
         public override TResult VisitProgram([NotNull] SBasicParser.ProgramContext context)
         {
-            TResult temp = base.VisitProgram(context);
-            return (TResult)_converter.ConvertFromString(output);
+            _ = base.VisitProgram(context);
+            return (TResult)_converter.ConvertFromString(Output);
         }
 
-        public override TResult VisitLine([NotNull] SBasicParser.LineContext context)
-        {
-            return base.VisitLine(context);
-        }
-
-        public override TResult VisitStmtlist([NotNull] SBasicParser.StmtlistContext context)
-        {
-            return base.VisitStmtlist(context);
-        }
-
-        public override TResult VisitConstexpr([NotNull] SBasicParser.ConstexprContext context)
-        {
-            return base.VisitConstexpr(context);
-        }
-
-        public override TResult VisitRangeexpr([NotNull] SBasicParser.RangeexprContext context)
-        {
-            return base.VisitRangeexpr(context);
-        }
-
-        public override TResult VisitStmt([NotNull] SBasicParser.StmtContext context)
-        {
-            return base.VisitStmt(context);
-        }
-
-        public override TResult VisitProchdr([NotNull] SBasicParser.ProchdrContext context)
-        {
-            return base.VisitProchdr(context);
-        }
-
-        public override TResult VisitFunchdr([NotNull] SBasicParser.FunchdrContext context)
-        {
-            return base.VisitFunchdr(context);
-        }
-
-        public override TResult VisitIdentifier([NotNull] SBasicParser.IdentifierContext context)
-        {
-            return base.VisitIdentifier(context);
-        }
-
-        public override TResult VisitParenthesizedlist([NotNull] SBasicParser.ParenthesizedlistContext context)
-        {
-            return base.VisitParenthesizedlist(context);
-        }
-
-        public override TResult VisitUnparenthesizedlist([NotNull] SBasicParser.UnparenthesizedlistContext context)
-        {
-            return base.VisitUnparenthesizedlist(context);
-        }
-
-        public override TResult VisitSeparator([NotNull] SBasicParser.SeparatorContext context)
-        {
-            return base.VisitSeparator(context);
-        }
-
-        public override TResult VisitExpr([NotNull] SBasicParser.ExprContext context)
-        {
-            return base.VisitExpr(context);
-        }
     }
 }

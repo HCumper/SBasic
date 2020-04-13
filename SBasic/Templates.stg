@@ -1,13 +1,4 @@
-﻿// file /tmp/test.stg
-decl(type, name, value) ::= "<type> <name><init(value)>;"
-decl2(type, nam, value) ::= "<type> <nam><value>;"
-
-templateExample(param, nameField) ::= <<
-<nameField>
-This is a template with the following param: (<param>)
-/////////////////////////////////////////////////////////////////>>
-
-assignmentTemplate(left, right) ::= "<left> = <right>;"
+﻿assignmentTemplate(left, right) ::= "<left> = <right>;"
 
 declarationsTemplate(scope, reals, realArrays, integers, integerArrays, strings, stringArrays) ::= <<
 <if (reals)>
@@ -33,13 +24,9 @@ declarationsTemplate(scope, reals, realArrays, integers, integerArrays, strings,
 <endif>
 >>
 
+shortForTemplate(id, expr1, expr2, stmtlist) ::= "for <id> = <expr1> To <expr2> : <stmtlist>"			
+
 identifierOnlyTemplate(id) ::= "<id>();"
-
-
-
-
-
-
 
 programTemplate(programName, when, declarationsTemplate, programContent) ::= <<
 // Super Basic To C# Port of <programName> on <when>

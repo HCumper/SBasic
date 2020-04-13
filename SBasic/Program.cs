@@ -1,19 +1,14 @@
-﻿using System;
-using System.IO;
-using System.Text;
+﻿using System.IO;
 using Antlr4.Runtime;
 using Antlr4.Runtime.Tree;
-using Antlr4.StringTemplate;
 using Parsing;
 using SBasic.SymbolTable;
-using static SBasic.DebugSymbols;
 
 namespace SBasic
 {
     public static class Program
     {
- 
-        static void Main()
+        private static void Main()
         {
             _ = DebugSymbols.Names[7];
             string sourceFile = @"c:\users\hcump\source\repos\SBasic\Parsing\Q3.SB";
@@ -48,7 +43,7 @@ namespace SBasic
             symbolTable.ListScope(SymbolTable<Symbol>.Global, "");
 
             GenerateCodeVisitor<string> generateCodeVisitor = new GenerateCodeVisitor<string>(symbolTable);
-        
+
             CodeGenerator generator = new CodeGenerator(tree, symbolTable);
             generator.GenerateCode(sourceFile);
         }
@@ -56,7 +51,7 @@ namespace SBasic
         private static void PrimeSymbolTable(SymbolTable<Symbol> table)
         {
             string[] builtIns = new string[] { "ABS", "BEEP", "CLS", "DATE", "INPUT", "STOP", "PRINT", "RETurn", "RND", "TURBO_repfil"};
-            foreach(string item in builtIns)
+            foreach (string item in builtIns)
                 table.AddSymbol(item, SymbolTable<Symbol>.Global, new FuncSymbol(item, SymbolTable<Symbol>.Global, SBasicLexer.ProcCall, SBasicLexer.Void));
         }
     }

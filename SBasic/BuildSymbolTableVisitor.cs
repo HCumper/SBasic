@@ -6,6 +6,7 @@ using Antlr4.Runtime.Tree;
 using Parsing;
 using SBasic.SymbolTable;
 using static Parsing.SBasicParser;
+using System.Linq;
 
 namespace SBasic
 {
@@ -87,15 +88,10 @@ namespace SBasic
             }
 
             var paramList = (ParenthesizedlistContext)context.children[2].Payload;
-            List<int> dimensions = new List<int>();
-            foreach (var node in paramList.children)
-            {
-                if (node is LiteralContext)
-                {
-                    var payload = (CommonToken)node.GetChild(0).Payload;
-                    dimensions.Add(Int32.Parse(payload.Text));
-                }
-            }
+            List<int> dimensions = (from node in paramList.children
+                                    where node is LiteralContext
+                                    let payload = (CommonToken)node.GetChild(0).Payload
+                                    select Int32.Parse(payload.Text)).ToList();
             var name = (CommonToken)context.children[1].Payload;
             var extracted = ExtractType(name.Text);
             name.Text = extracted.Item1;
@@ -208,11 +204,11 @@ namespace SBasic
             {
                 case "%":
                     type = SBasicLexer.Integer;
-                    name = name.Substring(0, name.Length - 1);
+                    name = name[0..^1];
                     break;
                 case "$":
                     type = SBasicLexer.String;
-                    name = name.Substring(0, name.Length - 1);
+                    name = name[0..^1];
                     break;
             }
             return (name, type);

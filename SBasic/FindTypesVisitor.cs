@@ -1,10 +1,10 @@
-﻿using Antlr4.Runtime;
+﻿using System;
+using System.Collections.Generic;
+using Antlr4.Runtime;
 using Antlr4.Runtime.Misc;
 using Antlr4.Runtime.Tree;
 using Parsing;
 using SBasic.SymbolTable;
-using System;
-using System.Collections.Generic;
 
 namespace SBasic
 {
@@ -15,8 +15,10 @@ namespace SBasic
         private readonly SymbolTable.SymbolTable<Symbol> _symbols;
         private string _scope = SymbolTable<Symbol>.Global;
 
-        public FindTypesVisitor(SymbolTable.SymbolTable<Symbol> symbolTable) => _symbols = symbolTable;
-
+        public FindTypesVisitor(SymbolTable.SymbolTable<Symbol> symbolTable)
+        {
+            _symbols = symbolTable;
+        }
 
         public override Result VisitBinary(SBasicParser.BinaryContext context)
         {

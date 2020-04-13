@@ -12,7 +12,7 @@ namespace SBasic
     {
         private readonly IParseTree _tree;
         private readonly SymbolTable<Symbol> _symbolTable;
-        private TemplateGroup _templateGroup;
+        private readonly TemplateGroup _templateGroup;
 
         public CodeGenerator(IParseTree tree, SymbolTable<Symbol> symbolTable)
         {
