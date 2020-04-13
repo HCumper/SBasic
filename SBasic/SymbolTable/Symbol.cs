@@ -20,7 +20,7 @@
 
         public override string ToString()
         {
-            return $"{Name.PadRight(20, ' ')}  {Scope.PadRight(20, ' ')}  {DebugSymbols.names[Type].PadRight(20, ' ')}";
+            return $"{Name.PadRight(20, ' ')}  {Scope.PadRight(20, ' ')}  {DebugSymbols.Names[Type].PadRight(20, ' ')}";
         }
     }
 }

@@ -1,0 +1,32 @@
+﻿// file /tmp/test.stg
+decl(type, name, value) ::= "<type> <name><init(value)>;"
+decl2(type, nam, value) ::= "<type> <nam><value>;"
+
+templateExample(param, nameField) ::= <<
+<nameField>
+This is a template with the following param: (<param>)
+>>
+
+declarationsTemplate(scope, reals, realArrays, integers, integerArrays, strings, stringArrays) :: <<
+<if (reals)>
+    <scope> float <reals:{it|<it.Value.Name>};separator=", ">;        
+<endif>
+<if (realArrays)>
+    <realArrays:{it|<scope> float[] <it.Value.Name> = new float[<it.Value.dimensions:{ot|<ot>};separator=", ">];                 
+    }>
+<endif>
+<if (integers)>
+    <scope> int <integers:{ut|<ut.Value.Name>};separator=", ">;        
+    <endif>
+<if (integerArrays)>
+    <scope> <integerArrays:{it|float[] <it.Value.Name> = new int[<it.Value.dimensions:{ot|<ot>};separator=", ">];
+    }>
+<endif>
+<if (strings)>
+    <scope> string <strings:{ut|<ut.Value.Name>};separator=", ">;        
+    <endif>
+<if (stringArrays)>
+    <scope> <stringArrays:{it|float[] <it.Value.Name> = new string[<it.Value.dimensions:{ot|<ot>};separator=", ">];
+    }>
+<endif>
+>>

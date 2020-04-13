@@ -15,7 +15,7 @@ namespace SBasic
  
         static void Main()
         {
-            _ = DebugSymbols.names[7];
+            _ = DebugSymbols.Names[7];
             string sourceFile = @"c:\users\hcump\source\repos\SBasic\Parsing\Q3.SB";
             StreamReader reader = File.OpenText(sourceFile);
 
