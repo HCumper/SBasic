@@ -5,9 +5,11 @@ decl2(type, nam, value) ::= "<type> <nam><value>;"
 templateExample(param, nameField) ::= <<
 <nameField>
 This is a template with the following param: (<param>)
->>
+/////////////////////////////////////////////////////////////////>>
 
-declarationsTemplate(scope, reals, realArrays, integers, integerArrays, strings, stringArrays) :: <<
+assignmentTemplate(left, right) ::= "<left> = <right>;"
+
+declarationsTemplate(scope, reals, realArrays, integers, integerArrays, strings, stringArrays) ::= <<
 <if (reals)>
     <scope> float <reals:{it|<it.Value.Name>};separator=", ">;        
 <endif>
@@ -29,4 +31,26 @@ declarationsTemplate(scope, reals, realArrays, integers, integerArrays, strings,
     <scope> <stringArrays:{it|float[] <it.Value.Name> = new string[<it.Value.dimensions:{ot|<ot>};separator=", ">];
     }>
 <endif>
+>>
+
+identifierOnlyTemplate(id) ::= "<id>();"
+
+
+
+
+
+
+
+programTemplate(programName, when, declarationsTemplate, programContent) ::= <<
+// Super Basic To C# Port of <programName> on <when>
+
+public class SB
+{
+<declarationsTemplate>
+
+    public static void main()
+    {
+        <programContent>
+    }
+}
 >>

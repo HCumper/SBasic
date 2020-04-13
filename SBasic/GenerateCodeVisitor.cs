@@ -1,19 +1,29 @@
 ﻿using System.Collections.Generic;
+using System.ComponentModel;
 using Antlr4.Runtime.Misc;
 using Antlr4.Runtime.Tree;
+using Antlr4.StringTemplate;
 using Parsing;
 using SBasic.SymbolTable;
 
 namespace SBasic
 {
     internal class GenerateCodeVisitor<TResult>: SBasicBaseVisitor<TResult>, ISBasicVisitor<TResult> where TResult : notnull
-        {
-            private SymbolTable<Symbol> _symbols { get; set; }
-
+    {
+        private SymbolTable<Symbol> _symbols { get; set; }
+        private TemplateGroup _group;
+        private TypeConverter _converter = TypeDescriptor.GetConverter(typeof (TResult));
+        private string output { get; set; } = "";
         protected override TResult DefaultResult => base.DefaultResult;
 
-        public GenerateCodeVisitor(SymbolTable.SymbolTable<Symbol> symbolTable) => _symbols = symbolTable;
+        public TemplateGroup Group { get => _group; set => _group = value; }
+        public TypeConverter Converter { get => _converter; set => _converter = value; }
 
+        public GenerateCodeVisitor(SymbolTable.SymbolTable<Symbol> symbolTable) { _symbols = symbolTable;
+            _group = new TemplateGroupFile(@"c:/users/hcump/source/repos/SBasic/SBasic/Templates.stg");
+        }
+
+        private TResult Convert(string text) => (TResult)_converter.ConvertFromString(text);
         public override bool Equals(object? obj)
         {
             return base.Equals(obj);
@@ -36,12 +46,15 @@ namespace SBasic
 
         public override TResult VisitChildren([NotNull] IRuleNode node)
         {
-            return base.VisitChildren(node);
+            TResult result = base.VisitChildren(node);
+            return result;
         }
 
         public override TResult VisitTerminal([NotNull] ITerminalNode node)
         {
-            return base.VisitTerminal(node);
+//            if (node.Symbol.Text == "<EOF>")
+  //              return (TResult)_converter.ConvertFromString(output);
+            return (TResult)_converter.ConvertFromString(node.Symbol.Text);
         }
 
         public override TResult VisitErrorNode([NotNull] IErrorNode node)
@@ -156,7 +169,15 @@ namespace SBasic
 
         public override TResult VisitAssignment([NotNull] SBasicParser.AssignmentContext context)
         {
-            return base.VisitAssignment(context);
+            var tok = (SBasicToken)(context.GetChild(0).GetChild(0).Payload);
+            if (tok.Template == null) tok.Template = _group.GetInstanceOf("assignmentTemplate");
+            tok.Text = tok.Text.TrimEnd('$');
+            tok.Text = tok.Text.TrimEnd('%');
+            tok.Template.Add("left", tok.Text);
+            tok.Template.Add("right", base.VisitAssignment(context));
+            string strResult = tok.Template.Render();
+            output += strResult + "\n";
+            return Convert(output);
         }
 
         public override TResult VisitOnselect([NotNull] SBasicParser.OnselectContext context)
@@ -176,7 +197,15 @@ namespace SBasic
 
         public override TResult VisitIdentifierOnly([NotNull] SBasicParser.IdentifierOnlyContext context)
         {
-            return base.VisitIdentifierOnly(context);
+            var tok = (SBasicToken)(context.GetChild(0).GetChild(0).Payload);
+            if (tok.Template == null)
+                tok.Template = _group.GetInstanceOf("identifierOnlyTemplate");
+            tok.Text = tok.Text.TrimEnd('$');
+            tok.Text = tok.Text.TrimEnd('%');
+            tok.Template.Add("id", tok.Text);
+            string strResult = tok.Template.Render() + "\n";
+            output += strResult;
+            return (TResult)_converter.ConvertFromString(strResult);
         }
 
         public override TResult VisitShortrepeat([NotNull] SBasicParser.ShortrepeatContext context)
@@ -201,7 +230,8 @@ namespace SBasic
 
         public override TResult VisitProgram([NotNull] SBasicParser.ProgramContext context)
         {
-            return base.VisitProgram(context);
+            TResult temp = base.VisitProgram(context);
+            return (TResult)_converter.ConvertFromString(output);
         }
 
         public override TResult VisitLine([NotNull] SBasicParser.LineContext context)

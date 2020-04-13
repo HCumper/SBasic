@@ -1,5 +1,6 @@
 ﻿using System;
 using Antlr4.Runtime;
+using Antlr4.StringTemplate;
 
 namespace SBasic
 {
@@ -18,7 +19,9 @@ namespace SBasic
 
     public class SBasicToken: CommonToken
     {
-        public int EvaluatedType { get; set; } // SBasicLexer type
+        public int EvaluatedType { get; set; } // SBasicLexer type such as return type of function distinct from token type which is function
+        public Template Template { get => template; set => template = value; }
+        private Template template;
 
         public SBasicToken(int type) : base(type)
         {

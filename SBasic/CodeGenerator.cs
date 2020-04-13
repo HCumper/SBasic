@@ -12,43 +12,34 @@ namespace SBasic
     {
         private readonly IParseTree _tree;
         private readonly SymbolTable<Symbol> _symbolTable;
-        private Template? _template;
-
+        private TemplateGroup _templateGroup;
 
         public CodeGenerator(IParseTree tree, SymbolTable<Symbol> symbolTable)
         {
             _tree = tree;
             _symbolTable = symbolTable;
+            _templateGroup = new TemplateGroupFile(@"c:/users/hcump/source/repos/SBasic/SBasic/Templates.stg");
+
         }
 
         public void GenerateCode(string sourceFile)
         {
-            string cSharp = Generate(sourceFile);
-            var path = @"..\..\..\Generated.cs";
-            File.WriteAllText(@path, cSharp);
+            Template programTemplate = _templateGroup.GetInstanceOf("programTemplate");
+            GenerateCodeVisitor<string> generateCodeVisitor = new GenerateCodeVisitor<string>(_symbolTable);
+
+            programTemplate.Add("programName", sourceFile);
+            programTemplate.Add("when", DateTime.Now.ToLongDateString() + " " + DateTime.Now.ToLongTimeString());
+            Template declarationsTemplate = _templateGroup.GetInstanceOf("declarationsTemplate");
+            programTemplate.Add("declarationsTemplate", Generatedeclarations(declarationsTemplate, SymbolTable<Symbol>.Global, ""));
+            string content = generateCodeVisitor.Visit(_tree);
+            programTemplate.Add("programContent", content);
+
+            string cSharp = programTemplate.Render();
+            var outputPath = @"..\..\..\Generated.cs";
+            File.WriteAllText(@outputPath, cSharp);
         }
 
-        private string Generate(string sourceFile)
-        {
-            var path = @"..\..\..\Code.st";
-            var file = new FileInfo(path);
-
-            using (StreamReader reader = file.OpenText())
-                _template = new Template(reader.ReadToEnd());
-
-            _template.Add("programName", sourceFile);
-            _template.Add("when", DateTime.Now.ToLongDateString() + " " + DateTime.Now.ToLongTimeString());
-
-            string declarations = GenerateGlobals(SymbolTable<Symbol>.Global, "public");
-            _template.Add("declarations", declarations);
-
-            GenerateCodeVisitor<int> generateCodeVisitor = new GenerateCodeVisitor<int>(_symbolTable);
-            generateCodeVisitor.Visit(_tree);
-
-            return _template.Render();
-        }
-
-        private string GenerateGlobals(string scope, string prefix)
+        private string Generatedeclarations(Template declarationsTemplate, string scope, string prefix)
         {
             var reals = from ent in _symbolTable.Table
                         where ent.Key.scope == scope
@@ -56,11 +47,7 @@ namespace SBasic
                            && !(ent.Value is ArraySymbol)
                         select ent;
 
-            TemplateGroup group = new TemplateGroupFile(@"c:/users/hcump/source/repos/SBasic/SBasic/SupportTemplates.stg");
-            //            TemplateGroup group = new TemplateGroupFile(@"..\..\..\SupportTemplates.stg");
-            Template declarations = group.GetInstanceOf("declarationsTemplate");
-
-            declarations.Add("reals", reals);
+            declarationsTemplate.Add("reals", reals);
 
             var realArrays = from ent in _symbolTable.Table
                              where ent.Key.scope == scope
@@ -68,7 +55,7 @@ namespace SBasic
                            && ent.Value is ArraySymbol
                              select ent;
 
-            declarations.Add("realArrays", realArrays);
+            declarationsTemplate.Add("realArrays", realArrays);
 
             var integers = from ent in _symbolTable.Table
                            where ent.Key.scope == scope
@@ -76,7 +63,7 @@ namespace SBasic
                            && !(ent.Value is ArraySymbol)
                            select ent;
 
-            declarations.Add("integers", integers);
+            declarationsTemplate.Add("integers", integers);
 
             var integerArrays = from ent in _symbolTable.Table
                                 where ent.Key.scope == scope
@@ -84,7 +71,7 @@ namespace SBasic
                            && ent.Value is ArraySymbol
                                 select ent;
 
-            declarations.Add("integerArrays", integerArrays);
+            declarationsTemplate.Add("integerArrays", integerArrays);
 
             var strings = from ent in _symbolTable.Table
                           where ent.Key.scope == scope
@@ -92,7 +79,7 @@ namespace SBasic
                            && !(ent.Value is ArraySymbol)
                           select ent;
 
-            declarations.Add("strings", strings);
+            declarationsTemplate.Add("strings", strings);
 
             var stringArrays = from ent in _symbolTable.Table
                                where ent.Key.scope == scope
@@ -100,9 +87,9 @@ namespace SBasic
                            && ent.Value is ArraySymbol
                                select ent;
 
-            declarations.Add("stringArrays", stringArrays);
-            declarations.Add("scope", prefix);
-            return declarations.Render();
+            declarationsTemplate.Add("stringArrays", stringArrays);
+            declarationsTemplate.Add("scope", prefix);
+            return declarationsTemplate.Render();
         }
     }
 }

@@ -47,9 +47,8 @@ namespace SBasic
 
             symbolTable.ListScope(SymbolTable<Symbol>.Global, "");
 
-            GenerateCodeVisitor<int> generateCodeVisitor = new GenerateCodeVisitor<int>(symbolTable);
-            generateCodeVisitor.Visit(tree);
-
+            GenerateCodeVisitor<string> generateCodeVisitor = new GenerateCodeVisitor<string>(symbolTable);
+        
             CodeGenerator generator = new CodeGenerator(tree, symbolTable);
             generator.GenerateCode(sourceFile);
         }
@@ -58,7 +57,7 @@ namespace SBasic
         {
             string[] builtIns = new string[] { "ABS", "BEEP", "CLS", "DATE", "INPUT", "STOP", "PRINT", "RETurn", "RND", "TURBO_repfil"};
             foreach(string item in builtIns)
-                table.AddSymbol(item, SymbolTable<Symbol>.Global, new FuncSymbol(item, SymbolTable<Symbol>.Global, SBasicLexer.Ignore, SBasicLexer.Void));
+                table.AddSymbol(item, SymbolTable<Symbol>.Global, new FuncSymbol(item, SymbolTable<Symbol>.Global, SBasicLexer.ProcCall, SBasicLexer.Void));
         }
     }
 }
