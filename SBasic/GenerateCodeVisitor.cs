@@ -78,40 +78,57 @@ namespace SBasic
             }
         }
 
-
-        public override string? ToString()
-        {
-            return base.ToString();
-        }
-
-        public override TResult Visit([NotNull] IParseTree tree)
-        {
-            return base.Visit(tree);
-        }
-
-        public override TResult VisitTerminal([NotNull] ITerminalNode node)
-        {
-            return (TResult)_converter.ConvertFromString(node.Symbol.Text);
-        }
-
         public override TResult VisitAssignment([NotNull] SBasicParser.AssignmentContext context)
         {
             var ttok = Visit(context.GetChild(0));
             var tok = ConvertToString(ttok);
             var template = _group.GetInstanceOf("assignmentTemplate");
-            tok = tok.TrimEnd('$');
-            tok = tok.TrimEnd('%');
             template.Add("left", tok);
             template.Add("right", Visit(context.GetChild(2)));
             return Emit(template, context);
         }
 
+        public override TResult VisitDim([NotNull] SBasicParser.DimContext context)
+        {
+            return DefaultResult;
+        }
+
+        public override TResult VisitIdentifier([NotNull] SBasicParser.IdentifierContext context)
+        {
+            var ttok = Visit(context.GetChild(0));
+            var tok = ConvertToString(ttok);
+            if (context.ChildCount > 1)
+            {
+                // () for function calls/definitions [] for arrays
+                SymbolTable<Symbol> symbols = GetSymbols();
+                Symbol sym = symbols.ReadSymbol(tok, SymbolTable<Symbol>.Global).Item2;
+                ttok = Visit(context.GetChild(1));
+                var tok2 = ConvertToString(ttok);
+                tok = (sym.GetType() == typeof(ArraySymbol)) ? $"{tok}[{tok2}]" : $"{tok}({tok2})";
+            }
+            return ConvertFromString(tok);
+        }
+
+        public override TResult VisitIdentExpr([NotNull] SBasicParser.IdentExprContext context)
+        {
+            return base.VisitIdentExpr(context);
+        }
         public override TResult VisitIdentifierOnly([NotNull] SBasicParser.IdentifierOnlyContext context)
         {
             TResult id = base.VisitIdentifierOnly(context);
             var template = _group.GetInstanceOf("identifierOnlyTemplate");
             template.Add("id", id);
             return Emit(template, context);
+        }
+
+        public override TResult VisitParenthesizedlist([NotNull] SBasicParser.ParenthesizedlistContext context)
+        {
+            return base.Visit(context.GetChild(1));
+        }
+        public override TResult VisitProgram([NotNull] SBasicParser.ProgramContext context)
+        {
+            _ = base.VisitProgram(context);
+            return (TResult)_converter.ConvertFromString(Output);
         }
 
         public override TResult VisitShortfor([NotNull] SBasicParser.ShortforContext context)
@@ -127,11 +144,6 @@ namespace SBasic
             template.Add("stmtlist", statements);
             return Emit(template, context);
         }
-        public override TResult VisitProgram([NotNull] SBasicParser.ProgramContext context)
-        {
-            _ = base.VisitProgram(context);
-            return (TResult)_converter.ConvertFromString(Output);
-        }
         public override TResult VisitStmtlist([NotNull] SBasicParser.StmtlistContext context)
         {
             List<string> statements = new List<string>();
@@ -142,22 +154,30 @@ namespace SBasic
             template.Add("statements", statements);
             return EmitList(template, context);
         }
-
-        public override TResult VisitChildren([NotNull] IRuleNode node)
+        public override TResult VisitTerminal([NotNull] ITerminalNode node)
         {
-            TResult result = this.DefaultResult;
-            int childCount = node.ChildCount;
-            for (int i = 0; i < childCount && this.ShouldVisitNextChild(node, result); ++i)
-            {
-                TResult nextResult = node.GetChild(i).Accept<TResult>((IParseTreeVisitor<TResult>) this);
-                result = this.AggregateResult(result, nextResult);
-            }
-            return result;
+            return ConvertFromString(node.Symbol.Text);
         }
 
-        protected  override TResult AggregateResult(TResult aggregate, TResult nextResult)
-        {
-            return nextResult;
-        }
+
+        /// /////////////////////////////////////////////////////////////////////////////////////////////////////
+        //// Antlr runtime implementation
+        //public override TResult VisitChildren([NotNull] IRuleNode node)
+        //{
+        //    TResult result = this.DefaultResult;
+        //    int childCount = node.ChildCount;
+        //    for (int i = 0; i < childCount && this.ShouldVisitNextChild(node, result); ++i)
+        //    {
+        //        TResult nextResult = node.GetChild(i).Accept<TResult>((IParseTreeVisitor<TResult>) this);
+        //        result = this.AggregateResult(result, nextResult);
+        //    }
+        //    return result;
+        //}
+
+        //// Antlr runtime implementation
+        //protected  override TResult AggregateResult(TResult aggregate, TResult nextResult)
+        //{
+        //    return nextResult;
+        //}
     }
 }

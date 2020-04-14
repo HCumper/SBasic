@@ -20,7 +20,7 @@ namespace SBasic
             _symbols = symbolTable;
         }
 
-        public override Result VisitBinary(SBasicParser.BinaryContext context)
+        public override Result VisitBinaryExpr(SBasicParser.BinaryExprContext context)
         {
             dynamic firstOperandType = Visit(context.children[0]);
             dynamic secondOperandTypeOpType = Visit(context.children[2]);

@@ -43,25 +43,25 @@ funchdr : DefFunc identifier parenthesizedlist? Newline											#Funcheader
 identifier :
 	ID (parenthesizedlist | unparenthesizedlist)?;
 
-parenthesizedlist :	LeftParen expr (separator expr)* RightParen									#Parenthesizedl;
-unparenthesizedlist : expr (separator expr)*													#Unparenthesized;
+parenthesizedlist :	LeftParen expr (separator expr)* RightParen;
+unparenthesizedlist : expr (separator expr)*;
 
 separator : Comma | Bang | Semi | To;
 
 expr :
-	  LeftParen expr RightParen														#Parenthesized
-	| (Plus | Minus) expr															#UnaryAdditive
-	| expr Amp expr																	#Binary
-	| <assoc=right> (String | ID) Instr expr										#Instr
-	| <assoc=right> expr Caret expr													#Binary
-	| expr (Multiply | Divide | Mod | Div) expr										#Binary
-	| expr (Plus | Minus) expr														#Binary
-	| expr (Equal | NotEqual | Less | LessEqual | Greater | GreaterEqual) expr		#Binary
-	| Not expr																		#Not
-	| expr And expr																	#Binary
-	| expr (Or | Xor) expr															#Binary
-	| identifier																	#Ident
-	| (Integer | String | Real)														#Literal
+	  LeftParen expr RightParen														#ParenthesizedExpr
+	| (Plus | Minus) expr															#UnaryAdditiveExpr
+	| expr Amp expr																	#BinaryExpr
+	| <assoc=right> (String | ID) Instr expr										#InstrExpr
+	| <assoc=right> expr Caret expr													#BinaryExpr
+	| expr (Multiply | Divide | Mod | Div) expr										#BinaryExpr
+	| expr (Plus | Minus) expr														#BinaryExpr
+	| expr (Equal | NotEqual | Less | LessEqual | Greater | GreaterEqual) expr		#BinaryExpr
+	| Not expr																		#NotExpr
+	| expr And expr																	#BinaryExpr
+	| expr (Or | Xor) expr															#BinaryExpr
+	| identifier																	#IdentExpr
+	| (Integer | String | Real)														#LiteralExpr
 	;
 
 /* Tokens */

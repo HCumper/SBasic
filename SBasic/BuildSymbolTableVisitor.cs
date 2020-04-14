@@ -56,6 +56,7 @@ namespace SBasic
                     var name = payload.Text;
                     var extracted = ExtractType(name);
                     name = extracted.Item1;
+                    payload.Text = name;
                     var type = extracted.Item2;
                     Symbol symbol;
                     if (localScope == FunctionScopeName)
@@ -89,7 +90,7 @@ namespace SBasic
 
             var paramList = (ParenthesizedlistContext)context.children[2].Payload;
             List<int> dimensions = (from node in paramList.children
-                                    where node is LiteralContext
+                                    where node is LiteralExprContext
                                     let payload = (CommonToken)node.GetChild(0).Payload
                                     select Int32.Parse(payload.Text)).ToList();
             var name = (CommonToken)context.children[1].Payload;
@@ -143,12 +144,12 @@ namespace SBasic
             {
                 var implicitDecl = ((CommonToken)context.children[0].Payload).Text;
                 var implicitType = ExtractType(implicitDecl);
-                var subContext = (UnparenthesizedContext)context.children[1];
+                var subContext = (UnparenthesizedlistContext)context.children[1];
                 foreach (var child in subContext.children)
                 {
-                    if (child is IdentContext)
+                    if (child is IdentExprContext)
                     {
-                        var identCtx = ((IdentContext)child).children[0].Payload;
+                        var identCtx = ((IdentExprContext)child).children[0].Payload;
                         var terminalNode = ((IdentifierContext)identCtx).Payload.GetChild(0);
                         var name = ((TerminalNodeImpl)terminalNode).Payload.Text;
                         if (implicitType.Item2 == SBasicLexer.Integer)
@@ -171,12 +172,12 @@ namespace SBasic
         {
             if (FirstPass)
             {
-                var subContext = (UnparenthesizedContext)context.children[1];
+                var subContext = (UnparenthesizedlistContext)context.children[1];
                 foreach (var child in subContext.children)
                 {
-                    if (child is IdentContext)
+                    if (child is IdentExprContext)
                     {
-                        var identCtx = ((IdentContext)child).children[0].Payload;
+                        var identCtx = ((IdentExprContext)child).children[0].Payload;
                         var terminalNode = ((IdentifierContext)identCtx).Payload.GetChild(0);
                         var name = ((TerminalNodeImpl)terminalNode).Payload.Text;
                         References.Add(name);
