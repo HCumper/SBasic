@@ -1,4 +1,4 @@
-97 astring$ = "hhh"
+97 astring$ = "hhh" : v = 3 : b = d
 100 CLS
 110 TURBO_repfil
 120 sorts=0:partitions=0
@@ -6,6 +6,7 @@
 150 DIM b(1,2,3)
 160 LET shortlist=9
 170 set_up_tabLe
+175 FOR x = 2 TO 3: y = 7 : z = 22
 180 FOR lo=1 TO n : b(lo)=a(lo)
 190 now = DATE
 200 b(n+1)=10001

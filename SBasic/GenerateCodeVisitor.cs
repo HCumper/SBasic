@@ -41,16 +41,43 @@ namespace SBasic
                 _templates.Add(templateName, _group.GetInstanceOf(templateName));
         }
 
-        private TResult Convert(string text)
+        private TResult ConvertFromString(string text)
         {
             return (TResult)_converter.ConvertFromString(text);
         }
-        private TResult Emit(Template template)
+        private string ConvertToString(TResult result)
         {
-            string strResult = template.Render() + "\n";
-            Output += strResult;
-            return Convert("");
+            return (string)_converter.ConvertToString(result);
         }
+
+        private TResult Emit(Template template, SBasicParser.StmtContext context)
+        {
+            if ((context.Parent.Parent.Parent).GetType() == typeof(SBasicParser.ProgramContext))
+            {
+                string strResult = template.Render() + "\n";
+                Output += strResult;
+                return ConvertFromString("");
+            }
+            else
+            {
+                return ConvertFromString(template.Render());
+            }
+        }
+
+        private TResult EmitList(Template template, SBasicParser.StmtlistContext context)
+        {
+            if ((context.Parent.Parent).GetType() == typeof(SBasicParser.ProgramContext))
+            {
+                string strResult = template.Render() + "\n";
+                Output += strResult;
+                return ConvertFromString("");
+            }
+            else
+            {
+                return ConvertFromString(template.Render());
+            }
+        }
+
 
         public override string? ToString()
         {
@@ -62,26 +89,21 @@ namespace SBasic
             return base.Visit(tree);
         }
 
-        public override TResult VisitChildren([NotNull] IRuleNode node)
-        {
-            TResult result = base.VisitChildren(node);
-            return result;
-        }
-
         public override TResult VisitTerminal([NotNull] ITerminalNode node)
         {
-            return base.VisitTerminal(node);
+            return (TResult)_converter.ConvertFromString(node.Symbol.Text);
         }
 
         public override TResult VisitAssignment([NotNull] SBasicParser.AssignmentContext context)
         {
-            var tok = (SBasicToken)(context.GetChild(0).GetChild(0).Payload);
+            var ttok = Visit(context.GetChild(0));
+            var tok = ConvertToString(ttok);
             var template = _group.GetInstanceOf("assignmentTemplate");
-            tok.Text = tok.Text.TrimEnd('$');
-            tok.Text = tok.Text.TrimEnd('%');
-            template.Add("left", tok.Text);
-            template.Add("right", base.VisitAssignment(context));
-            return Emit(template);
+            tok = tok.TrimEnd('$');
+            tok = tok.TrimEnd('%');
+            template.Add("left", tok);
+            template.Add("right", Visit(context.GetChild(2)));
+            return Emit(template, context);
         }
 
         public override TResult VisitIdentifierOnly([NotNull] SBasicParser.IdentifierOnlyContext context)
@@ -89,22 +111,53 @@ namespace SBasic
             TResult id = base.VisitIdentifierOnly(context);
             var template = _group.GetInstanceOf("identifierOnlyTemplate");
             template.Add("id", id);
-            return Emit(template);
+            return Emit(template, context);
         }
 
         public override TResult VisitShortfor([NotNull] SBasicParser.ShortforContext context)
         {
-            TResult forVar = base.VisitShortfor(context);
+            var loopVar = Visit(context.GetChild(1));;
+            var start = Visit(context.GetChild(3));
+            var end = Visit(context.GetChild(5));
+            var statements = Visit(context.GetChild(7));
             var template = _group.GetInstanceOf("shortForTemplate");
-            //template.Add("id", id);
-            return Emit(template);
+            template.Add("id", loopVar);
+            template.Add("expr1", start);
+            template.Add("expr2", end);
+            template.Add("stmtlist", statements);
+            return Emit(template, context);
         }
-
         public override TResult VisitProgram([NotNull] SBasicParser.ProgramContext context)
         {
             _ = base.VisitProgram(context);
             return (TResult)_converter.ConvertFromString(Output);
         }
+        public override TResult VisitStmtlist([NotNull] SBasicParser.StmtlistContext context)
+        {
+            List<string> statements = new List<string>();
+            int nodes = context.ChildCount;
+            for (int i = 0; i < nodes; i += 2)
+                statements.Add(ConvertToString(Visit(context.GetChild(i))));
+            var template = _group.GetInstanceOf("statementList");
+            template.Add("statements", statements);
+            return EmitList(template, context);
+        }
 
+        public override TResult VisitChildren([NotNull] IRuleNode node)
+        {
+            TResult result = this.DefaultResult;
+            int childCount = node.ChildCount;
+            for (int i = 0; i < childCount && this.ShouldVisitNextChild(node, result); ++i)
+            {
+                TResult nextResult = node.GetChild(i).Accept<TResult>((IParseTreeVisitor<TResult>) this);
+                result = this.AggregateResult(result, nextResult);
+            }
+            return result;
+        }
+
+        protected  override TResult AggregateResult(TResult aggregate, TResult nextResult)
+        {
+            return nextResult;
+        }
     }
 }

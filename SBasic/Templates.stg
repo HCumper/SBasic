@@ -24,8 +24,6 @@ declarationsTemplate(scope, reals, realArrays, integers, integerArrays, strings,
 <endif>
 >>
 
-shortForTemplate(id, expr1, expr2, stmtlist) ::= "for <id> = <expr1> To <expr2> : <stmtlist>"			
-
 identifierOnlyTemplate(id) ::= "<id>();"
 
 programTemplate(programName, when, declarationsTemplate, programContent) ::= <<
@@ -41,3 +39,8 @@ public class SB
     }
 }
 >>
+
+shortForTemplate(id, expr1, expr2, stmtlist) ::= "for (<id> = <expr1>; <id> \<= <expr2>; <id>++) {  <stmtlist> }"			
+
+statementList(statements) ::= <<<statements:{it|<it>};separator=" 
+"> >>       
