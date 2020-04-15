@@ -12,9 +12,10 @@ namespace SBasic
 {
     public class BuildSymbolTableVisitor<TResult>: SBasicBaseVisitor<TResult>, ISBasicVisitor<TResult> where TResult : notnull
     {
+        enum scopes {  procedure, function, none };
         private SymbolTable<Symbol> SymbolTable { get; set; }
         private string FunctionScopeName { get; set; } = SymbolTable<Symbol>.Global;
-        private bool FuncScopeActive { get; set; }
+        private scopes activeScopes { get; set; }
 
         private readonly ISet<string> ImplicitInts;
         private readonly ISet<string> ImplicitStrings;
@@ -36,10 +37,10 @@ namespace SBasic
             bool funcProc = false;
             var payload = (CommonToken)node.Payload;
 
-            if (FuncScopeActive && FirstPass || !FuncScopeActive && !FirstPass)
+            if ((activeScopes != scopes.none) && FirstPass || (activeScopes == scopes.none) && !FirstPass)
             {
                 string localScope;
-                if (FuncScopeActive && payload.Text != FunctionScopeName)
+                if ((activeScopes != scopes.none) && payload.Text != FunctionScopeName)
                 {
                     localScope = FunctionScopeName;
                 }
@@ -68,7 +69,8 @@ namespace SBasic
                     {
                         if (funcProc)
                         {
-                            symbol = new FuncSymbol(name, localScope, Unknowntype, DefFunc);
+                            int returnType = (activeScopes == scopes.procedure) ? SBasicLexer.DefProc : SBasicLexer.DefFunc;
+                            symbol = new FuncSymbol(name, localScope, returnType, DefFunc);
                         }
                         else
                         {
@@ -101,43 +103,44 @@ namespace SBasic
             SymbolTable.AddSymbol(symbol.Name, symbol.Scope, symbol);
             return base.VisitDim(context);
         }
-
-        public override TResult VisitFuncheader([NotNull] FuncheaderContext context)
+       
+        public override TResult VisitFunc([NotNull] FuncContext context)
         {
-            if (context == null)
-            {
-                throw new ArgumentNullException(nameof(context));
-            }
+            //if (context == null)
+            //{
+            //    throw new ArgumentNullException(nameof(context));
+            //}
 
-            var node = (CommonToken)context.children[1].GetChild(0).Payload;
-            FunctionScopeName = node.Text;
-            FuncScopeActive = true;
-            base.VisitFuncheader(context);
-            FuncScopeActive = false;
-            References = new HashSet<string>();
+            //var node = (CommonToken)context.children[1].GetChild(0).Payload;
+            //FunctionScopeName = node.Text;
+            //activeScopes = scopes.function;
+            //base.VisitFunc(context);
+            //activeScopes = scopes.none;
+            //References = new HashSet<string>();
             return default;
         }
-
-        public override TResult VisitProcheader([NotNull] ProcheaderContext context)
+        
+        public override TResult VisitProc([NotNull] ProcContext context)
         {
             var node = (CommonToken)context.children[1].GetChild(0).Payload;
             FunctionScopeName = node.Text;
-            FuncScopeActive = true;
-            base.VisitProcheader(context);
-            FuncScopeActive = false;
+            activeScopes = scopes.procedure;
+            base.VisitProc(context);
+            activeScopes = scopes.none;
             References = new HashSet<string>();
             return default;
         }
 
         public override TResult VisitLoc([NotNull] LocContext context)
         {
-            FuncScopeActive = true;
+//            activeScopes = scopes.function;
             base.VisitLoc(context);
-            FuncScopeActive = false;
+  //          FuncScopeActive = false;
             References = new HashSet<string>();
             return default;
         }
 
+        // implicit lists are cumulative and never cleared
         public override TResult VisitImplicit([NotNull] ImplicitContext context)
         {
             if (FirstPass)

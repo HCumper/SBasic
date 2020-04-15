@@ -52,30 +52,30 @@ namespace SBasic
 
         private TResult Emit(Template template, SBasicParser.StmtContext context)
         {
-            if ((context.Parent.Parent.Parent).GetType() == typeof(SBasicParser.ProgramContext))
-            {
-                string strResult = template.Render() + "\n";
-                Output += strResult;
-                return ConvertFromString("");
-            }
-            else
-            {
-                return ConvertFromString(template.Render());
-            }
+            //if ((context.Parent.Parent.Parent).GetType() == typeof(SBasicParser.ProgramContext))
+            //{
+            //    string strResult = template.Render() + "\n";
+            //    Output += strResult;
+            //    return ConvertFromString("");
+            //}
+            //else
+            //{
+               return ConvertFromString(template.Render());
+            //}
         }
 
         private TResult EmitList(Template template, SBasicParser.StmtlistContext context)
         {
-            if ((context.Parent.Parent).GetType() == typeof(SBasicParser.ProgramContext))
-            {
-                string strResult = template.Render() + "\n";
-                Output += strResult;
-                return ConvertFromString("");
-            }
-            else
-            {
-                return ConvertFromString(template.Render());
-            }
+            //if ((context.Parent.Parent).GetType() == typeof(SBasicParser.ProgramContext))
+            //{
+            //    string strResult = template.Render() + "\n";
+            //    Output += strResult;
+            //    return ConvertFromString("");
+            //}
+            //else
+            //{
+               return ConvertFromString(template.Render());
+            //}
         }
 
         public override TResult VisitAssignment([NotNull] SBasicParser.AssignmentContext context)
@@ -92,7 +92,28 @@ namespace SBasic
         {
             return DefaultResult;
         }
-
+        public override TResult VisitFunc([NotNull] SBasicParser.FuncContext context)
+        {
+            var functionName = ConvertToString(Visit(context.GetChild(1).GetChild(0)));
+            List<string> parameters = new List<string>();
+            var parameterList= context.GetChild(1).GetChild(1);
+            for (int i=1; i < parameterList.ChildCount - 1; i+=2)
+            {
+                parameters.Add(ConvertToString(Visit(parameterList.GetChild(i))));
+            }
+            var local = ConvertToString(Visit(context?.GetChild(3)?.GetChild(1)?.GetChild(0)?.GetChild(0)));
+            //var tok = ConvertToString(ttok);
+            //if (context.ChildCount > 1)
+            //{
+            //    // () for function calls/definitions [] for arrays
+            //    SymbolTable<Symbol> symbols = GetSymbols();
+            //    Symbol sym = symbols.ReadSymbol(tok, SymbolTable<Symbol>.Global).Item2;
+            //    ttok = Visit(context.GetChild(1));
+            //    var tok2 = ConvertToString(ttok);
+            //    tok = (sym.GetType() == typeof(ArraySymbol)) ? $"{tok}[{tok2}]" : $"{tok}({tok2})";
+            //}
+            return ConvertFromString(functionName);
+        }
         public override TResult VisitIdentifier([NotNull] SBasicParser.IdentifierContext context)
         {
             var ttok = Visit(context.GetChild(0));
@@ -170,7 +191,7 @@ namespace SBasic
             int nodes = context.ChildCount;
             for (int i = 0; i < nodes; i += 2)
                 statements.Add(ConvertToString(Visit(context.GetChild(i))));
-            var template = _group.GetInstanceOf("statementList");
+            var template = _group.GetInstanceOf("statementListTemplate");
             template.Add("statements", statements);
             return EmitList(template, context);
         }
