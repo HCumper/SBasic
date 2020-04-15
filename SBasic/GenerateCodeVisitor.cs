@@ -120,10 +120,30 @@ namespace SBasic
             template.Add("id", id);
             return Emit(template, context);
         }
-
+        public override TResult VisitLine([NotNull] SBasicParser.LineContext context)
+        {
+            return base.VisitLine(context);
+        }
         public override TResult VisitParenthesizedlist([NotNull] SBasicParser.ParenthesizedlistContext context)
         {
             return base.Visit(context.GetChild(1));
+        }
+        public override TResult VisitPrint([NotNull] SBasicParser.PrintContext context)
+        {
+            return base.VisitPrint(context);
+        }
+        public override TResult VisitProc([NotNull] SBasicParser.ProcContext context)
+        {
+            return base.VisitProc(context);
+        }
+        public override TResult VisitProchdr([NotNull] SBasicParser.ProchdrContext context)
+        {
+            return base.VisitProchdr(context);
+        }
+
+        public override TResult VisitProcheader([NotNull] SBasicParser.ProcheaderContext context)
+        {
+            return base.VisitProcheader(context);
         }
         public override TResult VisitProgram([NotNull] SBasicParser.ProgramContext context)
         {
@@ -158,8 +178,6 @@ namespace SBasic
         {
             return ConvertFromString(node.Symbol.Text);
         }
-
-
         /// /////////////////////////////////////////////////////////////////////////////////////////////////////
         //// Antlr runtime implementation
         //public override TResult VisitChildren([NotNull] IRuleNode node)

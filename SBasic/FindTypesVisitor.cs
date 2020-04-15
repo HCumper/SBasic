@@ -24,8 +24,8 @@ namespace SBasic
         {
             dynamic firstOperandType = Visit(context.children[0]);
             dynamic secondOperandTypeOpType = Visit(context.children[2]);
-            if (firstOperandType != secondOperandTypeOpType)
-                throw new ParseError("Incompatible types");
+//            if (firstOperandType != secondOperandTypeOpType)
+ //               throw new ParseError("Incompatible types", context.start.Line);
             ((SBasicToken)context.start).EvaluatedType = (int)firstOperandType;
             return firstOperandType;
         }
@@ -41,7 +41,7 @@ namespace SBasic
             dynamic secondOperandTypeOpType = Visit(context.children[2]);
             if (firstOperandType != secondOperandTypeOpType)
             {
-                throw new ParseError("Incompatible types");
+                throw new ParseError("Incompatible types", context.start.Line);
             }
             ((SBasicToken)context.start).EvaluatedType = (int)firstOperandType;
             return firstOperandType;
@@ -78,25 +78,26 @@ namespace SBasic
             return (Result)Convert.ChangeType(token.Type, typeof(int));
         }
 
-        public override Result VisitProc(SBasicParser.ProcContext context)
-        {
-            var tok = (SBasicToken)context.children[0].GetChild(1).GetChild(0).Payload;
-            tok.EvaluatedType = SBasicLexer.DefProc;
-            _scope = tok.Text;
-            var result = base.VisitProc(context);
-            _scope = SymbolTable<Symbol>.Global;
-            return result;
-        }
+        //public override Result VisitProc(SBasicParser.ProcContext context)
+        //{
+        //    var tok = (SBasicToken)context.children[0].GetChild(1).GetChild(0).Payload;
+        //    tok.Type = SBasicLexer.DefProc;
+        //    tok.EvaluatedType = SBasicLexer.Void;
+        //    _scope = tok.Text;
+        //    var result = base.VisitProc(context);
+        //    _scope = SymbolTable<Symbol>.Global;
+        //    return result;
+        //}
 
-        public override Result VisitFunc(SBasicParser.FuncContext context)
-        {
-            var tok = (SBasicToken)context.children[0].GetChild(1).GetChild(0).Payload;
-            tok.EvaluatedType = SBasicLexer.DefFunc;
-            _scope = tok.Text;
-            var result = base.VisitFunc(context);
-            _scope = SymbolTable<Symbol>.Global;
-            return result;
-        }
+        //public override Result VisitFunc(SBasicParser.FuncContext context)
+        //{
+        //    var tok = (SBasicToken)context.children[0].GetChild(1).GetChild(0).Payload;
+        //    tok.Type = SBasicLexer.DefFunc;
+        //    _scope = tok.Text;
+        //    var result = base.VisitFunc(context);
+        //    _scope = SymbolTable<Symbol>.Global;
+        //    return result;
+        //}
 
     }
 }

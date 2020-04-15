@@ -1,11 +1,15 @@
-200 b(n+1)=10001
+350 PRINT "Time" ! DATE-now
+360 FOR loop = 1 TO n-1
+370 IF b(loop) > b(loop + 1) THEN PRINT "Error at" ! loop
+380 END FOR loop
+1 x = foo(1,2)
+140 DIM a$(10001)
+150 DIM bbbb(1,2,3)
 180 FOR lo=1 TO n : b(lo)=a(lo)
 97 astring$ = "hhh" : v = 3
 100 CLS
 110 TURBO_repfil
 120 sorts=0:partitions=0
-140 DIM a$(10001)
-150 DIM b(1,2,3)
 160 LET shortlist=9
 170 set_up_tabLe
 175 FOR x = 2 TO 3: y = 7 : z = 22

@@ -1,9 +1,9 @@
-// Super Basic To C# Port of c:\users\hcump\source\repos\SBasic\Parsing\Q3.SB on Tuesday, April 14, 2020 11:28:56 AM
+// Super Basic To C# Port of c:\users\hcump\source\repos\SBasic\Parsing\Q3.SB on Tuesday, April 14, 2020 10:39:34 PM
 
 public class SB
 {
- float lo, n, v, sorts, partitions, shortlist, x, y, z, now, loop, finished, inc_k, dec_j, compare, temp;        
-     float[] b = new float[1, 2, 3];                 
+ float x, lo, n, b, v, sorts, partitions, shortlist, y, z, now, loop, finished, inc_k, dec_j, compare, temp;        
+     float[] bbbb = new float[1, 2, 3];                 
 
  string astring, t;        
  float[] a = new string[10001];
@@ -12,7 +12,11 @@ public class SB
 
     public static void main()
     {
-        for (lo = 1; lo <= n; lo++) {  b[lo] = a[lo];  }
+        x = foo(1);
+         
+         
+         
+        for (lo = 1; lo <= n; lo++) {  b(lo) = a[lo];  }
          
         astring = "hhh";
         v = 3;
@@ -24,8 +28,6 @@ public class SB
         sorts = 0;
         partitions = 0;
          
-         
-         
         shortlist = 9;
          
         set_up_tabLe();
@@ -35,8 +37,6 @@ public class SB
          
         now = DATE;
          
-        b[n(1)] = 10001;
-         
         quicksort(n)();
          
         check();
@@ -45,7 +45,7 @@ public class SB
          
         STOP();
          
-        for (lo = 1; lo <= n; lo++) {  b[lo] = a[lo];  }
+        for (lo = 1; lo <= n; lo++) {  b(lo) = a[lo];  }
          
         sorts = 0;
         partitions = 0;

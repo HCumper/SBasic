@@ -11,12 +11,15 @@ namespace SBasic
 
     public class ParseError: Exception
     {
-        public ParseError(string message)
+        public ParseError(string message, int line)
             : base(message)
         {
+            Line = line;
             Severity = Severities.Error;
         }
 
+        private int line;
         public Severities Severity { get; set; }
+        public int Line { get => line; set => line = value; }
     }
 }

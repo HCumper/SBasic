@@ -19,8 +19,8 @@ stmt :
 	| Local unparenthesizedlist																		#Loc
 	| Implic unparenthesizedlist																	#Implicit
 	| Refer unparenthesizedlist																		#Reference
-	| prochdr line* Integer? EndDef ID?																#Proc
-	| funchdr line* Integer? EndDef ID?																#Func
+	| DefProc identifier parenthesizedlist? Newline line* Integer? EndDef ID?																#Proc
+	| DefFunc identifier parenthesizedlist? Newline line* Integer? EndDef ID?																#Func
 	| For ID Equal expr To expr Newline line* Integer? EndFor ID?									#Longfor
 	| For ID Equal expr To expr Colon stmtlist														#Shortfor
 	| Repeat ID Colon stmtlist																		#Shortrepeat
@@ -31,13 +31,14 @@ stmt :
 	| On (constexpr) Equal rangeexpr																#Onselect
 	| Exit ID?																						#Exitstmt
 	| identifier Equal expr																			#Assignment
+	| PRINT expr ( separator expr)*																	#Print
 	| identifier																					#IdentifierOnly
 	;
 
-prochdr : DefProc identifier parenthesizedlist? Newline											#Procheader
+prochdr : DefProc DefProc identifier parenthesizedlist? Newline											#Procheader
 	;
 
-funchdr : DefFunc identifier parenthesizedlist? Newline											#Funcheader
+funchdr : DefFunc DefFunc identifier parenthesizedlist? Newline											#Funcheader
 	; 
 
 identifier :
@@ -88,6 +89,7 @@ Repeat : 'REPeat';
 Exit : 'EXIT';
 Until : 'UNTIL';
 EndRepeat : 'END REPeat';
+PRINT : 'PRINT';
 
 LeftParen : '(';
 RightParen : ')';
