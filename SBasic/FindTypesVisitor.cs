@@ -13,7 +13,7 @@ namespace SBasic
         private readonly IList<int> _lineNumbers = new List<int>();
         private bool _startOfLine = true;
         private readonly SymbolTable.SymbolTable<Symbol> _symbols;
-        private string _scope = SymbolTable<Symbol>.Global;
+        private readonly string _scope = SymbolTable<Symbol>.Global;
 
         public FindTypesVisitor(SymbolTable.SymbolTable<Symbol> symbolTable)
         {
@@ -24,8 +24,8 @@ namespace SBasic
         {
             dynamic firstOperandType = Visit(context.children[0]);
             dynamic secondOperandTypeOpType = Visit(context.children[2]);
-//            if (firstOperandType != secondOperandTypeOpType)
- //               throw new ParseError("Incompatible types", context.start.Line);
+            //            if (firstOperandType != secondOperandTypeOpType)
+            //               throw new ParseError("Incompatible types", context.start.Line);
             ((SBasicToken)context.start).EvaluatedType = (int)firstOperandType;
             return firstOperandType;
         }

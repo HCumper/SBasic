@@ -47,7 +47,7 @@ namespace SBasic
         }
         private string ConvertToString(TResult result)
         {
-            return (string)_converter.ConvertToString(result);
+            return _converter.ConvertToString(result);
         }
 
         private TResult Emit(Template template, SBasicParser.StmtContext context)
@@ -60,7 +60,7 @@ namespace SBasic
             //}
             //else
             //{
-               return ConvertFromString(template.Render());
+            return ConvertFromString(template.Render());
             //}
         }
 
@@ -74,7 +74,7 @@ namespace SBasic
             //}
             //else
             //{
-               return ConvertFromString(template.Render());
+            return ConvertFromString(template.Render());
             //}
         }
 
@@ -82,9 +82,10 @@ namespace SBasic
         {
             var ttok = Visit(context.GetChild(0));
             var tok = ConvertToString(ttok);
+            var expr = Visit(context.GetChild(2));
             var template = _group.GetInstanceOf("assignmentTemplate");
             template.Add("left", tok);
-            template.Add("right", Visit(context.GetChild(2)));
+            template.Add("right", ConvertToString(expr));
             return Emit(template, context);
         }
 
@@ -92,27 +93,44 @@ namespace SBasic
         {
             return DefaultResult;
         }
+        public override TResult VisitExpr([NotNull] SBasicParser.ExprContext context)
+        {
+            var temp = base.VisitExpr(context);
+            return temp;
+        }
+        public override TResult VisitLongfor([NotNull] SBasicParser.LongforContext context)
+        {
+            // For ID Equal expr To expr Newline linelist Integer? EndFor ID?	
+            var loopVar = Visit(context.GetChild(1));
+            var start = Visit(context.GetChild(3));
+            var end = Visit(context.GetChild(5));
+            var statements = Visit(context.GetChild(7));
+            var template = _group.GetInstanceOf("forTemplate");
+            template.Add("id", loopVar);
+            template.Add("expr1", start);
+            template.Add("expr2", end);
+            template.Add("body", statements);
+            return Emit(template, context);
+        }
         public override TResult VisitFunc([NotNull] SBasicParser.FuncContext context)
         {
             var functionName = ConvertToString(Visit(context.GetChild(1).GetChild(0)));
             List<string> parameters = new List<string>();
             var parameterList= context.GetChild(1).GetChild(1);
-            for (int i=1; i < parameterList.ChildCount - 1; i+=2)
+            for (int i = 1; i < parameterList.ChildCount - 1; i += 2)
             {
                 parameters.Add(ConvertToString(Visit(parameterList.GetChild(i))));
             }
-            var local = ConvertToString(Visit(context?.GetChild(3)?.GetChild(1)?.GetChild(0)?.GetChild(0)));
-            //var tok = ConvertToString(ttok);
-            //if (context.ChildCount > 1)
-            //{
-            //    // () for function calls/definitions [] for arrays
-            //    SymbolTable<Symbol> symbols = GetSymbols();
-            //    Symbol sym = symbols.ReadSymbol(tok, SymbolTable<Symbol>.Global).Item2;
-            //    ttok = Visit(context.GetChild(1));
-            //    var tok2 = ConvertToString(ttok);
-            //    tok = (sym.GetType() == typeof(ArraySymbol)) ? $"{tok}[{tok2}]" : $"{tok}({tok2})";
-            //}
-            return ConvertFromString(functionName);
+            var returnType = "object";
+            var content = Visit(context.GetChild(4));
+            var template = _group.GetInstanceOf("functionTemplate");
+            template.Add("returnType", returnType);
+            template.Add("functionName", functionName);
+            template.Add("params", parameters);
+            template.Add("body", content);
+            return Emit(template, context);
+
+//            return ConvertFromString(functionName);
         }
         public override TResult VisitIdentifier([NotNull] SBasicParser.IdentifierContext context)
         {
@@ -143,7 +161,8 @@ namespace SBasic
         }
         public override TResult VisitLine([NotNull] SBasicParser.LineContext context)
         {
-            return base.VisitLine(context);
+            var temp = base.Visit(context.GetChild(context.ChildCount - 2));
+            return temp;
         }
         public override TResult VisitParenthesizedlist([NotNull] SBasicParser.ParenthesizedlistContext context)
         {
@@ -174,11 +193,11 @@ namespace SBasic
 
         public override TResult VisitShortfor([NotNull] SBasicParser.ShortforContext context)
         {
-            var loopVar = Visit(context.GetChild(1));;
+            var loopVar = Visit(context.GetChild(1));
             var start = Visit(context.GetChild(3));
             var end = Visit(context.GetChild(5));
             var statements = Visit(context.GetChild(7));
-            var template = _group.GetInstanceOf("shortForTemplate");
+            var template = _group.GetInstanceOf("forTemplate");
             template.Add("id", loopVar);
             template.Add("expr1", start);
             template.Add("expr2", end);

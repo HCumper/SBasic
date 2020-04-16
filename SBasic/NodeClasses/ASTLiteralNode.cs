@@ -1,12 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace SBasic.NodeClasses
+﻿namespace SBasic.NodeClasses
 {
     public class ASTLiteralNode
     {
-        string name = "";
-        SBTypes dateType;
+        private readonly string name = "";
+        private readonly SBTypes dateType;
     }
 }

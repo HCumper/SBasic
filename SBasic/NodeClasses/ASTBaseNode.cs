@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace SBasic.NodeClasses
+﻿namespace SBasic.NodeClasses
 {
     public enum SBTypes { Integer, Real, String };
     public class ASTBaseNode

@@ -1,6 +1,8 @@
 ﻿grammar SBasic;
 
-program : line+ EOF;
+program : linelist EOF;
+
+linelist : line*;
 
 line :
 	Integer? (stmtlist)? Newline 
@@ -19,9 +21,9 @@ stmt :
 	| Local unparenthesizedlist																		#Loc
 	| Implic unparenthesizedlist																	#Implicit
 	| Refer unparenthesizedlist																		#Reference
-	| DefProc identifier parenthesizedlist? Newline Integer? line* Integer? EndDef ID?				#Proc
-	| DefFunc identifier parenthesizedlist? Newline Integer? line* Integer? EndDef ID? 				#Func
-	| For ID Equal expr To expr Newline line* Integer? EndFor ID?									#Longfor
+	| DefProc identifier parenthesizedlist? Newline Integer? linelist Integer? EndDef ID?				#Proc
+	| DefFunc identifier parenthesizedlist? Newline Integer? linelist Integer? EndDef ID? 				#Func
+	| For ID Equal expr To expr Newline linelist Integer? EndFor ID?									#Longfor
 	| For ID Equal expr To expr Colon stmtlist														#Shortfor
 	| Repeat ID Colon stmtlist																		#Shortrepeat
 	| Repeat ID Newline line* Integer? (EndRepeat ID? /*| { _input.Lt(1).Type == EndDef }?*/)		#Longrepeat

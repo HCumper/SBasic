@@ -1,18 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using Antlr4.Runtime;
 using Antlr4.Runtime.Misc;
 using Antlr4.Runtime.Tree;
 using Parsing;
 using SBasic.SymbolTable;
 using static Parsing.SBasicParser;
-using System.Linq;
 
 namespace SBasic
 {
     public class BuildSymbolTableVisitor<TResult>: SBasicBaseVisitor<TResult>, ISBasicVisitor<TResult> where TResult : notnull
     {
-        enum scopes {  procedure, function, none };
+        private enum scopes { procedure, function, none };
         private SymbolTable<Symbol> SymbolTable { get; set; }
         private string FunctionScopeName { get; set; } = SymbolTable<Symbol>.Global;
         private scopes activeScopes { get; set; }
@@ -103,23 +103,23 @@ namespace SBasic
             SymbolTable.AddSymbol(symbol.Name, symbol.Scope, symbol);
             return base.VisitDim(context);
         }
-       
+
         public override TResult VisitFunc([NotNull] FuncContext context)
         {
-            //if (context == null)
-            //{
-            //    throw new ArgumentNullException(nameof(context));
-            //}
+            if (context == null)
+            {
+                throw new ArgumentNullException(nameof(context));
+            }
 
-            //var node = (CommonToken)context.children[1].GetChild(0).Payload;
-            //FunctionScopeName = node.Text;
-            //activeScopes = scopes.function;
-            //base.VisitFunc(context);
-            //activeScopes = scopes.none;
-            //References = new HashSet<string>();
+            var node = (CommonToken)context.children[1].GetChild(0).Payload;
+            FunctionScopeName = node.Text;
+            activeScopes = scopes.function;
+            base.VisitFunc(context);
+            activeScopes = scopes.none;
+            References = new HashSet<string>();
             return default;
         }
-        
+
         public override TResult VisitProc([NotNull] ProcContext context)
         {
             var node = (CommonToken)context.children[1].GetChild(0).Payload;
@@ -133,9 +133,9 @@ namespace SBasic
 
         public override TResult VisitLoc([NotNull] LocContext context)
         {
-//            activeScopes = scopes.function;
+            //            activeScopes = scopes.function;
             base.VisitLoc(context);
-  //          FuncScopeActive = false;
+            //          FuncScopeActive = false;
             References = new HashSet<string>();
             return default;
         }

@@ -1,11 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System.Collections.Generic;
 
 namespace SBasic.NodeClasses
 {
-    public class ASTParenthesizedListNode : ASTBaseNode
+    public class ASTParenthesizedListNode: ASTBaseNode
     {
-        List<ASTExprNode> children = new List<ASTExprNode>();
+        private readonly List<ASTExprNode> children = new List<ASTExprNode>();
     }
 }

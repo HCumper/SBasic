@@ -1,11 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System.Collections.Generic;
 
 namespace SBasic.NodeClasses
 {
-    public abstract class ASTStmtNode : ASTBaseNode
+    public abstract class ASTStmtNode: ASTBaseNode
     {
-        List<ASTBaseNode> children = new List<ASTBaseNode>();
+        private readonly List<ASTBaseNode> children = new List<ASTBaseNode>();
     }
 }

@@ -1,11 +1,8 @@
-﻿using System.Collections.Generic;
-using System.ComponentModel;
+﻿using System.ComponentModel;
 using Antlr4.Runtime.Misc;
 using Antlr4.Runtime.Tree;
-using Antlr4.StringTemplate;
 using Parsing;
 using SBasic.NodeClasses;
-using SBasic.SymbolTable;
 
 namespace SBasic
 {
@@ -29,7 +26,7 @@ namespace SBasic
         }
         private string ConvertToString(TResult result)
         {
-            return (string)_converter.ConvertToString(result);
+            return _converter.ConvertToString(result);
         }
 
         public override string? ToString()
@@ -279,7 +276,7 @@ namespace SBasic
             int childCount = node.ChildCount;
             for (int i = 0; i < childCount && this.ShouldVisitNextChild(node, result); ++i)
             {
-                TResult nextResult = node.GetChild(i).Accept<TResult>((IParseTreeVisitor<TResult>) this);
+                TResult nextResult = node.GetChild(i).Accept<TResult>( this);
                 result = this.AggregateResult(result, nextResult);
             }
             return result;

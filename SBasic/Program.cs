@@ -61,7 +61,7 @@ namespace SBasic
 
         private static void PrimeSymbolTable(SymbolTable<Symbol> table)
         {
-            string[] builtIns = new string[] { "ABS", "BEEP", "CLS", "DATE", "INPUT", "STOP", "PRINT", "RETurn", "RND", "TURBO_repfil"};
+            string[] builtIns = new string[] { "ABS", "BEEP", "CLS", "DATE", "RND", "TURBO_repfil"};
             foreach (string item in builtIns)
                 table.AddSymbol(item, SymbolTable<Symbol>.Global, new FuncSymbol(item, SymbolTable<Symbol>.Global, SBasicLexer.ProcCall, SBasicLexer.Void));
         }

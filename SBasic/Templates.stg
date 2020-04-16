@@ -24,9 +24,12 @@ declarationsTemplate(scope, reals, realArrays, integers, integerArrays, strings,
 <endif>
 >>
 
-functionTemplate(returnType, functionName, params) ::= <<<returnType><functionName><params:{it|<it>};separator=", "> {} >>
+functionTemplate(returnType, functionName, params, body) ::= << <returnType> <functionName> ( <params:{it|<it>};separator=", "> )
+{ <body> }; >>
 
 identifierOnlyTemplate(id) ::= "<id>();"
+
+forTemplate(id, expr1, expr2, body) ::= "for (<id> = <expr1>; <id> \<= <expr2>; <id>++) {  <body> }"			
 
 programTemplate(programName, when, declarationsTemplate, programContent) ::= <<
 // Super Basic To C# Port of <programName> on <when>
@@ -41,8 +44,6 @@ public class SB
     }
 }
 >>
-
-shortForTemplate(id, expr1, expr2, stmtlist) ::= "for (<id> = <expr1>; <id> \<= <expr2>; <id>++) {  <stmtlist> }"			
 
 statementListTemplate(statements) ::= <<<statements:{it|<it>};separator=" 
 "> >>       
