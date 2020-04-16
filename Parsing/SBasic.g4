@@ -21,9 +21,9 @@ stmt :
 	| Local unparenthesizedlist																		#Loc
 	| Implic unparenthesizedlist																	#Implicit
 	| Refer unparenthesizedlist																		#Reference
-	| DefProc identifier parenthesizedlist? Newline Integer? linelist Integer? EndDef ID?				#Proc
-	| DefFunc identifier parenthesizedlist? Newline Integer? linelist Integer? EndDef ID? 				#Func
-	| For ID Equal expr To expr Newline linelist Integer? EndFor ID?									#Longfor
+	| DefProc identifier parenthesizedlist? Newline Integer? linelist Integer? EndDef ID?			#Proc
+	| DefFunc identifier parenthesizedlist? Newline Integer? linelist Integer? EndDef ID? 			#Func
+	| For ID Equal expr To expr Newline linelist Integer? EndFor ID?								#Longfor
 	| For ID Equal expr To expr Colon stmtlist														#Shortfor
 	| Repeat ID Colon stmtlist																		#Shortrepeat
 	| Repeat ID Newline line* Integer? (EndRepeat ID? /*| { _input.Lt(1).Type == EndDef }?*/)		#Longrepeat
@@ -33,15 +33,9 @@ stmt :
 	| On (constexpr) Equal rangeexpr																#Onselect
 	| Exit ID?																						#Exitstmt
 	| identifier Equal expr																			#Assignment
-	| PRINT expr ( separator expr)*																	#Print
+	| PRINT expr (separator expr)*																	#Print
 	| identifier																					#IdentifierOnly
 	;
-
-prochdr : DefProc DefProc identifier parenthesizedlist? Newline											#Procheader
-	;
-
-funchdr : DefFunc DefFunc identifier parenthesizedlist? Newline											#Funcheader
-	; 
 
 identifier :
 	ID (parenthesizedlist | unparenthesizedlist)?;

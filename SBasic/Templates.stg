@@ -24,12 +24,14 @@ declarationsTemplate(scope, reals, realArrays, integers, integerArrays, strings,
 <endif>
 >>
 
+forTemplate(id, expr1, expr2, body) ::= "for (<id> = <expr1>; <id> \<= <expr2>; <id>++) { <body> }"			
+
 functionTemplate(returnType, functionName, params, body) ::= << <returnType> <functionName> ( <params:{it|<it>};separator=", "> )
 { <body> }; >>
 
 identifierOnlyTemplate(id) ::= "<id>();"
 
-forTemplate(id, expr1, expr2, body) ::= "for (<id> = <expr1>; <id> \<= <expr2>; <id>++) {  <body> }"			
+printTemplate(params) ::= <<Console.Writeline( (<params:{it|<it>};separator=" + ">)>>			
 
 programTemplate(programName, when, declarationsTemplate, programContent) ::= <<
 // Super Basic To C# Port of <programName> on <when>

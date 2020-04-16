@@ -1,3 +1,4 @@
+570   PRINT "Time taken" ! finished
 430   FOR entry=1 TO n
 440     a(entry)=RND(1 TO 10000)
 450   END FOR entry

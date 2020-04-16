@@ -3,6 +3,7 @@ using System.ComponentModel;
 using Antlr4.Runtime.Misc;
 using Antlr4.Runtime.Tree;
 using Antlr4.StringTemplate;
+using Antlr4.StringTemplate.Compiler;
 using Parsing;
 using SBasic.SymbolTable;
 
@@ -78,15 +79,29 @@ namespace SBasic
             //}
         }
 
+        public override TResult Visit([NotNull] IParseTree tree)
+        {
+            return base.Visit(tree);
+        }
+
+        public TResult GenericVisitor([NotNull] IParseTree tree, IEnumerable<int> slots, string templateName)
+        {
+            List<string> parseResults = new List<string>();
+            List<string> args = new List<string>();
+            foreach (int slot in slots)
+                parseResults.Add(ConvertToString(base.Visit(tree.GetChild(slot))));
+            var template = (_group.GetInstanceOf(templateName));
+            foreach (FormalArgument arg in template.impl.FormalArguments) args.Add(arg.ToString());
+            for (int i = 0; i < parseResults.Count; i++)
+                template.Add(args[i], parseResults[i]);
+            var temp = ConvertFromString(template.Render());
+            return temp;
+        }
+
         public override TResult VisitAssignment([NotNull] SBasicParser.AssignmentContext context)
         {
-            var ttok = Visit(context.GetChild(0));
-            var tok = ConvertToString(ttok);
-            var expr = Visit(context.GetChild(2));
-            var template = _group.GetInstanceOf("assignmentTemplate");
-            template.Add("left", tok);
-            template.Add("right", ConvertToString(expr));
-            return Emit(template, context);
+            int[] slots =  { 0, 2 };
+            return GenericVisitor(context, slots, "assignmentTemplate");
         }
 
         public override TResult VisitDim([NotNull] SBasicParser.DimContext context)
@@ -101,16 +116,8 @@ namespace SBasic
         public override TResult VisitLongfor([NotNull] SBasicParser.LongforContext context)
         {
             // For ID Equal expr To expr Newline linelist Integer? EndFor ID?	
-            var loopVar = Visit(context.GetChild(1));
-            var start = Visit(context.GetChild(3));
-            var end = Visit(context.GetChild(5));
-            var statements = Visit(context.GetChild(7));
-            var template = _group.GetInstanceOf("forTemplate");
-            template.Add("id", loopVar);
-            template.Add("expr1", start);
-            template.Add("expr2", end);
-            template.Add("body", statements);
-            return Emit(template, context);
+            int[] slots =  { 1, 3, 5, 7 };
+            return GenericVisitor(context, slots, "forTemplate");
         }
         public override TResult VisitFunc([NotNull] SBasicParser.FuncContext context)
         {
@@ -170,39 +177,29 @@ namespace SBasic
         }
         public override TResult VisitPrint([NotNull] SBasicParser.PrintContext context)
         {
-            return base.VisitPrint(context);
+            List<string> expressions = new List<string>();
+            int nodes = context.ChildCount;
+            for (int i = 1; i < nodes; i += 2)
+                expressions.Add(ConvertToString(Visit(context.GetChild(i))));
+            var template = _group.GetInstanceOf("printTemplate");
+            template.Add("params", expressions);
+            var temp = ConvertFromString(template.Render());
+            return temp;
         }
         public override TResult VisitProc([NotNull] SBasicParser.ProcContext context)
         {
             return base.VisitProc(context);
-        }
-        public override TResult VisitProchdr([NotNull] SBasicParser.ProchdrContext context)
-        {
-            return base.VisitProchdr(context);
-        }
-
-        public override TResult VisitProcheader([NotNull] SBasicParser.ProcheaderContext context)
-        {
-            return base.VisitProcheader(context);
         }
         public override TResult VisitProgram([NotNull] SBasicParser.ProgramContext context)
         {
             _ = base.VisitProgram(context);
             return (TResult)_converter.ConvertFromString(Output);
         }
-
+        
         public override TResult VisitShortfor([NotNull] SBasicParser.ShortforContext context)
         {
-            var loopVar = Visit(context.GetChild(1));
-            var start = Visit(context.GetChild(3));
-            var end = Visit(context.GetChild(5));
-            var statements = Visit(context.GetChild(7));
-            var template = _group.GetInstanceOf("forTemplate");
-            template.Add("id", loopVar);
-            template.Add("expr1", start);
-            template.Add("expr2", end);
-            template.Add("stmtlist", statements);
-            return Emit(template, context);
+            int[] slots =  { 1, 3, 5, 7 };
+            return GenericVisitor(context, slots, "forTemplate");
         }
         public override TResult VisitStmtlist([NotNull] SBasicParser.StmtlistContext context)
         {
@@ -216,8 +213,11 @@ namespace SBasic
         }
         public override TResult VisitTerminal([NotNull] ITerminalNode node)
         {
-            return ConvertFromString(node.Symbol.Text);
+            var temp = ConvertFromString(node.Symbol.Text);
+            return temp;
         }
+
+
         /// /////////////////////////////////////////////////////////////////////////////////////////////////////
         //// Antlr runtime implementation
         //public override TResult VisitChildren([NotNull] IRuleNode node)
