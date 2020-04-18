@@ -32,7 +32,7 @@ namespace SBasic
                 SymbolTable<Symbol> symbolTable = new SymbolTable<Symbol>();
                 PrimeSymbolTable(symbolTable);
 
-               //BuildASTVisitor<int> buildVisitor = new BuildASTVisitor<int>();
+                //BuildASTVisitor<int> buildVisitor = new BuildASTVisitor<int>();
                 //buildVisitor.Visit(tree);
 
                 BuildSymbolTableVisitor<int> symbolTableVisitor = new BuildSymbolTableVisitor<int>(symbolTable)

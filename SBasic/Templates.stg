@@ -33,6 +33,9 @@ identifierOnlyTemplate(id) ::= "<id>();"
 
 printTemplate(params) ::= <<Console.Writeline( (<params:{it|<it>};separator=" + ">)>>			
 
+procedureTemplate(procedureName, params, body) ::= << <procedureName> ( <params:{it|<it>};separator=", "> )
+{ <body> }; >>
+
 programTemplate(programName, when, declarationsTemplate, programContent) ::= <<
 // Super Basic To C# Port of <programName> on <when>
 

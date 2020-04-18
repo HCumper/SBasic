@@ -33,7 +33,7 @@ stmt :
 	| On (constexpr) Equal rangeexpr																#Onselect
 	| Exit ID?																						#Exitstmt
 	| identifier Equal expr																			#Assignment
-	| PRINT expr (separator expr)*																	#Print
+	| PRINT expr? (separator expr)* Newline?														#Print
 	| identifier																					#IdentifierOnly
 	;
 
