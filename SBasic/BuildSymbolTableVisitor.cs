@@ -70,7 +70,7 @@ namespace SBasic
                         if (funcProc)
                         {
                             int returnType = (activeScopes == scopes.procedure) ? SBasicLexer.DefProc : SBasicLexer.DefFunc;
-                            symbol = new FuncSymbol(name, localScope, returnType, DefFunc);
+                            symbol = new FuncSymbol(name, localScope, returnType, SBasicLexer.DefFunc);
                         }
                         else
                         {

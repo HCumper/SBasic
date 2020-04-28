@@ -9,6 +9,7 @@ namespace SBasic
 {
     public static class Program
     {
+
         private static void Main()
         {
             _ = DebugSymbols.Names[7];
@@ -27,13 +28,8 @@ namespace SBasic
                 SBasicParser parser = new SBasicParser(tokens);
                 IParseTree tree = parser.program();
 
-                //            System.Diagnostics.Debug.WriteLine(tree.ToStringTree(parser));
-
                 SymbolTable<Symbol> symbolTable = new SymbolTable<Symbol>();
                 PrimeSymbolTable(symbolTable);
-
-                //BuildASTVisitor<int> buildVisitor = new BuildASTVisitor<int>();
-                //buildVisitor.Visit(tree);
 
                 BuildSymbolTableVisitor<int> symbolTableVisitor = new BuildSymbolTableVisitor<int>(symbolTable)
                 {

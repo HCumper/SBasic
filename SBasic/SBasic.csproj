@@ -7,6 +7,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="NodeClasses\**" />
+    <EmbeddedResource Remove="NodeClasses\**" />
+    <None Remove="NodeClasses\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Compile Remove="BuildASTVisitor.cs" />
     <Compile Remove="Generated.cs" />
     <Compile Remove="MainWindow.xaml.cs" />

@@ -5,7 +5,7 @@ program : linelist EOF;
 linelist : line*;
 
 line :
-	Integer? (stmtlist)? Newline 
+	Integer? stmtlist Newline 
 	| Integer Colon Newline
 	;
 
@@ -17,48 +17,46 @@ rangeexpr : constexpr To constexpr
 ;
 
 stmt :
-	Dimension ID parenthesizedlist																	#Dim
-	| Local unparenthesizedlist																		#Loc
-	| Implic unparenthesizedlist																	#Implicit
-	| Refer unparenthesizedlist																		#Reference
-	| DefProc identifier parenthesizedlist? Newline Integer? linelist Integer? EndDef ID?			#Proc
-	| DefFunc identifier parenthesizedlist? Newline Integer? linelist Integer? EndDef ID? 			#Func
-	| For ID Equal expr To expr Newline linelist Integer? EndFor ID?								#Longfor
-	| For ID Equal expr To expr Colon stmtlist														#Shortfor
-	| Repeat ID Colon stmtlist																		#Shortrepeat
-	| Repeat ID Newline line* Integer? (EndRepeat ID? /*| { _input.Lt(1).Type == EndDef }?*/)		#Longrepeat
-	| If expr (Then | Colon) stmtlist (Colon Else Colon stmtlist)?									#Shortif
-	| If expr (Then)? Newline line+ (Integer? Else line+)? Integer? EndIf							#Longif
-    | Select constexpr Newline line* Integer? EndSelect												#Longselect
-	| On (constexpr) Equal rangeexpr																#Onselect
-	| Exit ID?																						#Exitstmt
-	| identifier Equal expr																			#Assignment
-	| PRINT expr? (separator expr)* Newline?														#Print
-	| identifier																					#IdentifierOnly
+	Dimension ID parenthesizedlist																					#Dim
+	| Local unparenthesizedlist																						#Loc
+	| Implic unparenthesizedlist																					#Implicit
+	| Refer unparenthesizedlist																						#Reference
+	| 'DEFine PROCedure' identifier parenthesizedlist? Newline Integer? linelist Integer? 'END DEFine' ID?			#Proc
+	| 'DEFine FuNction' identifier parenthesizedlist? Newline Integer? linelist Integer? 'END DEFine' ID? 			#Func
+	| For ID Equal expr To expr ('STEP' expr)? Newline linelist Integer? EndFor ID?									#For
+	| For ID Equal expr To expr Colon stmtlist																		#For
+	| Repeat ID Colon stmtlist																						#Shortrepeat
+	| Repeat ID Newline line* Integer? (EndRepeat ID? /*| { _input.Lt(1).Type == EndDef }?*/)						#Longrepeat
+	| If expr (Then | Colon) stmtlist (Colon Else Colon stmtlist)?													#Shortif
+	| If expr (Then)? Newline line+ (Integer? Else line+)? Integer? EndIf											#Longif
+    | Select constexpr Newline line* Integer? EndSelect																#Longselect
+	| On (constexpr) Equal rangeexpr																				#Onselect
+	| Exit ID?																										#Exitstmt
+	| identifier Equal expr																							#Assignment
+	| PRINT expr? (separator expr)* Newline?																		#Print
+	| identifier																									#IdentifierOnly
 	;
 
 identifier :
 	ID (parenthesizedlist | unparenthesizedlist)?;
 
-parenthesizedlist :	LeftParen expr (separator expr)* RightParen;
+parenthesizedlist :	'(' expr (separator expr)* RightParen;
 unparenthesizedlist : expr (separator expr)*;
 
 separator : Comma | Bang | Semi | To;
 
 expr :
-	  LeftParen expr RightParen														#ParenthesizedExpr
-	| (Plus | Minus) expr															#UnaryAdditiveExpr
-	| expr Amp expr																	#BinaryExpr
-	| <assoc=right> (String | ID) Instr expr										#InstrExpr
-	| <assoc=right> expr Caret expr													#BinaryExpr
-	| expr (Multiply | Divide | Mod | Div) expr										#BinaryExpr
-	| expr (Plus | Minus) expr														#BinaryExpr
-	| expr (Equal | NotEqual | Less | LessEqual | Greater | GreaterEqual) expr		#BinaryExpr
-	| Not expr																		#NotExpr
-	| expr And expr																	#BinaryExpr
-	| expr (Or | Xor) expr															#BinaryExpr
-	| identifier																	#IdentExpr
-	| (Integer | String | Real)														#LiteralExpr
+	  '(' expr ')'																									#ParenthesizedExpr
+	| ('+' | '-') expr																								#UnaryAdditiveExpr
+	| expr Amp expr																									#BinaryExpr
+	| <assoc=right> (String | ID) Instr expr																		#InstrExpr
+	| <assoc=right> expr Caret expr																					#BinaryExpr
+	| expr ('+' | '-' | '*' | '/' | 'MOD' | 'DIV') expr																#BinaryExpr
+	| expr ('=' | '<>' | '<' | '>' | '<=' | '>=') expr																#BinaryExpr
+	| Not expr																										#NotExpr
+	| expr ('AND' | 'OR' | 'XOR') expr																				#BinaryExpr
+	| identifier																									#IdentExpr
+	| (Integer | String | Real)																						#LiteralExpr
 	;
 
 /* Tokens */
@@ -66,9 +64,6 @@ Refer : 'REFERENCE';
 Implic : 'IMPLICIT%' | 'IMPLICIT$';
 Local : 'LOCal';
 Dimension : 'DIM';
-DefProc : 'DEFine PROCedure';
-DefFunc : 'DEFine FuNction';
-EndDef  : 'END DEFine';
 If : 'IF';
 Else : 'ELSE';
 Then : 'THEN';
@@ -86,25 +81,6 @@ Exit : 'EXIT';
 Until : 'UNTIL';
 EndRepeat : 'END REPeat';
 PRINT : 'PRINT';
-
-LeftParen : '(';
-RightParen : ')';
-LeftBracket : '[';
-RightBracket : ']';
-
-Equal : '=';
-NotEqual : '<>';
-Less : '<';
-LessEqual : '<=';
-Greater : '>';
-GreaterEqual : '>=';
-
-Plus : '+';
-Minus : '-';
-Multiply : '*';
-Divide : '/';
-Mod : 'MOD';
-Div : 'DIV';
 
 And : 'AND';
 Or : 'OR';

@@ -25,5 +25,21 @@ namespace SBasic
             }
         }
 
+        public static string GetName(int subscript)
+        {
+            switch (subscript)
+            {
+                case -1:
+                    return "DefFunc";
+                case -2:
+                        return "DefProc";
+                case -3:
+                        return "ProcCall";
+                case -4:
+                        return "Void";
+                default:
+                    return Names[subscript];
+            }
+        }
     }
 }

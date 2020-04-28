@@ -74,9 +74,14 @@ namespace SBasic
         public override TResult VisitAssignment([NotNull] SBasicParser.AssignmentContext context)
         {
             int[] slots =  { 0, 2 };
-            return GenericVisitor(context, slots, "assignmentTemplate");
+            string temp = ConvertToString(GenericVisitor(context, slots, "assignmentTemplate"));
+            return ConvertFromString(temp);
         }
-
+        public override TResult VisitBinaryExpr([NotNull] SBasicParser.BinaryExprContext context)
+        {
+            string temp = $"{Visit(context.GetChild(0))} {Visit(context.GetChild(1))} {Visit(context.GetChild(2))}";
+            return ConvertFromString(temp);
+        }
         public override TResult VisitDim([NotNull] SBasicParser.DimContext context)
         {
             return DefaultResult;
@@ -161,7 +166,8 @@ namespace SBasic
                 accumulatedResult += base.Visit(context.children[i]);
             return ConvertFromString(accumulatedResult);
         }
-        public override TResult VisitLongfor([NotNull] SBasicParser.LongforContext context)
+       
+        public override TResult VisitFor([NotNull] SBasicParser.ForContext context)
         {
             // For ID Equal expr To expr Newline linelist Integer? EndFor ID?	
             int[] slots =  { 1, 3, 5, 7 };
@@ -235,12 +241,6 @@ namespace SBasic
         {
             string prog = ConvertToString(Visit(context.GetChild(0)));
             return ConvertFromString(prog);
-        }
-
-        public override TResult VisitShortfor([NotNull] SBasicParser.ShortforContext context)
-        {
-            int[] slots =  { 1, 3, 5, 7 };
-            return GenericVisitor(context, slots, "forTemplate");
         }
         public override TResult VisitStmtlist([NotNull] SBasicParser.StmtlistContext context)
         {

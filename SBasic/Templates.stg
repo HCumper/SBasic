@@ -24,17 +24,22 @@ declarationsTemplate(scope, reals, realArrays, integers, integerArrays, strings,
 <endif>
 >>
 
-forTemplate(id, expr1, expr2, body) ::= "for (<id> = <expr1>; <id> \<= <expr2>; <id>++) { <body> }"			
+forTemplate(id, expr1, expr2, increment, body) ::= "for (<id> = <expr1>; <id> \<= <expr2>; <id> <increment>) { <body> }"			
 
-functionTemplate(returnType, functionName, params, body) ::= << <returnType> <functionName> ( <params:{it|<it>};separator=", "> )
-{ <body> }; >>
+functionTemplate(returnType, functionName, params, body) ::= << 
+<returnType> <functionName> ( <params:{it|<it>};separator=", "> )
+{
+ <body> };
+>>
 
 identifierOnlyTemplate(id) ::= "<id>();"
 
 printTemplate(params) ::= <<Console.Writeline( (<params:{it|<it>};separator=" + ">)>>			
 
-procedureTemplate(procedureName, params, body) ::= << <procedureName> ( <params:{it|<it>};separator=", "> )
-{ <body> }; >>
+procedureTemplate(procedureName, params, body) ::= << 
+<procedureName> ( <params:{it|<it>};separator=", "> )
+{ 
+<body> }; >>
 
 programTemplate(programName, when, declarationsTemplate, programContent) ::= <<
 // Super Basic To C# Port of <programName> on <when>

@@ -55,6 +55,7 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="SBasicLexerDefinitions.cs" />
     <None Include="Generated\MainWindow.g.i.cs" />
     <None Include="Generated\SBasicBaseListener.cs" />
     <None Include="Generated\SBasicBaseVisitor.cs" />
