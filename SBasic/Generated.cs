@@ -1,8 +1,8 @@
-// Super Basic To C# Port of c:\users\hcump\source\repos\SBasic\Parsing\Q3.SB on Monday, April 27, 2020 11:45:24 PM
+// Super Basic To C# Port of c:\users\hcump\source\repos\SBasic\Parsing\Q3.SB on Tuesday, April 28, 2020 11:43:23 AM
 
 public class SB
 {
- float xx, n, x, entry, b, r, a, d, lod, foo, xxxx, m, lo, v, sorts, partitions, shortlist, set_up_tabLe, y, z, now, quicksort, check, INPUT, STOP, QUICKSORT2, loop;        
+ float x, foo, hh, xx, b, r, a, d, lod, xxxx, n, m, lo, v, sorts, partitions, shortlist, set_up_tabLe, y, z, now, quicksort, check, INPUT, STOP, QUICKSORT2, loop;        
      float[] bbbb = new float[1, 2, 3];                 
 
  string astring, t;        
@@ -10,7 +10,7 @@ public class SB
 
     public static void main()
     {
-        for (xx = 1; xx <= n; xx 4) {  } b = r(a); b(d) = 7; b(lod) = a(lod); x = foo(1);  for (xxxx = 1; xxxx <= n; xxxx m = 3; ) {  }  for (lo = 1; lo <= n; lo m = 3; ) {  } astring = "hhh"; 
+        x = foo(99); hh = 9; for (xx = 1; xx <= 4; xx ) {  } b = r(a); b(d) = 7; b(lod) = a(lod);  for (xxxx = 1; xxxx <= n; xxxx m = 3; ) {  }  for (lo = 1; lo <= n; lo m = 3; ) {  } astring = "hhh"; 
         v = 3; CLS(); TURBO_repfil(); sorts = 0; 
         partitions = 0; shortlist = 9; set_up_tabLe(); for (x = 2; x <= 3; x y = 7; 
         z = 22; ) {  } now = DATE; quicksort(n)(); check(); INPUT(t)(); STOP(); for (lo = 1; lo <= n; lo :b(lo) = a(lo); sorts = 0; 
@@ -44,6 +44,6 @@ public class SB
         quicksort ( l, r )
         { 
         int  pivot; i = l; 
-        j = r;  };  
+        j = r; pivot = b(i); loop END IF  };  END IF 
     }
 }

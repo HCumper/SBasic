@@ -23,12 +23,12 @@ stmt :
 	| Refer unparenthesizedlist																						#Reference
 	| 'DEFine PROCedure' identifier parenthesizedlist? Newline Integer? linelist Integer? 'END DEFine' ID?			#Proc
 	| 'DEFine FuNction' identifier parenthesizedlist? Newline Integer? linelist Integer? 'END DEFine' ID? 			#Func
-	| For ID Equal expr To expr ('STEP' expr)? Newline linelist Integer? EndFor ID?									#For
+	| For ID Equal expr 'TO' expr ('STEP' expr)? Newline linelist Integer? EndFor ID?								#For
 	| For ID Equal expr To expr Colon stmtlist																		#For
 	| Repeat ID Colon stmtlist																						#Shortrepeat
 	| Repeat ID Newline line* Integer? (EndRepeat ID? /*| { _input.Lt(1).Type == EndDef }?*/)						#Longrepeat
-	| If expr (Then | Colon) stmtlist (Colon Else Colon stmtlist)?													#Shortif
-	| If expr (Then)? Newline line+ (Integer? Else line+)? Integer? EndIf											#Longif
+	| If expr (Then | Colon) stmtlist (Colon 'ELSE' Colon stmtlist)?													#Shortif
+	| If expr (Then)? Newline line+ (Integer? 'ELSE' Newiine line+)? Integer? EndIf											#Longif
     | Select constexpr Newline line* Integer? EndSelect																#Longselect
 	| On (constexpr) Equal rangeexpr																				#Onselect
 	| Exit ID?																										#Exitstmt
@@ -40,7 +40,7 @@ stmt :
 identifier :
 	ID (parenthesizedlist | unparenthesizedlist)?;
 
-parenthesizedlist :	'(' expr (separator expr)* RightParen;
+parenthesizedlist :	'(' expr (separator expr)* ')';
 unparenthesizedlist : expr (separator expr)*;
 
 separator : Comma | Bang | Semi | To;
@@ -82,6 +82,7 @@ Until : 'UNTIL';
 EndRepeat : 'END REPeat';
 PRINT : 'PRINT';
 
+Equal : '=';
 And : 'AND';
 Or : 'OR';
 Xor : 'XOR';
@@ -129,10 +130,8 @@ Real
 	;
 
 Unknowntype:;
-Void:;
 Scalar:;
 LineNumber:;
-ProcCall:;
 FuncCall:;
 Ignore:;
 

@@ -1,10 +1,10 @@
-430 FOR xx=1 TO n STEP 4
-440 x = 1
-450 END FOR entry
+1 x = foo(99,88)
+420 hh = 9
+430 FOR xx=1 TO 4
+450 END FOR xx
 2 b = r(a)
 3 b(d) = 7
 5 b(lod)=a(lod)
-1 x = foo(1,2)
 140 DIM a$(10001)
 250 FOR xxxx=1 TO n : m=3
 150 DIM bbbb(1,2,3)
