@@ -35,6 +35,7 @@ namespace SBasic
                 {
                     FirstPass = true   // Array functions and procedures
                 };
+                DumpTree(tree, "");
                 symbolTableVisitor.Visit(tree);
                 symbolTableVisitor.FirstPass = false; // Everything else
                 symbolTableVisitor.Visit(tree);
@@ -60,6 +61,34 @@ namespace SBasic
             string[] builtIns = new string[] { "ABS", "BEEP", "CLS", "DATE", "RND", "TURBO_repfil"};
             foreach (string item in builtIns)
                 table.AddSymbol(item, SymbolTable<Symbol>.Global, new FuncSymbol(item, SymbolTable<Symbol>.Global, SBasicLexer.ProcCall, SBasicLexer.Void));
+        }
+
+        private static void DumpTree(IParseTree tree, string indent)
+        {
+            for (int i = 0; i < tree.ChildCount; i++)
+            {
+                var child = tree.GetChild(0);
+                try
+                {
+                    child = tree.GetChild(i);
+                    Console.Write(indent + child.GetType());
+                    if (child is ParserRuleContext)
+                    {
+                        Console.WriteLine("        " + ((ParserRuleContext)child).GetText());
+                    }
+                    else
+                    {
+                        if (child is TerminalNodeImpl)
+                            Console.WriteLine("        " + ((TerminalNodeImpl)child).symbol.Text);
+                        else
+                            Console.WriteLine("");
+                    }
+                }
+                catch (Exception e) 
+                { };
+
+                DumpTree(child, indent + "    ");
+            }
         }
     }
 }

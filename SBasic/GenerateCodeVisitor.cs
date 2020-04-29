@@ -157,15 +157,15 @@ namespace SBasic
             var temp = base.Visit(context.GetChild(context.ChildCount - 2));
             return temp;
         }
-        public override TResult VisitLinelist([NotNull] SBasicParser.LinelistContext context)
-        {
-            if (context.ChildCount == 0)
-                return ConvertFromString("");
-            string accumulatedResult = "";
-            for (int i = 0; i < context.children.Count; i++)
-                accumulatedResult += base.Visit(context.children[i]);
-            return ConvertFromString(accumulatedResult);
-        }
+        //public override TResult VisitLinelist([NotNull] SBasicParser.LinelistContext context)
+        //{
+        //    if (context.ChildCount == 0)
+        //        return ConvertFromString("");
+        //    string accumulatedResult = "";
+        //    for (int i = 0; i < context.children.Count; i++)
+        //        accumulatedResult += base.Visit(context.children[i]);
+        //    return ConvertFromString(accumulatedResult);
+        //}
        
         public override TResult VisitFor([NotNull] SBasicParser.ForContext context)
         {
@@ -239,8 +239,12 @@ namespace SBasic
         }
         public override TResult VisitProgram([NotNull] SBasicParser.ProgramContext context)
         {
-            string prog = ConvertToString(Visit(context.GetChild(0)));
-            return ConvertFromString(prog);
+                if (context.ChildCount == 0)
+                    return ConvertFromString("");
+                string accumulatedResult = "";
+                for (int i = 0; i < context.children.Count; i++)
+                    accumulatedResult += base.Visit(context.children[i]);
+                return ConvertFromString(accumulatedResult);
         }
         public override TResult VisitStmtlist([NotNull] SBasicParser.StmtlistContext context)
         {

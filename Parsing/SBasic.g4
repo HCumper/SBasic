@@ -1,104 +1,61 @@
 ﻿grammar SBasic;
 
-program : linelist EOF;
-
-linelist : line*;
+program : line* EOF;
 
 line :
-	Integer? stmtlist Newline 
-	| Integer Colon Newline
+	Newline? Integer? stmtlist Newline 
+	| Integer ':' Newline
 	;
 
 stmtlist : stmt (':' stmt)*;
 
+stmt :
+	'DIM' ID parenthesizedlist																											#Dim
+	| 'LOCal' unparenthesizedlist																										#Loc
+	| ('IMPLICIT%' | 'IMPLICIT$') unparenthesizedlist																					#Implicit
+	| 'REFERENCE' unparenthesizedlist																									#Reference
+	| 'DEFine PROCedure' ID parenthesizedlist? Newline Integer? line* Integer? 'END DEFine' ID?											#Proc
+	| 'DEFine FuNction' ID parenthesizedlist? Newline Integer? line* Integer? 'END DEFine' ID? 											#Func
+	| 'FOR' ID '=' expr 'TO' expr ('STEP' expr)? Newline line* Integer? 'END FOR' ID?													#For
+	| 'FOR' ID '=' expr 'TO' expr ':' stmtlist																							#For
+	| 'REPeat' ID ':' stmtlist																											#Shortrepeat
+	| 'REPeat' ID Newline line* Integer? 'END REPeat' ID?																				#Longrepeat
+	| 'IF' expr ('THEN' | ':')? Newline line* Integer? ('ELSE' Newline line*)?  Integer? 'END IF'									#Longif
+	| 'IF' expr ('THEN' | ':')? stmtlist ('ELSE' stmtlist)? 									#Longif
+    | 'SELect ON' constexpr Newline line* Integer? 'END SELect'																			#Longselect
+	| 'ON' (constexpr) '=' rangeexpr																									#Onselect
+	| 'EXIT' ID?																														#Exitstmt
+	| ID expr? (',' expr)*											#ProcCall
+	| identifier '=' expr																												#Assignment
+	| 'PRINT' expr? (separator expr)* Newline?																							#Print
+	| identifier																														#IdentifierOnly
+	;
+
+expr :
+	  '(' expr ')'																														#ParenthesizedExpr
+	| ('+' | '-') expr																													#UnaryAdditiveExpr
+	| expr 'AMP' expr																													#BinaryExpr
+	| <assoc=right> (String | ID) 'INSTR' expr																							#InstrExpr
+	| <assoc=right> expr '^' expr																										#BinaryExpr
+	| expr ('+' | '-' | '*' | '/' | 'MOD' | 'DIV') expr																					#BinaryExpr
+	| expr ('=' | '<>' | '<' | '>' | '<=' | '>=') expr																					#BinaryExpr
+	| Not expr																															#NotExpr
+	| expr ('AND' | 'OR' | 'XOR') expr																									#BinaryExpr
+	| identifier																														#IdentExpr
+	| (Integer | String | Real)																											#LiteralExpr
+	;
+
 constexpr : Integer | Real | String | ID;
-rangeexpr : constexpr To constexpr
+rangeexpr : constexpr 'TO' constexpr
 		  | constexpr
 ;
 
-stmt :
-	Dimension ID parenthesizedlist																					#Dim
-	| Local unparenthesizedlist																						#Loc
-	| Implic unparenthesizedlist																					#Implicit
-	| Refer unparenthesizedlist																						#Reference
-	| 'DEFine PROCedure' identifier parenthesizedlist? Newline Integer? linelist Integer? 'END DEFine' ID?			#Proc
-	| 'DEFine FuNction' identifier parenthesizedlist? Newline Integer? linelist Integer? 'END DEFine' ID? 			#Func
-	| For ID Equal expr 'TO' expr ('STEP' expr)? Newline linelist Integer? EndFor ID?								#For
-	| For ID Equal expr To expr Colon stmtlist																		#For
-	| Repeat ID Colon stmtlist																						#Shortrepeat
-	| Repeat ID Newline line* Integer? (EndRepeat ID? /*| { _input.Lt(1).Type == EndDef }?*/)						#Longrepeat
-	| If expr (Then | Colon) stmtlist (Colon 'ELSE' Colon stmtlist)?													#Shortif
-	| If expr (Then)? Newline line+ (Integer? 'ELSE' Newiine line+)? Integer? EndIf											#Longif
-    | Select constexpr Newline line* Integer? EndSelect																#Longselect
-	| On (constexpr) Equal rangeexpr																				#Onselect
-	| Exit ID?																										#Exitstmt
-	| identifier Equal expr																							#Assignment
-	| PRINT expr? (separator expr)* Newline?																		#Print
-	| identifier																									#IdentifierOnly
-	;
-
-identifier :
-	ID (parenthesizedlist | unparenthesizedlist)?;
+identifier : ID (parenthesizedlist )?;
 
 parenthesizedlist :	'(' expr (separator expr)* ')';
 unparenthesizedlist : expr (separator expr)*;
 
-separator : Comma | Bang | Semi | To;
-
-expr :
-	  '(' expr ')'																									#ParenthesizedExpr
-	| ('+' | '-') expr																								#UnaryAdditiveExpr
-	| expr Amp expr																									#BinaryExpr
-	| <assoc=right> (String | ID) Instr expr																		#InstrExpr
-	| <assoc=right> expr Caret expr																					#BinaryExpr
-	| expr ('+' | '-' | '*' | '/' | 'MOD' | 'DIV') expr																#BinaryExpr
-	| expr ('=' | '<>' | '<' | '>' | '<=' | '>=') expr																#BinaryExpr
-	| Not expr																										#NotExpr
-	| expr ('AND' | 'OR' | 'XOR') expr																				#BinaryExpr
-	| identifier																									#IdentExpr
-	| (Integer | String | Real)																						#LiteralExpr
-	;
-
-/* Tokens */
-Refer : 'REFERENCE';
-Implic : 'IMPLICIT%' | 'IMPLICIT$';
-Local : 'LOCal';
-Dimension : 'DIM';
-If : 'IF';
-Else : 'ELSE';
-Then : 'THEN';
-EndIf : 'END IF';
-Select : 'SELect ON';
-EndSelect : 'END SELect';
-On : 'ON';
-For : 'FOR';
-Next : 'NEXT';
-To : 'TO';
-EndFor : 'END FOR';
-Step : 'STEP';
-Repeat : 'REPeat';
-Exit : 'EXIT';
-Until : 'UNTIL';
-EndRepeat : 'END REPeat';
-PRINT : 'PRINT';
-
-Equal : '=';
-And : 'AND';
-Or : 'OR';
-Xor : 'XOR';
-Caret : '^';
-Not : 'NOT';
-Tilde : '~';
-
-Instr : 'INSTR';
-Amp : '&';
-Question : '?';
-Colon : ':';
-Semi : ';';
-Comma : ',';
-Point : '.';
-
-Bang : '!';
+separator : ',' | '!' | ';' | 'TO';
        
 Whitespace
     :   [ \t]+
@@ -122,19 +79,21 @@ ID : LETTER ([0-9] | [A-Za-z] | '_')* '$'
 	| LETTER ([0-9] | [A-Za-z] | '_')*;
 
 Integer : DIGIT+;
-
+LineNumber : DIGIT+;
 
 Real
-	: DIGIT+ Point DIGIT*
-	| Point DIGIT+
+	: DIGIT+ '.' DIGIT*
+	| '.' DIGIT+
 	;
 
 Unknowntype:;
 Scalar:;
-LineNumber:;
 FuncCall:;
 Ignore:;
-
+DefProc:;
+DefFunc:;
+ProcCall:;
+Void:;
 
 fragment LETTER : [a-zA-Z];
 fragment DIGIT : [0-9];
