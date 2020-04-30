@@ -10,7 +10,7 @@ using static Parsing.SBasicParser;
 
 namespace SBasic
 {
-    public class BuildSymbolTableVisitor<TResult>: SBasicBaseVisitor<TResult>, ISBasicVisitor<TResult> where TResult : notnull
+    public class BuildSymbolTableVisitor<TResult>: GenericVisitor<TResult>, ISBasicVisitor<TResult> where TResult : notnull
     {
         private enum scopes { procedure, function, none };
         private SymbolTable<Symbol> SymbolTable { get; set; }
@@ -111,7 +111,7 @@ namespace SBasic
                 throw new ArgumentNullException(nameof(context));
             }
 
-            var node = (CommonToken)context.children[1].GetChild(0).Payload;
+            var node = (CommonToken)context.children[1].Payload;
             FunctionScopeName = node.Text;
             activeScopes = scopes.function;
             base.VisitFunc(context);
@@ -122,8 +122,8 @@ namespace SBasic
 
         public override TResult VisitProc([NotNull] ProcContext context)
         {
-            var node = (CommonToken)context.children[1].GetChild(0).Payload;
-            FunctionScopeName = node.Text;
+            var name = GetTextByType<SBasicParser.ProcedureNameContext>(context);
+            FunctionScopeName = name;
             activeScopes = scopes.procedure;
             base.VisitProc(context);
             activeScopes = scopes.none;

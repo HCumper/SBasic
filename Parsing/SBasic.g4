@@ -1,33 +1,35 @@
 ﻿grammar SBasic;
 
-program : line* EOF;
+program : linelist EOF;
+
+linelist: line*;
 
 line :
-	Newline? Integer? stmtlist Newline 
-	| Integer ':' Newline
+	eol? lineNumber? stmtlist eol 
+	| lineNumber ':' eol
 	;
 
 stmtlist : stmt (':' stmt)*;
 
 stmt :
-	'DIM' ID parenthesizedlist																											#Dim
-	| 'LOCal' unparenthesizedlist																										#Loc
+	Comment																																#Comment
+	| 'DIM' ID parenthesizedlist																										#Dim
 	| ('IMPLICIT%' | 'IMPLICIT$') unparenthesizedlist																					#Implicit
 	| 'REFERENCE' unparenthesizedlist																									#Reference
-	| 'DEFine PROCedure' ID parenthesizedlist? Newline Integer? line* Integer? 'END DEFine' ID?											#Proc
-	| 'DEFine FuNction' ID parenthesizedlist? Newline Integer? line* Integer? 'END DEFine' ID? 											#Func
-	| 'FOR' ID '=' expr 'TO' expr ('STEP' expr)? Newline line* Integer? 'END FOR' ID?													#For
+	| 'DEFine PROCedure' procedureName parenthesizedlist? eol lineNumber? loc? linelist lineNumber? 'END DEFine' ID?										#Proc
+	| 'DEFine FuNction' ID parenthesizedlist? eol lineNumber? loc? linelist lineNumber? 'END DEFine' ID? 										#Func
+	| 'FOR' ID '=' expr 'TO' expr ('STEP' expr)? eol linelist lineNumber? 'END FOR' ID?													#For
 	| 'FOR' ID '=' expr 'TO' expr ':' stmtlist																							#For
 	| 'REPeat' ID ':' stmtlist																											#Shortrepeat
-	| 'REPeat' ID Newline line* Integer? 'END REPeat' ID?																				#Longrepeat
-	| 'IF' expr ('THEN' | ':')? Newline line* Integer? ('ELSE' Newline line*)?  Integer? 'END IF'									#Longif
-	| 'IF' expr ('THEN' | ':')? stmtlist ('ELSE' stmtlist)? 									#Longif
-    | 'SELect ON' constexpr Newline line* Integer? 'END SELect'																			#Longselect
+	| 'REPeat' ID eol linelist lineNumber? 'END REPeat' ID?																				#Longrepeat
+	| 'IF' expr ('THEN' | ':')? eol linelist lineNumber? ('ELSE' eol linelist)?  lineNumber? 'END IF'											#If
+	| 'IF' expr ('THEN' | ':')? stmtlist ('ELSE' stmtlist)? 																			#If
+    | 'SELect ON' constexpr eol linelist lineNumber? 'END SELect'																			#Longselect
 	| 'ON' (constexpr) '=' rangeexpr																									#Onselect
 	| 'EXIT' ID?																														#Exitstmt
-	| ID expr? (',' expr)*											#ProcCall
+	| ID expr? (',' expr)*																												#ProcCall
 	| identifier '=' expr																												#Assignment
-	| 'PRINT' expr? (separator expr)* Newline?																							#Print
+	| 'PRINT' expr? (separator expr)* eol?																								#Print
 	| identifier																														#IdentifierOnly
 	;
 
@@ -39,7 +41,7 @@ expr :
 	| <assoc=right> expr '^' expr																										#BinaryExpr
 	| expr ('+' | '-' | '*' | '/' | 'MOD' | 'DIV') expr																					#BinaryExpr
 	| expr ('=' | '<>' | '<' | '>' | '<=' | '>=') expr																					#BinaryExpr
-	| Not expr																															#NotExpr
+	| 'NOT' expr																														#NotExpr
 	| expr ('AND' | 'OR' | 'XOR') expr																									#BinaryExpr
 	| identifier																														#IdentExpr
 	| (Integer | String | Real)																											#LiteralExpr
@@ -50,6 +52,8 @@ rangeexpr : constexpr 'TO' constexpr
 		  | constexpr
 ;
 
+procedureName : ID;
+loc : 'LOCal' unparenthesizedlist;	
 identifier : ID (parenthesizedlist )?;
 
 parenthesizedlist :	'(' expr (separator expr)* ')';
@@ -67,11 +71,12 @@ Let : 'LET' -> skip;
 Newline
     :   (( '\r' '\n') |   '\n') 
 	;
+eol : Newline;
 
 String : '"' ~('"')* '"';
 
 Comment
-	:  'REMark' ~( '\r' | '\n' )* -> skip
+	:  'REMark' ~( '\r' | '\n' )*
 	;
 
 ID : LETTER ([0-9] | [A-Za-z] | '_')* '$'
@@ -79,7 +84,7 @@ ID : LETTER ([0-9] | [A-Za-z] | '_')* '$'
 	| LETTER ([0-9] | [A-Za-z] | '_')*;
 
 Integer : DIGIT+;
-LineNumber : DIGIT+;
+lineNumber : Integer;
 
 Real
 	: DIGIT+ '.' DIGIT*

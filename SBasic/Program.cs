@@ -28,6 +28,9 @@ namespace SBasic
                 SBasicParser parser = new SBasicParser(tokens);
                 IParseTree tree = parser.program();
 
+                //PruneVisitor<int> pruner = new PruneVisitor<int>();
+                //pruner.Visit(tree);
+
                 SymbolTable<Symbol> symbolTable = new SymbolTable<Symbol>();
                 PrimeSymbolTable(symbolTable);
 
@@ -84,7 +87,7 @@ namespace SBasic
                             Console.WriteLine("");
                     }
                 }
-                catch (Exception e) 
+                catch (Exception e)
                 { };
 
                 DumpTree(child, indent + "    ");

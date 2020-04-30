@@ -1,7 +1,8 @@
-1 IF 1=2 
+3 REMark sljfljsfljf
+1 IF 1=2
 4 IF 8=4
 23 ELSE
-5 lsfj=1
+5 lsfj=1 : REMark comment
 18 END IF
 26 outer = t
 366 END IF
@@ -41,12 +42,12 @@
 300 PRINT sorts,partitions
 310 check
 320 STOP
-490 DEFine PROCedure print_table
+490 DEFine PROCedure print_table(l,r)
 500 LOCal pos
 430   FOR entry=1 TO n STEP 4
 440     a(entry)=RND(1)
 450   END FOR entry
-580 END DEFine
+580 END DEFine print_table
 481 DEFine FuNction  c (x,y)
 87 LOCal local$
 88 x=3

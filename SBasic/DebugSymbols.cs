@@ -32,11 +32,11 @@ namespace SBasic
                 case -1:
                     return "DefFunc";
                 case -2:
-                        return "DefProc";
+                    return "DefProc";
                 case -3:
-                        return "ProcCall";
+                    return "ProcCall";
                 case -4:
-                        return "Void";
+                    return "Void";
                 default:
                     return Names[subscript];
             }

@@ -9,7 +9,7 @@ using SBasic.SymbolTable;
 
 namespace SBasic
 {
-    internal class GenerateCodeVisitor<TResult>: SBasicBaseVisitor<TResult>, ISBasicVisitor<TResult> where TResult : notnull
+    internal class GenerateCodeVisitor<TResult>: GenericVisitor<TResult>, ISBasicVisitor<TResult> where TResult : notnull
     {
         private SymbolTable<Symbol> symbols;
         private string Scope = SymbolTable<Symbol>.Global;
@@ -86,6 +86,10 @@ namespace SBasic
         {
             return DefaultResult;
         }
+        public override TResult VisitEol([NotNull] SBasicParser.EolContext context)
+        {
+            return DefaultResult;
+        }
         public override TResult VisitErrorNode([NotNull] IErrorNode node)
         {
             return base.VisitErrorNode(node);
@@ -94,6 +98,12 @@ namespace SBasic
         {
             var temp = base.VisitExpr(context);
             return temp;
+        }
+        public override TResult VisitFor([NotNull] SBasicParser.ForContext context)
+        {
+            // For ID Equal expr To expr Newline linelist Integer? EndFor ID?	
+            int[] slots =  { 1, 3, 5, 7 };
+            return GenericVisitor(context, slots, "forTemplate");
         }
         public override TResult VisitFunc([NotNull] SBasicParser.FuncContext context)
         {
@@ -157,6 +167,11 @@ namespace SBasic
             var temp = base.Visit(context.GetChild(context.ChildCount - 2));
             return temp;
         }
+
+        public override TResult VisitLineNumber([NotNull] SBasicParser.LineNumberContext context)
+        {
+            return DefaultResult;
+        }
         //public override TResult VisitLinelist([NotNull] SBasicParser.LinelistContext context)
         //{
         //    if (context.ChildCount == 0)
@@ -166,13 +181,7 @@ namespace SBasic
         //        accumulatedResult += base.Visit(context.children[i]);
         //    return ConvertFromString(accumulatedResult);
         //}
-       
-        public override TResult VisitFor([NotNull] SBasicParser.ForContext context)
-        {
-            // For ID Equal expr To expr Newline linelist Integer? EndFor ID?	
-            int[] slots =  { 1, 3, 5, 7 };
-            return GenericVisitor(context, slots, "forTemplate");
-        }
+
         public override TResult VisitParenthesizedlist([NotNull] SBasicParser.ParenthesizedlistContext context)
         {
             return base.Visit(context.GetChild(1));
@@ -217,18 +226,21 @@ namespace SBasic
         }
         public override TResult VisitProc([NotNull] SBasicParser.ProcContext context)
         {
-            var procedureName = ConvertToString(Visit(context.GetChild(1).GetChild(0)));
+            var procedureName = GetTextByType<SBasicParser.ProcedureNameContext>(context);
             this.Scope = procedureName;
             List<string> parameters = new List<string>();
-            if (context.GetChild(1).ChildCount != 1)
+            var parameterList = GetNodeByType<SBasicParser.ParenthesizedlistContext>(context);
+            if (parameterList != null)
             {
-                var parameterList= context.GetChild(1).GetChild(1);
-                for (int i = 1; i < parameterList.ChildCount - 1; i += 2)
+                for (int i = 1; i < parameterList.ChildCount - 1; i++)
                 {
-                    parameters.Add(ConvertToString(Visit(parameterList.GetChild(i))));
+                    if (parameterList.GetChild(i) is SBasicParser.ExprContext)
+                        parameters.Add(ConvertToString(Visit(parameterList.GetChild(i))));
+                    //fill in param types for c#
                 }
             }
-            var content = Visit(context.GetChild(4));
+
+            var content = Visit(GetNodeByType<SBasicParser.LinelistContext>(context));
             var template = _group.GetInstanceOf("procedureTemplate");
             template.Add("procedureName", procedureName);
             template.Add("params", parameters);
@@ -239,12 +251,12 @@ namespace SBasic
         }
         public override TResult VisitProgram([NotNull] SBasicParser.ProgramContext context)
         {
-                if (context.ChildCount == 0)
-                    return ConvertFromString("");
-                string accumulatedResult = "";
-                for (int i = 0; i < context.children.Count; i++)
-                    accumulatedResult += base.Visit(context.children[i]);
-                return ConvertFromString(accumulatedResult);
+            if (context.ChildCount == 0)
+                return ConvertFromString("");
+            string accumulatedResult = "";
+            for (int i = 0; i < context.children.Count; i++)
+                accumulatedResult += base.Visit(context.children[i]);
+            return ConvertFromString(accumulatedResult);
         }
         public override TResult VisitStmtlist([NotNull] SBasicParser.StmtlistContext context)
         {
@@ -281,5 +293,15 @@ namespace SBasic
         //{
         //    return nextResult;
         //}
+        protected override bool ShouldVisitNextChild([NotNull] IRuleNode node, TResult currentResult)
+        {
+            var typ = node.GetType();
+            if (typ == typeof(SBasicParser.LineNumberContext))
+                return false;
+            if (typ == typeof(SBasicParser.EolContext))
+                return false;
+            return true;
+        }
+
     }
 }

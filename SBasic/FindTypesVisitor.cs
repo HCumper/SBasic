@@ -8,7 +8,7 @@ using SBasic.SymbolTable;
 
 namespace SBasic
 {
-    public class FindTypesVisitor<Result>: SBasicBaseVisitor<Result>
+    public class FindTypesVisitor<Result>: GenericVisitor<Result>
     {
         private readonly IList<int> _lineNumbers = new List<int>();
         private bool _startOfLine = true;
@@ -66,7 +66,7 @@ namespace SBasic
             if (token.Type == SBasicLexer.Integer && _startOfLine)
             {
                 _lineNumbers.Add(int.Parse(token.Text));
-                token.Type = SBasicLexer.LineNumber;
+                token.Type = SBasicLexer.Integer;
             }
             _startOfLine = (token.Text == "\n" || token.Text == "\r\n");
 
