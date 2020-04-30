@@ -17,11 +17,11 @@ stmt :
 	| ('IMPLICIT%' | 'IMPLICIT$') unparenthesizedlist																					#Implicit
 	| 'REFERENCE' unparenthesizedlist																									#Reference
 	| 'DEFine PROCedure' procedureName parenthesizedlist? eol lineNumber? loc? linelist lineNumber? 'END DEFine' ID?										#Proc
-	| 'DEFine FuNction' ID parenthesizedlist? eol lineNumber? loc? linelist lineNumber? 'END DEFine' ID? 										#Func
-	| 'FOR' ID '=' expr 'TO' expr ('STEP' expr)? eol linelist lineNumber? 'END FOR' ID?													#For
-	| 'FOR' ID '=' expr 'TO' expr ':' stmtlist																							#For
-	| 'REPeat' ID ':' stmtlist																											#Shortrepeat
-	| 'REPeat' ID eol linelist lineNumber? 'END REPeat' ID?																				#Longrepeat
+	| 'DEFine FuNction' functionName parenthesizedlist? eol lineNumber? loc? linelist lineNumber? 'END DEFine' ID? 										#Func
+	| 'FOR' loopVar '=' expr 'TO' expr step? eol linelist lineNumber? 'END FOR' ID?													#For
+	| 'FOR' loopVar '=' expr 'TO' expr ':' stmtlist																							#For
+	| 'REPeat' loopVar ':' stmtlist																											#Shortrepeat
+	| 'REPeat' loopVar eol linelist lineNumber? 'END REPeat' ID?																				#Longrepeat
 	| 'IF' expr ('THEN' | ':')? eol linelist lineNumber? ('ELSE' eol linelist)?  lineNumber? 'END IF'											#If
 	| 'IF' expr ('THEN' | ':')? stmtlist ('ELSE' stmtlist)? 																			#If
     | 'SELect ON' constexpr eol linelist lineNumber? 'END SELect'																			#Longselect
@@ -50,9 +50,12 @@ expr :
 constexpr : Integer | Real | String | ID;
 rangeexpr : constexpr 'TO' constexpr
 		  | constexpr
-;
+			;
+step : 'STEP' expr; 
 
+functionName : ID;
 procedureName : ID;
+loopVar : ID;
 loc : 'LOCal' unparenthesizedlist;	
 identifier : ID (parenthesizedlist )?;
 

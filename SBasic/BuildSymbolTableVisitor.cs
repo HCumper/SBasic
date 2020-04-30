@@ -111,8 +111,8 @@ namespace SBasic
                 throw new ArgumentNullException(nameof(context));
             }
 
-            var node = (CommonToken)context.children[1].Payload;
-            FunctionScopeName = node.Text;
+            string name = GetTextByType<SBasicParser.ProcedureNameContext>(context);
+            FunctionScopeName = name;
             activeScopes = scopes.function;
             base.VisitFunc(context);
             activeScopes = scopes.none;

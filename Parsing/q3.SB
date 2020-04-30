@@ -1,3 +1,10 @@
+430 FOR xx=1 TO 4
+440 m = 39
+450 END FOR xx
+430 FOR yy=1*6 TO xx/7-5 STEP -2
+10 x =  j - shortlist
+2 j-l = shortlist
+450 END FOR yy
 3 REMark sljfljsfljf
 1 IF 1=2
 4 IF 8=4
