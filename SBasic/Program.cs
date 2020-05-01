@@ -38,10 +38,7 @@ namespace SBasic
                 {
                     FirstPass = true   // Array functions and procedures
                 };
-                
-#if (DEBUG)
                     DumpTree(tree, "");
-#endif
                 symbolTableVisitor.Visit(tree);
                 symbolTableVisitor.FirstPass = false; // Everything else
                 symbolTableVisitor.Visit(tree);

@@ -2,29 +2,29 @@
 
 program : linelist EOF;
 
-linelist: line*;
+linelist : line*;
 
 line :
-	eol? lineNumber? stmtlist eol 
+	  lineNumber? stmtlist eol 
 	| lineNumber ':' eol
 	;
 
 stmtlist : stmt (':' stmt)*;
 
 stmt :
-	Comment																																#Comment
+      Comment																															#Comment
 	| 'DIM' ID parenthesizedlist																										#Dim
 	| ('IMPLICIT%' | 'IMPLICIT$') unparenthesizedlist																					#Implicit
 	| 'REFERENCE' unparenthesizedlist																									#Reference
-	| 'DEFine PROCedure' procedureName parenthesizedlist? eol lineNumber? loc? linelist lineNumber? 'END DEFine' ID?										#Proc
-	| 'DEFine FuNction' functionName parenthesizedlist? eol lineNumber? loc? linelist lineNumber? 'END DEFine' ID? 										#Func
-	| 'FOR' loopVar '=' expr 'TO' expr step? eol linelist lineNumber? 'END FOR' ID?													#For
-	| 'FOR' loopVar '=' expr 'TO' expr ':' stmtlist																							#For
-	| 'REPeat' loopVar ':' stmtlist																											#Shortrepeat
-	| 'REPeat' loopVar eol linelist lineNumber? 'END REPeat' ID?																				#Longrepeat
-	| 'IF' expr ('THEN' | ':')? eol linelist lineNumber? ('ELSE' eol linelist)?  lineNumber? 'END IF'											#If
+	| 'DEFine PROCedure' procedureName parenthesizedlist? (eol | ':') lineNumber? loc? linelist lineNumber? 'END DEFine' ID?			#Proc
+	| 'DEFine FuNction' functionName parenthesizedlist? (eol | ':') lineNumber? loc? linelist lineNumber? 'END DEFine' ID?				#Func
+	| 'FOR' loopVar '=' expr 'TO' expr step? eol linelist lineNumber? 'END FOR' ID?														#For
+	| 'FOR' loopVar '=' expr 'TO' expr ':' stmtlist																						#For
+	| 'REPeat' loopVar ':' stmtlist																										#Shortrepeat
+	| 'REPeat' loopVar eol linelist lineNumber? 'END REPeat' ID?																		#Longrepeat
+	| 'IF' expr ('THEN' | ':')? eol linelist lineNumber? ('ELSE' eol linelist)?  lineNumber? 'END IF'									#If
 	| 'IF' expr ('THEN' | ':')? stmtlist ('ELSE' stmtlist)? 																			#If
-    | 'SELect ON' constexpr eol linelist lineNumber? 'END SELect'																			#Longselect
+    | 'SELect ON' constexpr eol linelist lineNumber? 'END SELect'																		#Longselect
 	| 'ON' (constexpr) '=' rangeexpr																									#Onselect
 	| 'EXIT' ID?																														#Exitstmt
 	| ID expr? (',' expr)*																												#ProcCall
@@ -50,14 +50,14 @@ expr :
 constexpr : Integer | Real | String | ID;
 rangeexpr : constexpr 'TO' constexpr
 		  | constexpr
-			;
-step : 'STEP' expr; 
+		  ;
 
+step : 'STEP' expr; 
 functionName : ID;
 procedureName : ID;
 loopVar : ID;
 loc : 'LOCal' unparenthesizedlist;	
-identifier : ID (parenthesizedlist )?;
+identifier : ID (parenthesizedlist )?;   // could be function call or array refrence
 
 parenthesizedlist :	'(' expr (separator expr)* ')';
 unparenthesizedlist : expr (separator expr)*;
@@ -90,9 +90,7 @@ Integer : DIGIT+;
 lineNumber : Integer;
 
 Real
-	: DIGIT+ '.' DIGIT*
-	| '.' DIGIT+
-	;
+	: DIGIT* '.' DIGIT* ('E' DIGIT+);
 
 Unknowntype:;
 Scalar:;
