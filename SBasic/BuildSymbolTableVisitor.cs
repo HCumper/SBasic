@@ -60,7 +60,7 @@ namespace SBasic
                     payload.Text = name;
                     var type = extracted.Item2;
                     Symbol symbol;
-                    if (localScope == FunctionScopeName)
+                    if (localScope == FunctionScopeName && localScope != SymbolTable<Symbol>.Global)
                     {
                         bool refer = References.Contains(name);
                         symbol = new ParamSymbol(name, type, localScope, refer);
@@ -104,7 +104,7 @@ namespace SBasic
             return base.VisitDim(context);
         }
 
-        public override TResult VisitFunc([NotNull] FuncContext context)
+        public override TResult VisitFuncDecl([NotNull] FuncDeclContext context)
         {
             if (context == null)
             {
@@ -114,18 +114,18 @@ namespace SBasic
             string name = GetTextByType<SBasicParser.ProcedureNameContext>(context);
             FunctionScopeName = name;
             activeScopes = scopes.function;
-            base.VisitFunc(context);
+            base.VisitFuncDecl(context);
             activeScopes = scopes.none;
             References = new HashSet<string>();
             return default;
         }
 
-        public override TResult VisitProc([NotNull] ProcContext context)
+        public override TResult VisitProcDecl([NotNull] ProcDeclContext context)
         {
             var name = GetTextByType<SBasicParser.ProcedureNameContext>(context);
             FunctionScopeName = name;
             activeScopes = scopes.procedure;
-            base.VisitProc(context);
+            base.VisitProcDecl(context);
             activeScopes = scopes.none;
             References = new HashSet<string>();
             return default;

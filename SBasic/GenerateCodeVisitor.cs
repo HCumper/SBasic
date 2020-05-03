@@ -14,16 +14,6 @@ namespace SBasic
     {
         private SymbolTable<Symbol> symbols;
         private string Scope = SymbolTable<Symbol>.Global;
-        private SymbolTable<Symbol> GetSymbols()
-        {
-            return symbols;
-        }
-
-        private void SetSymbols(SymbolTable<Symbol> value)
-        {
-            symbols = value;
-        }
-
         private TypeConverter _converter = TypeDescriptor.GetConverter(typeof (TResult));
         protected override TResult DefaultResult => base.DefaultResult;
 
@@ -31,7 +21,17 @@ namespace SBasic
 
         private readonly IDictionary<string, Template> _templates = new Dictionary<string, Template>();
         private readonly TemplateGroupFile _group;
+        private SymbolTable<Symbol> GetSymbols()
 
+        {
+            return symbols;
+        }
+
+        #region Ancillary functions
+        private void SetSymbols(SymbolTable<Symbol> value)
+        {
+            symbols = value;
+        }
         public GenerateCodeVisitor(SymbolTable.SymbolTable<Symbol> symbolTable)
         {
             SetSymbols(symbolTable);
@@ -42,7 +42,6 @@ namespace SBasic
             foreach (string templateName in templateNames)
                 _templates.Add(templateName, _group.GetInstanceOf(templateName));
         }
-
         private TResult ConvertFromString(string text)
         {
             return (TResult)_converter.ConvertFromString(text);
@@ -56,7 +55,52 @@ namespace SBasic
         {
             return base.Visit(tree);
         }
+        private static string ConvertType(Symbol sym)
+        {
+            string strType = "";
+            switch (sym.Type)
+            {
+                case SBasicLexer.Integer:
+                    strType = "int ";
+                    break;
+                case SBasicLexer.Real:
+                    strType = "float ";
+                    break;
+                case SBasicLexer.String:
+                    strType = "string ";
+                    break;
+            }
 
+            return strType;
+        }
+        /// /////////////////////////////////////////////////////////////////////////////////////////////////////
+        //// Antlr runtime implementation
+        //public override TResult VisitChildren([NotNull] IRuleNode node)
+        //{
+        //    TResult result = this.DefaultResult;
+        //    int childCount = node.ChildCount;
+        //    for (int i = 0; i < childCount && this.ShouldVisitNextChild(node, result); ++i)
+        //    {
+        //        TResult nextResult = node.GetChild(i).Accept<TResult>((IParseTreeVisitor<TResult>) this);
+        //        result = this.AggregateResult(result, nextResult);
+        //    }
+        //    return result;
+        //}
+
+        //// Antlr runtime implementation
+        //protected  override TResult AggregateResult(TResult aggregate, TResult nextResult)
+        //{
+        //    return nextResult;
+        //}
+        protected override bool ShouldVisitNextChild([NotNull] IRuleNode node, TResult currentResult)
+        {
+            var typ = node.GetType();
+            if (node is LineNumberContext)
+                return false;
+            if (typ == typeof(EolContext))
+                return false;
+            return true;
+        }
         public TResult GenericVisitor([NotNull] IParseTree tree, IEnumerable<int> slots, string templateName)
         {
             List<string> parseResults = new List<string>();
@@ -71,7 +115,7 @@ namespace SBasic
             var temp = ConvertFromString(template.Render());
             return temp;
         }
-
+        #endregion
         public override TResult VisitAssignment([NotNull] AssignmentContext context)
         {
             int[] slots =  { 0, 2 };
@@ -120,7 +164,7 @@ namespace SBasic
             else
                 slots.Add("++");
 
-            slots.Add(ConvertToString(Visit(GetNodeByType<LinelistContext>(context))));
+            slots.Add(ConvertToString(Visit(GetNodeByType<StmtlistContext>(context))));
             List<string> args = new List<string>();
             var template = (_group.GetInstanceOf("forTemplate"));
             foreach (FormalArgument arg in template.impl.FormalArguments)
@@ -131,7 +175,7 @@ namespace SBasic
 
             return temp;
         }
-        public override TResult VisitFunc([NotNull] FuncContext context)
+        public override TResult VisitFuncDecl([NotNull] FuncDeclContext context)
         {
             TResult temp = procFuncHelper(context);
             return temp;
@@ -152,35 +196,29 @@ namespace SBasic
             return ConvertFromString(tok);
         }
 
-        public override TResult VisitIdentifierOnly([NotNull] IdentifierOnlyContext context)
-        {
-            TResult id = base.VisitIdentifierOnly(context);
-            var template = _group.GetInstanceOf("identifierOnlyTemplate");
-            template.Add("id", id);
-            return ConvertFromString(template.Render());
-        }
+        //public override TResult VisitIdentifierOnly([NotNull] IdentifierOnlyContext context)
+        //{
+        //    TResult id = base.VisitIdentifierOnly(context);
+        //    var template = _group.GetInstanceOf("identifierOnlyTemplate");
+        //    template.Add("id", id);
+        //    return ConvertFromString(template.Render());
+        //}
 
         public override TResult VisitLine([NotNull] LineContext context)
         {
             if (context.ChildCount <= 1)
                 return ConvertFromString("");
-            var temp = base.Visit(context.GetChild(context.ChildCount - 2));
+            var temp = ConvertFromString("\r\n" + ConvertToString(base.Visit(context.GetChild(context.ChildCount - 2))));
             return temp;
         }
-
-        //public override TResult VisitLinelist([NotNull] LinelistContext context)
-        //{
-        //    if (context.ChildCount == 0)
-        //        return ConvertFromString("");
-        //    string accumulatedResult = "";
-        //    for (int i = 0; i < context.children.Count; i++)
-        //        accumulatedResult += base.Visit(context.children[i]);
-        //    return ConvertFromString(accumulatedResult);
-        //}
-
-        public override TResult VisitParenthesizedlist([NotNull] ParenthesizedlistContext context)
+        public override TResult VisitLinelist([NotNull] LinelistContext context)
         {
-            return base.Visit(context.GetChild(1));
+            if (context.ChildCount == 0)
+                return ConvertFromString("");
+            string accumulatedResult = "";
+            for (int i = 0; i < context.children.Count; i++)
+                accumulatedResult += base.Visit(context.children[i]);
+            return ConvertFromString(accumulatedResult);
         }
         public override TResult VisitLoc([NotNull] LocContext context)
         {
@@ -189,25 +227,10 @@ namespace SBasic
             string strType = ConvertType(sym.Item2);
             return ConvertFromString($"{strType} {name};");
         }
-        private static string ConvertType(Symbol sym)
+        public override TResult VisitParenthesizedlist([NotNull] ParenthesizedlistContext context)
         {
-            string strType = "";
-            switch (sym.Type)
-            {
-                case SBasicLexer.Integer:
-                    strType = "int ";
-                    break;
-                case SBasicLexer.Real:
-                    strType = "float ";
-                    break;
-                case SBasicLexer.String:
-                    strType = "string ";
-                    break;
-            }
-
-            return strType;
+            return base.Visit(context.GetChild(1));
         }
-
         public override TResult VisitPrint([NotNull] PrintContext context)
         {
             List<string> expressions = new List<string>();
@@ -219,7 +242,13 @@ namespace SBasic
             var temp = ConvertFromString(template.Render());
             return temp;
         }
-        public override TResult VisitProc([NotNull] ProcContext context)
+        public override TResult VisitProcCall([NotNull] ProcCallContext context)
+        {
+            TResult procName = Visit(context.GetChild(0));
+            TResult parameters = (context.ChildCount > 1) ? Visit(context.GetChild(1)) : default;
+            return ConvertFromString($"{procName}({parameters}); ");
+        }
+        public override TResult VisitProcDecl([NotNull] ProcDeclContext context)
         {
             TResult temp = procFuncHelper(context);
             return temp;
@@ -258,17 +287,15 @@ namespace SBasic
 
         public override TResult VisitProgram([NotNull] ProgramContext context)
         {
-            if (context.ChildCount == 0)
-                return ConvertFromString("");
-            string accumulatedResult = "";
-            for (int i = 0; i < context.children.Count; i++)
-                accumulatedResult += base.Visit(context.children[i]);
-            return ConvertFromString(accumulatedResult);
+            TResult temp = Visit(context.GetChild(0));
+            return temp;
         }
         public override TResult VisitStmtlist([NotNull] StmtlistContext context)
         {
             List<string> statements = new List<string>();
             int nodes = context.ChildCount;
+            if (nodes == 0)
+                return default; // node was removed by find types e.g. IMPLICIT%
             for (int i = 0; i < nodes; i += 2)
                 statements.Add(ConvertToString(Visit(context.GetChild(i))));
             var template = _group.GetInstanceOf("statementListTemplate");
@@ -280,35 +307,18 @@ namespace SBasic
             var temp = ConvertFromString(node.Symbol.Text);
             return temp;
         }
-
-        /// /////////////////////////////////////////////////////////////////////////////////////////////////////
-        //// Antlr runtime implementation
-        //public override TResult VisitChildren([NotNull] IRuleNode node)
-        //{
-        //    TResult result = this.DefaultResult;
-        //    int childCount = node.ChildCount;
-        //    for (int i = 0; i < childCount && this.ShouldVisitNextChild(node, result); ++i)
-        //    {
-        //        TResult nextResult = node.GetChild(i).Accept<TResult>((IParseTreeVisitor<TResult>) this);
-        //        result = this.AggregateResult(result, nextResult);
-        //    }
-        //    return result;
-        //}
-
-        //// Antlr runtime implementation
-        //protected  override TResult AggregateResult(TResult aggregate, TResult nextResult)
-        //{
-        //    return nextResult;
-        //}
-        protected override bool ShouldVisitNextChild([NotNull] IRuleNode node, TResult currentResult)
+        public override TResult VisitUnparenthesizedlist([NotNull] UnparenthesizedlistContext context)
         {
-            var typ = node.GetType();
-            if (node is LineNumberContext)
-                return false;
-            if (typ == typeof(EolContext))
-                return false;
-            return true;
+            string listVal = "";
+            for (int i = 0; i < context.ChildCount; i += 2)
+            {
+                if (i > 0)
+                    listVal += ", ";
+                listVal += base.Visit(context.GetChild(i));
+            }
+            return ConvertFromString(listVal);
         }
+
 
     }
 }

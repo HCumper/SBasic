@@ -16,21 +16,20 @@ stmt :
 	| 'DIM' ID parenthesizedlist																										#Dim
 	| ('IMPLICIT%' | 'IMPLICIT$') unparenthesizedlist																					#Implicit
 	| 'REFERENCE' unparenthesizedlist																									#Reference
-	| 'DEFine PROCedure' procedureName parenthesizedlist? (eol | ':') lineNumber? loc? linelist lineNumber? 'END DEFine' ID?			#Proc
-	| 'DEFine FuNction' functionName parenthesizedlist? (eol | ':') lineNumber? loc? linelist lineNumber? 'END DEFine' ID?				#Func
-	| 'FOR' loopVar '=' expr 'TO' expr step? eol linelist lineNumber? 'END FOR' ID?														#For
+	| 'DEFine PROCedure' procedureName parenthesizedlist? (eol | ':') lineNumber? loc? linelist lineNumber? 'END DEFine' ID?			#ProcDecl
+	| 'DEFine FuNction' functionName parenthesizedlist? (eol | ':') lineNumber? loc? linelist lineNumber? 'END DEFine' ID?				#FuncDecl
+	| 'FOR' loopVar '=' expr 'TO' expr step? eol linelist lineNumber? 'END FOR' ID?										#For
 	| 'FOR' loopVar '=' expr 'TO' expr ':' stmtlist																						#For
-	| 'REPeat' loopVar ':' stmtlist																										#Shortrepeat
-	| 'REPeat' loopVar eol linelist lineNumber? 'END REPeat' ID?																		#Longrepeat
+	| 'REPeat' loopVar ':' stmtlist																										#Repeat
+	| 'REPeat' loopVar eol linelist lineNumber? 'END REPeat' ID?																		#Repeat
 	| 'IF' expr ('THEN' | ':')? eol linelist lineNumber? ('ELSE' eol linelist)?  lineNumber? 'END IF'									#If
 	| 'IF' expr ('THEN' | ':')? stmtlist ('ELSE' stmtlist)? 																			#If
-    | 'SELect ON' constexpr eol linelist lineNumber? 'END SELect'																		#Longselect
+    | 'SELect ON' constexpr eol linelist lineNumber? 'END SELect'																		#Select
 	| 'ON' (constexpr) '=' rangeexpr																									#Onselect
 	| 'EXIT' ID?																														#Exitstmt
-	| ID expr? (',' expr)*																												#ProcCall
 	| identifier '=' expr																												#Assignment
+	| ID unparenthesizedlist?																											#ProcCall
 	| 'PRINT' expr? (separator expr)* eol?																								#Print
-	| identifier																														#IdentifierOnly
 	;
 
 expr :
@@ -56,7 +55,7 @@ step : 'STEP' expr;
 functionName : ID;
 procedureName : ID;
 loopVar : ID;
-loc : 'LOCal' unparenthesizedlist;	
+loc : 'LOCal' unparenthesizedlist eol;	
 identifier : ID (parenthesizedlist )?;   // could be function call or array refrence
 
 parenthesizedlist :	'(' expr (separator expr)* ')';

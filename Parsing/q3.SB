@@ -1,100 +1,42 @@
-430 FOR xx=1 TO 4
-440 m = 39
-450 END FOR xx
-430 FOR yy=1*6 TO xx/7-5 STEP -2
-10 x =  j - shortlist
-2 j-l = shortlist
-450 END FOR yy
-3 REMark sljfljsfljf
-1 IF 1=2
-4 IF 8=4
-23 ELSE
-5 lsfj=1 : REMark comment
-18 END IF
-26 outer = t
-366 END IF
-10 x =  j - shortlist
-2 IF j-l = shortlist THEN
-5 IF y=2 THEN
-6 z=3
-7 END IF
-8 END IF
-1 x = foo(99)
-420 hh = 9
-430 FOR xx=1 TO 4
-450 END FOR xx
-2 b = r(a)
-3 b(d) = 7
-5 b(lod)=a(lod)
-140 DIM a$(10001)
-250 FOR xxxx=1 TO n : m=3
-150 DIM bbbb(1,2,3)
-180 FOR lo=1 TO n : m=3
-97 astring$ = "hhh" : v = 3
 100 CLS
 110 TURBO_repfil
 120 sorts=0:partitions=0
+130 IMPLICIT% a, b
+140 DIM a(10001)
+150 DIM b(10001)
 160 LET shortlist=9
 170 set_up_tabLe
-175 FOR x = 2 TO 3: y = 7 : z = 22
+180 FOR lo=1 TO n : b(lo)=a(lo)
 190 now = DATE
+200 b(n+1)=10001
+210 quicksort 1,n
 220 check
 230 INPUT t$
 240 STOP
-25660 FOR lo=1 TO n
-989 b(lo)=a(lo)
+250 FOR lo=1 TO n : b(lo)=a(lo)
+260 REMark b(n+1)=10001
 270 sorts=0:partitions=0
-285 END FOR
+280 now = DATE
 290 QUICKSORT2 1,n
 300 PRINT sorts,partitions
 310 check
 320 STOP
-490 DEFine PROCedure print_table(l,r)
-500 LOCal pos
-430   FOR entry=1 TO n STEP 4
-440     a(entry)=RND(1)
-450   END FOR entry
-580 END DEFine print_table
-481 DEFine FuNction  c (x,y)
-87 LOCal local$
-88 x=3
-460   LET now=DATE
-570   PRINT "Time taken" ! finished
-480 END DEFine
-481 DEFine FuNction foo (param1, param2)
-484 END DEFine
-490 DEFine PROCedure print_table
-500 LOCal pos
-510   LET finished=DATE-now
-520   PRINT : PRINT
-530   BEEP 10000,100
-540   FOR pos=n TO n+3
-550     PRINT a(pos)
-560   END FOR pos
-570   PRINT "Time taken" ! finished
-580 END DEFine
-350 PRINT "Time" ! DATE-now
-360 FOR loop = 1 TO n-1
-370 IF b(loop) > b(loop + 1) THEN PRINT "Error at"
-3800 END FOR loop
 330 :
 340 DEFine PROCedure check
 350 PRINT "Time" ! DATE-now
 360 FOR loop = 1 TO n-1
-370 IF b(loop) > b(loop + 1) THEN PRINT "Error at" 
+370 IF b(loop) > b(loop + 1) THEN PRINT "Error at" ! loop
 380 END FOR loop
 390 END DEFine
 400 DEFine PROCedure set_up_tabLe
 410 LOCal entry
-420   INPUT "How many numbers? "
+420   INPUT "How many numbers? ";n
 430   FOR entry=1 TO n
 440     a(entry)=RND(1 TO 10000)
 450   END FOR entry
 460   LET now=DATE
 470 END DEFine
 480 :
-481 DEFine FuNction foo (param1, param2)
-484 END DEFine
 490 DEFine PROCedure print_table
 500 LOCal pos
 510   LET finished=DATE-now
@@ -107,10 +49,12 @@
 580 END DEFine
 590 :
 600 IMPLICIT% l, r, i, j, pivot
-605 REFERENCE r
 610 DEFine PROCedure quicksort(l,r)
 620 LOCal i,j,pivot
 630   i=l : j=r
+640   REMark IF b(i)<b(i+1) : swap b(i),b(i+1)
+650   REMark IF b(i+1)>b(j) : swap b(i+1),b(j)
+660   REMark IF b(i)>b(i+1) : swap b(i),b(i+1)
 670   pivot=b(i)
 680   REPeat loop
 690     REPeat inc_k
@@ -142,7 +86,6 @@
 950 END DEFine
 960 :
 970 IMPLICIT% this, that, t
-975 REFERENCE this, that
 980 DEFine PROCedure swap(this,that)
 990 LOCal t
 1000   LET t=this
@@ -171,7 +114,7 @@
 1230   low  = bottom : high = top : ptr = bottom
 1240   REPeat sort_loop
 1250     IF low >= high : EXIT sort_loop
-1260     IF b(low) > b(high) THEN
+1260     IF b(low) > b(high)
 1270       temp        = b(low)
 1280       b(low)  = b(high)
 1290       b(high) = temp
@@ -181,7 +124,7 @@
 1330         high = high-1 : ptr = low
 1340       END IF
 1350     ELSE
-1360       IF ptr = low : high = high-1  ELSE  low = low+1
+1360       IF ptr = low : high = high-1 : ELSE : low = low+1
 1370     END IF
 1380   END REPeat sort_loop
 1390   IF ABS(top - bottom) < 2 : RETurn
@@ -189,6 +132,11 @@
 1410   QUICKSORT1 ptr + 1,top
 1420 END DEFine QUICKSORT1
 1430 :
+1440 REMark Quicksort, faster variety, by Marcus Jeffery
+1450 :
+1460 REMark prepare an array to sort, remembering that this routine needs
+1470 REMark a predefined 'highest value entry' at the end of the array
+1480 REMark QUICKSORT2 also needs the procedure QS2_PARTITION below
 1490 DEFine PROCedure QUICKSORT2 (lower,upper)
 1500 LOCal part_elem
 1510 sorts=sorts+1
@@ -208,13 +156,18 @@
 1650 partitions=partitions+1
 1660     REPeat inc_k
 1670       k = k + 1
+1680       REMark this is where the 'guaranteed highest value' comes in
 1690       IF b(k) >= temp : EXIT inc_k
 1700     END REPeat inc_k
 1710     REPeat dec_j
 1720       j = j - 1
+1730       REMark conversely we don't need a 'guaranteed less than' value
+1740       REMark at the start of the array as the sorting process does
+1750       REMark this for us anyway
 1760       IF b(j) <= temp : EXIT dec_j
 1770     END REPeat dec_j
 1780     IF k < j
+1790       REMark swap the two entries around
 1800       swap b(k),b(j)
 1810     ELSE
 1820       EXIT loop

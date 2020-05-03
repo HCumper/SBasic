@@ -24,7 +24,11 @@ declarationsTemplate(scope, reals, realArrays, integers, integerArrays, strings,
 <endif>
 >>
 
-forTemplate(id, expr1, expr2, increment, body) ::= "for (<id> = <expr1>; <id> \<= <expr2>; <id> <increment>) { <body> }"			
+forTemplate(id, expr1, expr2, increment, body) ::= <<for (<id> = <expr1>; <id> \<= <expr2>; <id> <increment>) 
+{ 
+<body> 
+};
+>>
 
 identifierOnlyTemplate(id) ::= "<id>();"
 
