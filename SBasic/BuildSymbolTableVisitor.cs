@@ -12,10 +12,10 @@ namespace SBasic
 {
     public class BuildSymbolTableVisitor<TResult>: GenericVisitor<TResult>, ISBasicVisitor<TResult> where TResult : notnull
     {
-        private enum scopes { procedure, function, none };
+        private enum Scopes { procedure, function, none };
         private SymbolTable<Symbol> SymbolTable { get; set; }
         private string FunctionScopeName { get; set; } = SymbolTable<Symbol>.Global;
-        private scopes activeScopes { get; set; }
+        private Scopes activeScopes { get; set; }
 
         private readonly ISet<string> ImplicitInts;
         private readonly ISet<string> ImplicitStrings;
@@ -37,10 +37,10 @@ namespace SBasic
             bool funcProc = false;
             var payload = (CommonToken)node.Payload;
 
-            if ((activeScopes != scopes.none) && FirstPass || (activeScopes == scopes.none) && !FirstPass)
+            if ((activeScopes != Scopes.none) && FirstPass || (activeScopes == Scopes.none) && !FirstPass)
             {
                 string localScope;
-                if ((activeScopes != scopes.none) && payload.Text != FunctionScopeName)
+                if ((activeScopes != Scopes.none) && payload.Text != FunctionScopeName)
                 {
                     localScope = FunctionScopeName;
                 }
@@ -69,7 +69,7 @@ namespace SBasic
                     {
                         if (funcProc)
                         {
-                            int returnType = (activeScopes == scopes.procedure) ? SBasicLexer.DefProc : SBasicLexer.DefFunc;
+                            int returnType = (activeScopes == Scopes.procedure) ? SBasicLexer.DefProc : SBasicLexer.DefFunc;
                             symbol = new FuncSymbol(name, localScope, returnType, SBasicLexer.DefFunc);
                         }
                         else
@@ -113,9 +113,9 @@ namespace SBasic
 
             string name = GetTextByType<SBasicParser.ProcedureNameContext>(context);
             FunctionScopeName = name;
-            activeScopes = scopes.function;
+            activeScopes = Scopes.function;
             base.VisitFuncDecl(context);
-            activeScopes = scopes.none;
+            activeScopes = Scopes.none;
             References = new HashSet<string>();
             return default;
         }
@@ -124,17 +124,17 @@ namespace SBasic
         {
             var name = GetTextByType<SBasicParser.ProcedureNameContext>(context);
             FunctionScopeName = name;
-            activeScopes = scopes.procedure;
+            activeScopes = Scopes.procedure;
             base.VisitProcDecl(context);
-            activeScopes = scopes.none;
+            activeScopes = Scopes.none;
             References = new HashSet<string>();
             return default;
         }
-
-        public override TResult VisitLoc([NotNull] LocContext context)
+        
+        public override TResult VisitLocalVars([NotNull]LocalVarsContext context)
         {
             //            activeScopes = scopes.function;
-            base.VisitLoc(context);
+            base.VisitLocalVars(context);
             //          FuncScopeActive = false;
             References = new HashSet<string>();
             return default;

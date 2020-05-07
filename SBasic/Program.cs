@@ -30,6 +30,7 @@ namespace SBasic
 
                 //PruneVisitor<int> pruner = new PruneVisitor<int>();
                 //pruner.Visit(tree);
+                DumpTree(tree, "");
 
                 SymbolTable<Symbol> symbolTable = new SymbolTable<Symbol>();
                 PrimeSymbolTable(symbolTable);
@@ -38,7 +39,6 @@ namespace SBasic
                 {
                     FirstPass = true   // Array functions and procedures
                 };
-                    DumpTree(tree, "");
                 symbolTableVisitor.Visit(tree);
                 symbolTableVisitor.FirstPass = false; // Everything else
                 symbolTableVisitor.Visit(tree);

@@ -162,7 +162,9 @@ namespace SBasic
                     slots.Add("+=" + stepExp[4..]);
             }
             else
+            {
                 slots.Add("++");
+            }
 
             slots.Add(ConvertToString(Visit(GetNodeByType<StmtlistContext>(context))));
             List<string> args = new List<string>();
@@ -220,9 +222,9 @@ namespace SBasic
                 accumulatedResult += base.Visit(context.children[i]);
             return ConvertFromString(accumulatedResult);
         }
-        public override TResult VisitLoc([NotNull] LocContext context)
+        public override TResult VisitLocalVars([NotNull] LocalVarsContext context)
         {
-            string name = ConvertToString(base.VisitLoc(context));
+            string name = ConvertToString(base.VisitLocalVars(context));
             var sym = symbols.ReadSymbol(name, this.Scope);
             string strType = ConvertType(sym.Item2);
             return ConvertFromString($"{strType} {name};");
