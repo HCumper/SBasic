@@ -2,49 +2,47 @@
 
 program : linelist EOF;
 
-linelist : line*;
-
-line :
-	  lineNumber? stmtlist eol?
-	| lineNumber ':' eol
-	;
-
+linelist : lineNumber? stmt (terminator lineNumber? (stmt | ':'))* terminator;
 stmtlist : stmt (':' stmt)*;
 
 stmt :
       Comment																															#Comment
-	| 'DIM' ID parenthesizedlist																										#Dim
+	| 'DIM' ID parenthesizedlist (',' ID parenthesizedlist)*																				#Dim
 	| ('IMPLICIT%' | 'IMPLICIT$') unparenthesizedlist																					#Implicit
 	| 'REFERENCE' unparenthesizedlist																									#Reference
-	| 'DEFine PROCedure' procedureName parenthesizedlist? (eol | ':') localVars linelist lineNumber? 'END DEFine' ID?					#ProcDecl
-	| 'DEFine FuNction' functionName parenthesizedlist? (eol | ':') localVars linelist lineNumber? 'END DEFine' ID?						#FuncDecl
+	| 'DEFine PROCedure' procedureName parenthesizedlist? terminator linelist? localVars linelist lineNumber? 'END DEFine' ID?					#ProcDecl
+	| 'DEFine FuNction' functionName parenthesizedlist? terminator localVars linelist lineNumber? 'END DEFine' ID?						#FuncDecl
 	| 'FOR' loopVar '=' expr 'TO' expr step? eol linelist lineNumber? ('END FOR' | 'NEXT') ID?											#For
 	| 'FOR' loopVar '=' expr 'TO' expr ':' stmtlist																						#For
 	| 'REPeat' loopVar ':' stmtlist																										#Repeat
-	| 'REPeat' ID eol linelist lineNumber? 'END REPeat' ID?																				#Repeat
-	| 'IF' expr ('THEN' | ':')? eol linelist lineNumber? ('ELSE' (eol | ':') linelist)?   lineNumber? 'END IF'					#If
-	| 'IF' expr ('THEN' | ':')? stmtlist ('ELSE' stmtlist)? 																			#If
-    | 'SELect ON' constexpr eol linelist lineNumber? 'END SELect'																		#Select
+	| 'REPeat' ID eol linelist? lineNumber? 'END REPeat' ID?																				#Repeat
+	| 'IF' expr ('THEN' | ':')? eol linelist? lineNumber? else? lineNumber? ':'? 'END IF'								#If
+	| 'IF' expr ('THEN' | ':')? stmtlist (':' else)? 																			#If
+    | 'SELect ON' constexpr terminator linelist lineNumber? 'END SELect'																		#Select
 	| 'ON' (constexpr) '=' rangeexpr																									#Onselect
-	| 'EXIT' ID?																														#Exitstmt
 	| identifier '=' expr																												#Assignment
 	| ID unparenthesizedlist?																											#ProcCall
-	| 'PRINT' '\\'* expr? '\\'* (separator '\\'* expr '\\'* )* separator? eol?																		#Print
 	| '=' unparenthesizedlist																											#Equal
+	| 'NEXT' ID?																														#Next
+	| 'DATA' unparenthesizedlist																										#Data
+	| 'PRINT' '\\'* expr? '\\'* (separator '\\'* expr '\\'* )* separator? eol?																		#Print
+	| 'READ' unparenthesizedlist																										#Read
+	| 'RETurn' unparenthesizedlist																										#Return
+	| ':'																																#Acolon
 	;
 
 expr :
 	  '(' expr ')'																														#ParenthesizedExpr
 	| ('+' | '-') expr																													#UnaryAdditiveExpr
-	| expr '&' expr																														#BinaryExpr
+	| expr ('&' | '&&') expr																											#BinaryExpr
 	| <assoc=right> (String | ID) 'INSTR' expr																							#InstrExpr
 	| <assoc=right> expr '^' expr																										#BinaryExpr
 	| expr ('*' | '/' | 'MOD' | 'DIV') expr																								#BinaryExpr
 	| expr ('+' | '-') expr																												#BinaryExpr
-	| expr ('=' | '<>' | '<' | '>' | '<=' | '>=') expr																					#BinaryExpr
-	| 'NOT' expr																														#NotExpr
-	| expr ('AND') expr																													#BinaryExpr
-	| expr ('||' | 'OR' | 'XOR') expr																											#BinaryExpr
+	| expr ('=' | '==' | '<>' | '<' | '>' | '<=' | '>=') expr																					#BinaryExpr
+	| ('NOT' | '~') expr																														#NotExpr
+	| expr ('AND' | '&&') expr																													#BinaryExpr
+	| expr ('^^' || '||' | 'OR' | 'XOR') expr																											#BinaryExpr
 	| identifier																														#IdentExpr
 	| (Integer | String | Real)																											#LiteralExpr
 	;
@@ -54,6 +52,7 @@ rangeexpr : constexpr 'TO' constexpr
 		  | constexpr
 		  ;
 
+else : ':'? 'ELSE' ((eol linelist) | (':'? stmtlist));
 step : 'STEP' expr; 
 functionName : ID;
 procedureName : ID;
@@ -65,7 +64,8 @@ parenthesizedlist :	'(' expr (separator expr)* ')';
 unparenthesizedlist : expr (separator expr)*;
 
 separator : ',' | '!' | ';' | 'TO';
-terminator: (eol | ':');       
+terminator: (eol | ':');      
+
 Whitespace
     :   [ \t]+
         -> skip

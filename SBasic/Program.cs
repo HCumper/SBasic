@@ -31,7 +31,7 @@ namespace SBasic
                 //PruneVisitor<int> pruner = new PruneVisitor<int>();
                 //pruner.Visit(tree);
                 DumpTree(tree, "");
-
+                return;
                 SymbolTable<Symbol> symbolTable = new SymbolTable<Symbol>();
                 PrimeSymbolTable(symbolTable);
 

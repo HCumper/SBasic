@@ -1,3 +1,322 @@
-
+12660 DEFine PROCedure Dialogue
+12664 LOCal w%(window_count%),d%(window_count%),winx%(window_count%),winy%(window_count%)
+12668 LOCal up%(icon_count%),down%(icon_count%)
+12672 LOCal left%(icon_count%),right%(icon_count%),offset%(icon_count%)
+12676 LOCal ii, i
+12680 :
+12684   IF COMPILED : OPEN #1,'con' : IF qram_flag : OPEN #0,'scr_512x256a0x0' : CLS #0
+12688   REMark Window #0 set up as QRAM Guardian
+12692   Grab_User : task$ = prog$(6 TO LEN(prog$))
+12696   Search_for_Directives
+12700   IF LEN(OPTION_CMD$) <> 0
+12704     IF OPTION_CMD$<>"*"
+12708       prog$ = OPTION_CMD$
+12712         IF LEN(prog$)>31 : prog$=prog$(1 TO 31)
+12716     ELSE : restart_flag = 1 : END IF : END IF
+12720       REMark Set Auto if param is "*"
+12724   i=buffer_size%
+12728   IF Heap_Space(0)<i
+12732     buffer_size%=Heap_Space(0) : Squeak : REMark Don't be greedy
+12736     IF buffer_size%<1 : i=RESPR(10000) : REMark Force abort - no room!
+12740     END IF
+12744 :
+12748   IF COMPILED : SET_PRIORITY 0,0,0
+12752 :
+12756   active_chans%=(BASIC_L(52)-BASIC_L(48))/40 : REMark BV.CHBAS, BV.CHP, CH.ENTRY
+12760   windows% = Min_Int%(active_chans%, windows%)
+12764   prog$ = Stripped_Back$((prog$))
+12768   log$ = Stripped_Back$((log$))
+12772 :
+12776 REMark Establish Window Stats
+12780   RESTORE 12800:FOR ii=0 TO window_count% : READ w%(ii),d%(ii),winx%(ii),winy%(ii)
+12784   FOR ii=0 TO icon_count%
+12788     READ up%(ii),down%(ii),left%(ii),right%(ii),offset%(ii) : END FOR ii
+12792 :
+12796 REMark Display window DATA
+12800 DATA  80,15, 49,150, 264,15, 49,127, 440,15, 49, 81,   88,15,401,150
+12804 DATA  80,15,217,150,  88,15,304,150, 152,15,337,104,  144,15, 49,104
+12808 DATA 128,15,201,104, 128,15,361, 58,  88,15, 49, 58,   48,15,145, 58
+12812 DATA  96,15,201, 58,  48,15,305, 58, 168,15,321,127,   72,15,137,150
+12816 DATA 440,15, 49, 35,  80,15, 49, 12,  96,15,137, 12,  112,15,241, 12
+12820 DATA 128,15,361, 12, 440,76, 49,173
+12824 :
+12828 REMark Window selection DATA
+12832 DATA  1,-1,-1,15,0,  8, 4,-1,14, 8, 12,8,-1,-1, 8,  1,-1, 5,-1, 7
+12836 DATA  1,-1,15, 5,6,  1,-1, 4,-1, 7,  2,1, 8,-1,13,  2, 1,-1, 8,12
+12840 DATA  2, 1, 7, 6,0, -1, 2,13,-1, 3, -1,2,-1,11, 0, -1, 2,10,12, 0
+12844 DATA -1, 2,11,13,0, -1, 2,12, 9, 0,  8,4, 1,-1, 6,  1,-1, 0, 4, 0
+12848 :
+12852   WINDOW 512,256,0,0 : PAPER background% : CLS : PAPER 7 : INK 0
+12856   drawing=1 : time = 0
+12860   Window_3D 16 : CSIZE 0,0
+12864   PRINT "  1987 The Turbo Team                          2006 George Gwilt V"&version$;
+12868   WINDOW 400,25,38,34
+12872   INK 2 : CSIZE 3,0 : CURSOR 182,1 : OVER 1 : PRINT "TURBO";
+12876   CURSOR 182,2 : PRINT "TURBO"; : INK 0 : OVER 0
+12880   CSIZE 1,0
+12884   Window_3D 17 : PRINT "Pass: 0";
+12888   Window_3D 18 : PRINT "Line: 0";
+12892   Window_3D 15 : Show_Strs
+12896   Window_3D  7 : Switch_Data_Stk
+12900   Window_3D 10 : Show_Struct
+12904   Window_3D 11 : Show_Addressing
+12908   Window_3D 12 : Show_Diag
+12912   Window_3D 13 : Show_Opt
+12916   Window_3D  6 : PRINT "TURBO buffer:    K"; : Show_Count buffer_size%
+12920   Window_3D 19 : PRINT "Errors: 0";
+12924   Window_3D 20 : PRINT "Warnings: 0";
+12928   Window_3D  4 : PRINT "List:"; : Echo list_flag
+12932   Window_3D  0 : Show_Res
+12936   Window_3D  9
+12940   IF active_chans%>32
+12944     PRINT "> 32 CHANNELS!";
+12948     Squeak : dummy% = Key_from_Kbd(1) : Place_Cursor 0
+12952     windows%=32 : active_chans%=32 : END IF
+12956   PRINT "Set     windows"; : Show_Windows
+12960   Window_3D  5 : PRINT "Sound:"; : Echo sound_flag
+12964   Window_3D  2 : Show_File : prog$=Text_Response$(prog$,31)
+12968   Window_3D  1 : Show_File : log$=Text_Response$(log$,22)
+12972   Window_3D 14 : PRINT "Task: ";task$;
+12976   Window_3D  8 : PRINT " ½½ COMPILE ¼¼";
+12980   drawing=0 : PAPER 0 : INK 7
+12984   here=8 : Window_3D here
+12988   IF restart_flag<>1
+12992   REPeat options
+12996     keynum=CODE(INKEY$(#1,-1))
+13000     IF sound_flag <> 0 : BEEP 100,60
+13004     SELect ON keynum
+13008       =32
+13012           SELect ON here
+13016             =8 : End_Dialogue: EXIT options
+13020             =0 : restart_flag=restart_flag^^2 : Show_Res
+13024             =3 : pause_flag=1-pause_flag : Echo pause_flag
+13028             =4 : list_flag=1-list_flag : Echo list_flag
+13032             =5 : sound_flag=1-sound_flag : Echo sound_flag
+13034             =7 : dat_stk=1-dat_stk:Place_Cursor 0:Switch_Data_Stk
+13036             =10 : structured_flag=1-structured_flag : Show_Struct
+13040             =11 : short_adr_gen=1-short_adr_gen : Show_Addressing
+13044             =12 : diagnose_flag=(diagnose_flag+1) MOD 3 : Show_Diag
+13048             =13 : optimise_flag=(optimise_flag+1) MOD 3 : Show_Opt
+13052             =15 : string_flag=(string_flag+1) MOD 3 : Show_Strs
+13056             END SELect
+13060       =208:REMark ¾
+13064           SELect ON here
+13068             =9 : windows%=windows%+(windows%<active_chans%) : Show_Windows
+13072             =7 : IF dat_stk:dataspace%=dataspace%+(dataspace%<max_data%) : Show_Count dataspace%:ELSE stk_sze%=stk_sze%+2*(stk_sze%<(max_stk%-1)):Show_Stack stk_sze%
+13076             =6 : IF Heap_Space(0)<=buffer_size%
+13080                    Squeak
+13084                    ELSE
+13088                    buffer_size%=buffer_size%+1 : Show_Count buffer_size%
+13092                    END IF
+13096             =REMAINDER : Switch_To up%(here)
+13100             END SELect
+13104       =216:REMark ¿
+13108           SELect ON here
+13112             =9 : windows%=windows%-(windows%>0) : Show_Windows
+13116             =7 : IF dat_stk:dataspace%=dataspace%-(dataspace%>1) : Show_Count dataspace%:ELSE Down_Stk
+13120             =6 : buffer_size%=buffer_size%-(buffer_size%>1)
+13124                  Show_Count buffer_size%
+13128             =REMAINDER : Switch_To down%(here)
+13132             END SELect
+13136       =192 : Switch_To left%(here)
+13140       =200 : Switch_To right%(here)
+13144       =10,194
+13148               SELect ON here
+13152                 =0 : IF restart_flag=2 : _quit = 1 : EXIT options
+13156                 =1 : log$=Text_Response$(log$,22)
+13160                 =2 : prog$=Text_Response$(prog$,31)
+13164                 =14: task$=Text_Response$(task$,12)
+13165                 =7 : IF dat_stk
+13166                       dataspace%=Int_Response%(max_data%): Show_Count dataspace% : PRINT "K";
+13168                      ELSE
+13170                       stk_sze%=Stk_Set%(Int_Response%(max_stk%)):Show_Stack stk_sze%
+13172                      END IF
+13176                 =6 : buffer_size%=Int_Response%(Heap_Space(0))
+13180                      Show_Count buffer_size% : PRINT "K";
+13184                 END SELect
+13188               Switch_To 8
+13192       =232 : _where=here : drawing=1 : Window_3D 21 : INK 2
+13196              PRINT ,"        CURSOR-CONTROLLED MENU"
+13200              PRINT \"Press ¾¿ ¼½ arrows to "; : PAPER 0 : INK 7
+13204              PRINT " select "; : PAPER 7 : INK 2
+13208              PRINT" the option you require."\\
+13212              PRINT "Press SPACE to toggle a switch or start a compilation."\\
+13216              PRINT "Press ENTER to edit file names.  ¿ and ¾ change sizes.";
+13220              INK 7 : PAPER 0 : here=_where : drawing=0 : Switch_To here
+13224       END SELect
+13228     END REPeat options
+13232    ELSE
+13236     End_Dialogue
+13240    END IF
+13244   WINDOW 390,15,97,12 : INK 0 : PAPER 7 : REMark Status report window
+13248   SET_PRIORITY 0,0,32
+13252   END DEFine
+13256 :
+13260 DEFine FuNction Stripped_Back$(txt$)
+13264 LOCal ii
+13268   FOR ii = LEN(txt$) TO 1 STEP -1
+13272     IF txt$(ii) <> " " : RETurn txt$(1 TO ii)
+13276     END FOR ii
+13280   RETurn ""
+13284   END DEFine
+13288 :
+13292 DEFine FuNction Text_Response$(txt$,lenf)
+13296 LOCal status, wk$(50)
+13300   status=1-drawing : REMark Initially 0 if invoked during set-up phase
+13304   wk$=txt$ : REMark Use a string of known size
+13308   IF txt$="" AND here=1 : Set_Print : PRINT "        ";
+13312   REPeat outer_lp
+13316     Set_Print : IF status : wk$=EDIT$(wk$,lenf) : ELSE : PRINT wk$;
+13320     IF lenf < 15 : RETurn wk$
+13324     IF LEN(wk$)>2
+13328       IF wk$(1 TO 3)=='scr' OR wk$(1 TO 3)=='con' : wk$=""
+13332       END IF
+13336     IF here=1 AND (wk$=="display" OR wk$="") : wk$="" : EXIT outer_lp
+13340     status=DEVICE_STATUS(wk$)
+13344     IF status=-8
+13348       IF restart_flag=1:restart_flag=0:REMark If change of file Auto -> Manual
+13352       Place_Cursor 0 : PRINT "DELETE?"; : Squeak
+13356       REPeat rep_lp
+13360         status = Key_from_Kbd(1)
+13364         IF status = code_y% OR status = code_n% : EXIT rep_lp
+13368         END REPeat rep_lp
+13372       Show_File : IF status = code_y% : DELETE wk$ : EXIT outer_lp
+13376       ELSE
+13380       IF status>=0 : EXIT outer_lp
+13384       IF restart_flag=1:restart_flag=0:REMark If change of file - Auto -> Manual
+13388       Place_Cursor 0 : PRINT "PARDON?"; : Squeak
+13392       dummy% = Key_from_Kbd(1) : Show_File : END IF
+13396     END REPeat outer_lp
+13400   IF here=1
+13404     IF wk$="" : Set_Print : PRINT "DISPLAY";
 13408     IF drawing
-13412             END IF
+13412       Window_3D 3 : PRINT "Pause: ";
+13416       ELSE : Switch_To 3 : Set_Print : END IF
+13420     IF wk$=""
+13424       Echo pause_flag : right%(5)=3 : ELSE : PRINT "N/A"; : right%(5)=-1
+13428       END IF
+13432     ELSE
+13436     DELETE wk$ & "_temp" : END IF
+13440   RETurn wk$
+13444   END DEFine
+13448 :
+13452 DEFine FuNction Int_Response%(max%)
+13456 LOCal ii
+13460   REPeat rep_lp
+13464     Set_Print : PRINT "    "; : Set_Print : ii=EDIT%("",LEN(max%))
+13468     IF Within(ii,1,max%) : RETurn ii
+13472     Squeak
+13476     END REPeat rep_lp
+13480   END DEFine
+13484 :
+13488 DEFine PROCedure Switch_To(ii)
+13492   IF ii=-1 : RETurn
+13496   Window_3D here : Window_3D ii : here=ii
+13500   END DEFine
+13504 :
+13508 DEFine PROCedure Window_3D(ii)
+13512   IF drawing : Modwin 0,0,-1,-1,ii : PAPER 0 : CLS
+13516   Modwin 0,0,-4,-3,ii
+13520   IF drawing
+13524     PAPER 7 : CLS : BORDER 1,4 : here=ii
+13528     ELSE
+13532     OVER -1 : BLOCK w%(ii)-2,d%(ii)-2,1,1,7 : OVER 0 : END IF
+13536   Modwin -8,-5,0,0, ii
+13540   END DEFine
+13544 :
+13548 DEFine PROCedure Modwin(d1%,d2%,d3%,d4%,ii)
+13552   WINDOW w%(ii)+d1%,d%(ii)+d2%,winx%(ii)+d3%,winy%(ii)+d4%
+13556   END DEFine
+13560 :
+13564 DEFine PROCedure Set_Print
+13568   Place_Cursor offset%(here)
+13572   END DEFine
+13576 :
+13580 DEFine PROCedure Squeak
+13584   IF sound_flag <> 0 : BEEP 3300,0,20,100,1
+13588   END DEFine
+13592 :
+13596 DEFine PROCedure Echo(ii)
+13600   Set_Print : IF ii<>0 : PRINT "YES"; : ELSE : PRINT "NO ";
+13604   END DEFine
+13608 :
+13612 DEFine PROCedure Show_Count(ii)
+13616 LOCal wk$(10)
+13620   Set_Print : wk$="   " & ii
+13624   PRINT wk$(LEN(wk$)-3 TO LEN(wk$));
+13628   END DEFine
+13632 :
+13636 DEFine PROCedure Show_File
+13640   Place_Cursor 0
+13644   IF here=1 : PRINT "Report: "; : ELSE : PRINT "Object: ";
+13648   END DEFine
+13652 :
+13656 DEFine PROCedure Show_Windows
+13660   Show_Count windows% : Place_Cursor 14 : PRINT Cond_s$(windows%);
+13664   END DEFine
+13668 :
+13672 DEFine PROCedure Show_Addressing
+13676   Set_Print
+13680   SELect ON short_adr_gen
+13684     =0 : PRINT "> 64K";
+13688     =REMAINDER : PRINT "< 64K";  : REMark = 1
+13692     END SELect
+13696   END DEFine
+13700 :
+13704 DEFine PROCedure Show_Struct
+13708   Set_Print
+13712   SELect ON structured_flag
+13716     =0 : PRINT "Freeform  ";
+13720     =REMAINDER : PRINT "Structured";  : REMark = 1
+13724     END SELect
+13728   END DEFine
+13732 :
+13736 DEFine PROCedure Show_Opt
+13740   Set_Print
+13744   SELect ON optimise_flag
+13748     =0 : PRINT "BRIEF";
+13752     =1 : PRINT "REMs ";
+13756     =REMAINDER : PRINT "FAST ";  : REMark = 2
+13760     END SELect
+13764   END DEFine
+13768 :
+13772 DEFine PROCedure Show_Diag
+13776   Set_Print
+13780   SELect ON diagnose_flag
+13784     =0 : PRINT "Omit Nos   ";
+13788     =1 : PRINT "Display Nos";
+13792     =REMAINDER : PRINT "Include Nos";  : REMark = 2
+13796     END SELect
+13800   END DEFine
+13804 :
+13808 DEFine PROCedure Show_Strs
+13812   Set_Print
+13816   SELect ON string_flag
+13820     =0 : PRINT "Ignore $";
+13824     =1 : PRINT "Report $";
+13828     =REMAINDER : PRINT "Create $";  : REMark = 2
+13832     END SELect
+13836   END DEFine
+13840 :
+13844 DEFine PROCedure Show_Res
+13848   Set_Print
+13852   SELect ON restart_flag
+13856     =0 : PRINT "Manual   ";
+13860     =1 : PRINT "Auto     ";
+13864     =REMAINDER : PRINT "Quit now?"; : REMark = 2
+13868     END SELect
+13872   END DEFine
+13876 :
+13886 DEFine PROCedure Show_Stack(ii)
+13896  LOCal wk$(10)
+13906  IF ii<350:wk$="Dflt":ELSE :wk$=" "&ii
+13916  Set_Print:PRINT wk$(LEN(wk$)-3 TO LEN(wk$));
+13926 END DEFine
+13936 :
+13946 DEFine FuNction Stk_Set%(a$)
+13956  LOCal ii
+13966  ii=a$
+13976  IF ii<350:ii=348
+13986  RETurn Ev(ii)
+13996 END DEFine
+14006 :

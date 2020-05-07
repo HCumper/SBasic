@@ -131,10 +131,6 @@ namespace SBasic
         {
             return DefaultResult;
         }
-        public override TResult VisitEol([NotNull] EolContext context)
-        {
-            return DefaultResult;
-        }
         public override TResult VisitErrorNode([NotNull] IErrorNode node)
         {
             return base.VisitErrorNode(node);
@@ -206,13 +202,13 @@ namespace SBasic
         //    return ConvertFromString(template.Render());
         //}
 
-        public override TResult VisitLine([NotNull] LineContext context)
-        {
-            if (context.ChildCount <= 1)
-                return ConvertFromString("");
-            var temp = ConvertFromString("\r\n" + ConvertToString(base.Visit(context.GetChild(context.ChildCount - 2))));
-            return temp;
-        }
+        //public override TResult VisitLine([NotNull] LineContext context)
+        //{
+        //    if (context.ChildCount <= 1)
+        //        return ConvertFromString("");
+        //    var temp = ConvertFromString("\r\n" + ConvertToString(base.Visit(context.GetChild(context.ChildCount - 2))));
+        //    return temp;
+        //}
         public override TResult VisitLinelist([NotNull] LinelistContext context)
         {
             if (context.ChildCount == 0)
