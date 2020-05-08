@@ -1,177 +1,2594 @@
-100 CLS
-110 TURBO_repfil
-120 sorts=0:partitions=0
-130 IMPLICIT% a, b
-140 DIM a(10001)
-150 DIM b(10001)
-160 LET shortlist=9
-170 set_up_tabLe
-180 FOR lo=1 TO n : b(lo)=a(lo)
-190 now = DATE
-200 b(n+1)=10001
-210 quicksort 1,n
-220 check
-230 INPUT t$
-240 STOP
-250 FOR lo=1 TO n : b(lo)=a(lo)
-260 REMark b(n+1)=10001
-270 sorts=0:partitions=0
-280 now = DATE
-290 QUICKSORT2 1,n
-300 PRINT sorts,partitions
-310 check
-320 STOP
-330 :
-340 DEFine PROCedure check
-350 PRINT "Time" ! DATE-now
-360 FOR loop = 1 TO n-1
-370 IF b(loop) > b(loop + 1) THEN PRINT "Error at" ! loop
-380 END FOR loop
-390 END DEFine
-400 DEFine PROCedure set_up_tabLe
-410 LOCal entry
-420   INPUT "How many numbers? ";n
-430   FOR entry=1 TO n
-440     a(entry)=RND(1 TO 10000)
-450   END FOR entry
-460   LET now=DATE
-470 END DEFine
-480 :
-490 DEFine PROCedure print_table
-500 LOCal pos
-510   LET finished=DATE-now
-520   PRINT : PRINT
-530   BEEP 10000,100
-540   FOR pos=n-4 TO n
-550     PRINT a(pos)
-560   END FOR pos
-570   PRINT "Time taken" ! finished
-580 END DEFine
-590 :
-600 IMPLICIT% l, r, i, j, pivot
-610 DEFine PROCedure quicksort(l,r)
-620 LOCal i,j,pivot
-630   i=l : j=r
-640   REMark IF b(i)<b(i+1) : swap b(i),b(i+1)
-650   REMark IF b(i+1)>b(j) : swap b(i+1),b(j)
-660   REMark IF b(i)>b(i+1) : swap b(i),b(i+1)
-670   pivot=b(i)
-680   REPeat loop
-690     REPeat inc_k
-700       IF pivot<=b(i) : EXIT inc_k
-710       i=i+1
-720     END REPeat inc_k
-730     REPeat dec_j
-740       IF pivot>=b(j) : EXIT dec_j
-750       j=j-1
-760     END REPeat dec_j
-770     IF i<j : swap b(i),b(j)
-780     IF i<=j : i=i+1 : j=j-1
-790     IF i>j : EXIT loop
-800   END REPeat loop
-810   IF l< j THEN
-820     IF j-l >= shortlist THEN
-830      quicksort l,j
-840     ELSE
-850       insertionsort l,j
-860     END IF
-870   END IF
-880   IF i < r THEN
-890     IF r - 1 >= shortlist THEN
-900       quicksort i,r
-910     ELSE
-920      insertionsort i,r
-930     END IF
-940   END IF
-950 END DEFine
-960 :
-970 IMPLICIT% this, that, t
-980 DEFine PROCedure swap(this,that)
-990 LOCal t
-1000   LET t=this
-1010   LET this=that
-1020   LET that=t
-1030 END DEFine swap
-1040 :
-1050 IMPLICIT% first, last, p, item, temporary
-1060 DEFine PROCedure insertionsort (first,last)
-1070 LOCal p,item,temporary
-1080   FOR item=first+1 TO last
-1090     LET p=item
-1100     LET temporary=b(p)
-1110     REPeat compare
-1120       IF temporary>=b(p-1) : EXIT compare
-1130       IF p=first : EXIT compare
-1140       LET b(p)=b(p-1)
-1150       LET p=p-1
-1160     END REPeat compare
-1170     LET b(p)=temporary
-1180   END FOR item
-1190 END DEFine
-1200 :
-1210 DEFine PROCedure QUICKSORT1 (bottom,top)
-1220 LOCal sort_loop,low,high,ptr
-1230   low  = bottom : high = top : ptr = bottom
-1240   REPeat sort_loop
-1250     IF low >= high : EXIT sort_loop
-1260     IF b(low) > b(high)
-1270       temp        = b(low)
-1280       b(low)  = b(high)
-1290       b(high) = temp
-1300       IF ptr = low
-1310         low  = low+1 : ptr = high
-1320       ELSE
-1330         high = high-1 : ptr = low
-1340       END IF
-1350     ELSE
-1360       IF ptr = low : high = high-1 : ELSE : low = low+1
-1370     END IF
-1380   END REPeat sort_loop
-1390   IF ABS(top - bottom) < 2 : RETurn
-1400   QUICKSORT1 bottom,ptr - 1
-1410   QUICKSORT1 ptr + 1,top
-1420 END DEFine QUICKSORT1
-1430 :
-1440 REMark Quicksort, faster variety, by Marcus Jeffery
-1450 :
-1460 REMark prepare an array to sort, remembering that this routine needs
-1470 REMark a predefined 'highest value entry' at the end of the array
-1480 REMark QUICKSORT2 also needs the procedure QS2_PARTITION below
-1490 DEFine PROCedure QUICKSORT2 (lower,upper)
-1500 LOCal part_elem
-1510 sorts=sorts+1
-1520   IF lower < upper
-1530     part_elem = upper + 1
-1540     QS2_PARTITION lower,part_elem
-1550     QUICKSORT2 lower,part_elem-1
-1560     QUICKSORT2 part_elem+1,upper
-1570   END IF
-1580 END DEFine QUICKSORT2
-1590 :
-1600 DEFine PROCedure QS2_PARTITION (i,j)
-1610 LOCal k,temp,exchange,loop,inc_k,dec_j
-1620   temp = b((i+j)/2) : k = i
-1630 partitions=partitions+1
-1640   REPeat loop
-1650 partitions=partitions+1
-1660     REPeat inc_k
-1670       k = k + 1
-1680       REMark this is where the 'guaranteed highest value' comes in
-1690       IF b(k) >= temp : EXIT inc_k
-1700     END REPeat inc_k
-1710     REPeat dec_j
-1720       j = j - 1
-1730       REMark conversely we don't need a 'guaranteed less than' value
-1740       REMark at the start of the array as the sorting process does
-1750       REMark this for us anyway
-1760       IF b(j) <= temp : EXIT dec_j
-1770     END REPeat dec_j
-1780     IF k < j
-1790       REMark swap the two entries around
-1800       swap b(k),b(j)
-1810     ELSE
-1820       EXIT loop
-1830     END IF
-1840   END REPeat loop
-1850   b(i) = b(j) : b(j) = temp
-1860 END DEFine QS2_PARTITION
+10000 REMark QL TURBO PARSER V5.02 - 24 MAY 06
+10004 REMark                  Rebuilt & extended Jan 87 - Chas Dillon
+10008 REMark                  Altered storing of ROM routines - 28 FEB 00 GDG
+10012 REMark  Ident_Class 0 as well as 2 allowed in Parse_Manifest
+10016 REMark  LOG10 used in place of LN. Allows 128 to be properly dealt with.
+10020 REMark  Allow up to 32 channels
+10024 REMark  TURBO_buffserz added : Smaller Vector_Table
+10028 REMark  Allow byte and integer tokenisation for Minerva : % & $ for SMSQ/E
+10032 REMark  Incorporate DEBUG and alter DEBUG_LEVEL : Adjust Line_Pos%
+10036 REMark  Set DATA 25671 correctly now : 23 DEC 00
+10040 REMark  Set ATAN -> ad hoc : limit buffer & data to 9999*1024 : 16 JAN 01
+10044 REMark  Use standard Config block : 8 FEB 01
+10048 REMark  Correctly code TURBO_P/F in Init_Names: 20 FEB 01
+10052 REMark  Add TURBO_V - to return Vector Table position of name: 1 MAR 01
+10056 REMark  Replace "Resident" by "Auto" and "Manual" - 3 MAR 01
+10060 REMark  Make BAUD ad hoc - 7 JUN 01
+10064 REMark  Add "getsym" to Parse_Continue & Parse_End_When
+10068 REMark  Add Retry_Here to the start of a program - 7 Oct 2001
+10072 REMark  Make BLOCK ad hoc to allow for GD2 - 16 Nov 2001
+10076 REMark  Correct Set_Fl (for Minerva) & allow default Report - 18 JAN 02
+10080 REMark  BASIC_ADR added to list of keywords - 6 FEB 02
+10084 REMark  Version number set in Comms area for codegen - 18 FEB 02
+10088 REMark  Concat LF excised in codegen "improvements" - 8 APR 02
+10092 REMark  Extensions added - 17 AUG 02
+10096 REMark  Size limits on Extensions relaxed - 5 MAR 03
+10100 REMark  File_SIZE now allows file sizes up to $7FFFFFFF
+10104 REMark  To recognise that free memory may exceed 32 megabytes (Alteration due to W. Lenerz)
+10108 REMark  v4.20 makes more corrections re large free memory, and allows EXEC(_W),#x;a$
+10112 REMark  v4.20 now allows extension file names to be 41 bytes long
+10116 REMark  . File_SIZE uses $7fffff0f now (ram1_xx problem with SMSQ/E)
+10120 REMark  v4.21 allows arrays in, and parameters to be returned in, rom fn/procs
+10122 REMark  v5.01 allows the option of passing string pars by reference  (for SMSQ)
+10123 REMark  v5.02 allows inclusion of an _INS file and setting of list/nolist
+10124 :
+10128 TURBO_objfil 'ram1_parser502'
+10132 TURBO_taskn  'Turbo 5.02'
+10136 TURBO_objdat 200
+10140 TURBO_repfil 'ram1_err' : TURBO_buffersz 200
+10144 TURBO_diags  'o' : TURBO_struct 1 : TURBO_model  0
+10148 TURBO_optim  0 : TURBO_windo  0 : TURBO_locstr 0
+10150 TURBO_objstk 600:TURBO_list 0
+10152 :
+10154 REMark %%win1_turbo_test_parser_ins,1,0
+10200 :
+10204 IMPLICIT% token, tokval, ii, jj, keynum, here, _where, monop
+10208 IMPLICIT% optimise_flag, diagnose_flag, string_flag, restart_flag
+10212 IMPLICIT% param_type, p_type, end_type, con_type, template_no
+10216 IMPLICIT% gotype, grp_module
+10220 IMPLICIT% lenf, level, maxval, ref_pointer, suffix
+10224 IMPLICIT% sym_num, debug_top, debug_now
+10228 :
+10232 REMark   Extra cmds/fns: PEEK$, POKE$, MOVE_MEMORY, BASIC_POINTER
+10236 REMark                   BASIC_L, BASIC_B%, BASIC_NAME$, BASIC_TYPE%
+10240 REMark                   BASIC_W%, BASIC_INDEX%, EDIT$, EDIT%
+10244 REMark                   DEVICE_STATUS, CURSOR_ON, CURSOR_OFF
+10248 REMark                   SUSPEND_TASK, SET_PRIORITY, COMPILED
+10252 REMark                   OPTION_CMD$, FREE_MEMORY, PEEK_F, RETRY//HERE
+10256 REMark                   ALLOCATION, DEALLOCATE, SYS_VARS
+10260 :
+10264 DIM prog$(36), log$(36), wk$(50), version$(4)
+10268 DIM grp_id$(40), known_grps$(400), task$(12)
+10272 :
+10276 _quit = 0 : MODE 4 : version$="5.02":hp_sp=0:ref=0:dat_stk=1:str_ref%=0:ins_fl=0
+10280 Assign_Constants : Init_Names
+10284 Set_Links
+10288 Dialogue
+10292 IF NOT _quit
+10296   Pass1 : Pass2
+10300   REMark IF Resident_Mode : RUN
+10304   END IF
+10308 _quit=CODE(INKEY$(#1,200))
+10312 STOP
+10316 :
+10320 DEFine PROCedure Assign_Constants
+10324 LOCal ii, i
+10328   REMark >>>--<<<   --------------------------------------------------
+10332   REMark **** Sinclair equates (from QDOS manual)
+10336   MANIFEST : bv_pfbas% = 16 : REMark Source start pointer offset
+10340   MANIFEST : bv_pfp%   = 20 : REMark Source end pointer offset
+10344   MANIFEST : bv_ntbas% = 24 : REMark Name table pointer offset
+10348   MANIFEST : bv_ntp%   = 28 : REMark Name table end pointer
+10352   MANIFEST : bv_chbas% = 48 : REMark Channel table pointer offset
+10356 :
+10360   REMark **** Compiler constants
+10364   MANIFEST : local_flag%=-1 : ambiguous_flag%=-2 : for_flag%=-3
+10368   MANIFEST : global_var_flag%=-4 : extnl_var_flag%=-5 : global_rtn_flag%=-6
+10372   MANIFEST : nt_entry%=8 : short_string%=14 : min_rom_words%=114
+10376   MANIFEST : slow_code% = 45 : exts_max% = 8 : max_stk%=9998
+10380 :
+10384   REMark **** QL internal source representation codes
+10388   REMark tokens
+10392   MANIFEST : tok_space%=128 : tok_keyword%=129
+10396   MANIFEST : tok_symbol%=132 : tok_opsym%=133
+10400   MANIFEST : tok_monosym%=134 : tok_name% = 136
+10404   MANIFEST : tok_short%=137 : tok_long%=138
+10408   MANIFEST : tok_string%=139 : tok_text%=140 : tok_lineno%=141
+10412   MANIFEST : tok_separator%=142 : tok_end_of_prog%=200
+10416   MANIFEST : tok_nomin%=240 : tok_nomax%=255 : REMark Numbers use tokens 240-255
+10420   MANIFEST : tok_bin%=216 : tok_hex%=232
+10424 :
+10428   REMark Symbols
+10432   MANIFEST : sym_assign%=1 : sym_colon%=2 : sym_hash%=3 : sym_comma%=4
+10436   MANIFEST : sym_opbrt%=5 : sym_clbrt%=6 : sym_eol%=10
+10440   REMark sym_opcurly%=7 : sym_clcurly%=8 : sym_space%=9
+10444   REMark Operators
+10448   MANIFEST : op_start%=0
+10452   MANIFEST : op_add%=1 : monop_minus%=1 : monop_bnot%=3 : monop_lnot%=4
+10456   MANIFEST : op_concat%=16 : op_instr%=22
+10460   MANIFEST : opind_concat% = 20 : opind_instr% = 26
+10464   MANIFEST : opind_mod% = 24 : opind_div% = 25 : opind_divide% = 8
+10468   REMark Separators
+10472   MANIFEST : sep_comma%=1 : sep_semi%=2 : sep_slash%=3 : sep_pling%=4 : sep_to%=5
+10476   REMark Keywords
+10480   MANIFEST : key_end%=1 : key_for%=2 : key_if%=3
+10484   MANIFEST : key_repeat%=4 : key_select%=5
+10488   MANIFEST : key_when% = 6 : key_define%=7 : key_proc%=8 : key_fctn%=9
+10492   MANIFEST : key_go%=10 : key_to%=11 : key_sub%=12 : key_error%=14
+10496   MANIFEST : key_restore%=17 : key_next%=18 : key_exit%=19
+10500   MANIFEST : key_else%=20 : key_on%=21 : key_return%=22
+10504   MANIFEST : key_remainder%=23 : key_data%=24 : key_dim%=25
+10508   MANIFEST : key_local%=26 : key_let%=27 : key_then%=28
+10512   MANIFEST : key_step%=29 : key_remark%=30 : key_mistake%=31
+10516   MANIFEST : mc_proc%=8 : mc_fn%=9 : REMark Name usage markers
+10520 :
+10524   REMark **** Expression evaluation constants & datastructures
+10528   MANIFEST : max_expr_lev%=20 : REMark Maximum depth of expression nesting
+10532   MANIFEST : max_bh = 1.023898E7 : REMark Maximum value for buffer and dataspace
+10536   MANIFEST : max_str = 32760
+10540 :
+10544   REMark  **** Values used in struct% ( & elsewhere )
+10548 :
+10552   MANIFEST : string_mask% = 1 : REMark used for var & fn (type & grammar) - bit 0
+10556   MANIFEST : float_mask%  = 2 : REMark       "                 "                1
+10560   MANIFEST : int_mask%    = 4 : REMark       "                 "                2
+10564   MANIFEST : datatypes%=7
+10568   MANIFEST : colour_mask%   = 8     : REMark used in grammar word - bit 3
+10572   MANIFEST : channel_mask%  = 16    : REMark     "           "          4
+10576   MANIFEST : name_mask%     = 32    : REMark     "           "          5
+10580   MANIFEST : slice_mask%    = 64    : REMark     "           "          6
+10584   MANIFEST : by_ref_mask%   = 128   : REMark     "           "          7
+10588   MANIFEST : proc_mask%     = 8     : REMark used in type word - bit 3
+10592   MANIFEST : fctn_mask%     = 16    : REMark      "        "         4
+10596   MANIFEST : rom_mask%      = 32    : REMark      "        "         5
+10600   MANIFEST : exception_mask%= 64    : REMark      "        "         6
+10604   MANIFEST : ad_hoc_mask%   = 128   : REMark      "        "         7
+10608   MANIFEST : manifest_mask% = 256   : REMark      "        "         8
+10612   MANIFEST : glob_dir_mask% = 512   : REMark      "        "         9
+10616   MANIFEST : extnl_dir_mask%= 1024  : REMark      "        "         10
+10620   MANIFEST : template_mask% = 2048  : REMark      "        "         11
+10624 :
+10628   MANIFEST : in_use_mask%   = 4096  : REMark      "        "         12
+10632   MANIFEST : vector_mask%   = 8192  : REMark used in type & grammar  13
+10636   MANIFEST : last_mask%     = 16384 : REMark      "        "         14
+10640 :
+10644   MANIFEST : dims_offset%   = 512   : REMark used in param word - bits 9-12
+10648 :
+10652   REMark Template no. may be in grammar word bits 3 to 13 inc
+10656 :
+10660   rom_ext_mask% = rom_mask% || ad_hoc_mask% || last_mask% || in_use_mask%
+10664   directive_mask% = glob_dir_mask% || rom_mask% || proc_mask%
+10668   vecstr_mask% = vector_mask% || string_mask% : REMark Simple string
+10672   glbl_and_extnl% = glob_dir_mask% || extnl_dir_mask%
+10676 :
+10680   MANIFEST : code_y% = 89 : code_n% = 78
+10684   MANIFEST : op_offset%=4 : mono_offset%=0 : max_optrs%=26
+10688 :
+10692   REMark **** Error types
+10696   MANIFEST : err_buffer_too_small% = 1
+10700   MANIFEST : err_sys_fault% = 2
+10704   MANIFEST : err_too_many_structs% = 3
+10708   MANIFEST : err_dim_loc% = 4
+10712   MANIFEST : err_array_needed% = 6
+10716   MANIFEST : err_arrays_by_ref% = 7
+10720   MANIFEST : err_assign_expected% = 8
+10724   MANIFEST : err_coming_soon% = 9
+10728   MANIFEST : err_data_expression% = 10
+10732   MANIFEST : err_direct_conflict% = 11
+10736   MANIFEST : err_dupl_grp_id% = 12
+10740   MANIFEST : err_expr_by_ref% = 13
+10744   MANIFEST : err_exp_mismatch% = 14
+10748   MANIFEST : err_faulty_linenum% = 15
+10752   MANIFEST : err_id_ambiguous% = 16
+10756   MANIFEST : err_id_redefined% = 17
+10760   MANIFEST : err_illegal_vector% = 18
+10764   MANIFEST : err_misplaced_local% = 19
+10768   MANIFEST : err_mixed_modno% = 20
+10772   MANIFEST : err_no_channel% = 21
+10776   MANIFEST : err_parameter_error% = 22
+10780   MANIFEST : err_procfn_not_params% = 23
+10784   MANIFEST : err_proc_in_eval% = 24
+10788   MANIFEST : err_stmt_too_long% = 25
+10792   MANIFEST : err_syntax_error% = 26
+10796   MANIFEST : err_too_complex% = 27
+10800   MANIFEST : err_unknown_loop% = 28
+10804   MANIFEST : err_value_needed% = 29
+10808   MANIFEST : err_defdir_conflict% = 30
+10812   MANIFEST : err_assign_manifest% = 31
+10816   MANIFEST : err_simple_var% = 32
+10818   MANIFEST : err_dup_ins_file% = 33
+10820 REMark >>>++<<<   ----------------------------------------------------
+10824   i = SYS_VARS
+10828   sv_ident  = 0  + i : sv_free  = 12 + i
+10832   sv_basic  = 16 + i : sv_ramt  = 32 + i
+10836   sv_chbas  = 120 + i: sv_arbuf = 138 + i
+10840 :
+10844   Grab_Data 100 : REPeat plug : READ ii : IF ii=-1 : EXIT plug
+10848 :
+10852 DATA "Buffer too small."
+10856 DATA "TURBO internal fault - please report details"
+10860 DATA "Parser DATASPACE full."
+10864 DATA "","Error diagnosis failed."
+10868 DATA "Array name required."
+10872 DATA "Arrays only passed by reference."
+10876 DATA "Variable assignment expected."
+10880 DATA "Statement is not yet supported."
+10884 DATA "Calculation not allowed in DATA."
+10888 DATA "Conflicting Directive statements."
+10892 DATA "Duplicate group name."
+10896 DATA "Can't pass expression by reference."
+10900 DATA "Incorrect calculation syntax."
+10904 DATA "Faulty line reference."
+10908 DATA "Ambiguous name used."
+10912 DATA "Ambiguous declaration of name."
+10916 DATA "Array operation not allowed."
+10920 DATA "LOCALs must follow DEFinitions."
+10924 DATA "Inconsistent module numbers."
+10928 DATA "Channel number (0-31) needed."
+10932 DATA "Incorrect number of parameters."
+10936 DATA "Routine names can not be parameters."
+10940 DATA "Procedures do not have values."
+10944 DATA "End of statement expected."
+10948 DATA "Incorrect SuperBasic syntax."
+10952 DATA "Calculation too complex."
+10956 DATA "Loop does not exist here."
+10960 DATA "A function must return a value."
+10964 DATA "DEFine/Directive mismatch."
+10968 DATA "Can't assign value - MANIFEST"
+10972 DATA "Only scalar name for MANIFEST"
+10974 DATA "Only one INS file allowed"
+10976 DATA "ENDMSG"
+10980 DATA 78,113,78,113,32,122,255,250,69,250,0,10,118,255,112
+10984 DATA 9,78,67,78,117,69,250,255,234,36,136,112,0,78,117,-1
+10988     REMark  here   nop
+10992     REMark         nop
+10996     REMark         move.l    here,a0     Channel Id
+11000     REMark         lea       ext,a2      Start of 'external' routine
+11004     REMark         moveq     #9,d0       SD.EXTOP
+11008     REMark         trap      #3
+11012     REMark         rts
+11016     REMark  ext    lea       here,a2
+11020     REMark         move.l    a0,(a2)     Base ptr to Chan Tab entry
+11024     REMark         moveq     #0,d0
+11028     REMark         rts
+11032 :
+11036   READ window_count%,icon_count%,restart_flag,restart_key% : REMark Used in Dialogue
+11040 REMark DATA 1        : REMark Set to zero if #0 not needed (QRAM needs it)
+11044 DATA 21,15    : REMark window and icon counts (from zero)
+11048 DATA 0,12287  :REMark restart_flag & restart_key%
+11052 :
+11058 DATA "$`#*","parser    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+11060 DATA -4444:REMark Number of SuperBASIC windows
+11062 DATA -4444:REMark Default Dataspace
+11064 DATA -4444:REMark Default buffer size
+11066 DATA -4444:REMark Background Colour
+11068 DATA -4444:REMark Listing Depth
+11070 DATA -4444:REMark Default String Length
+11072 DATA -4444:REMark Default Stack size
+11074 DATA -4444:REMark Key to shrink wondow
+11076 DATA -4444:REMark Key to expand window
+11078 DATA -4444:REMark Qram on/off
+11080 DATA -4444:REMark Produce Listing
+11082 DATA -4444:REMark Sound on/off
+11084 DATA -4444:REMark Pause
+11086 DATA -4444:REMark Optimisation
+11088 DATA -4444:REMark Line Numbers
+11090 DATA -4444:REMark Local Strings
+11092 DATA -4444:REMark Structure
+11094 DATA -4444:REMark Program Size
+11096 DATA -4444:REMark Display x-csize
+11098 DATA -4444:REMark Display y-csize
+11100 DATA "XX","00000000000000000000000000000000000000000"
+11102 DATA "XX","11111111111111111111111111111111111111111"
+11144 RESTORE 11060:REMark to get the configured DATA
+11148 READ windows%,dataspace%,buffer_size%,background%,listing_depth%,string_default%,stk_sze%:stk_sze%=Ev(stk_sze%):REMark Integers
+11152 READ up_key%,down_key%:REMark Characters
+11156 READ qram_flag,list_flag,sound_flag,pause_flag,optimise_flag
+11160 READ diagnose_flag,string_flag,structured_flag,short_adr_gen,x_csize%,y_csize%
+11164 RESTORE 11100:READ prog$,prog$
+11168 RESTORE 11102:READ log$,log$
+11172 REMark  READ wk$, prog$, log$, restart_flag, restart_key%, pause_flag, list_flag
+11176 REMark  READ sound_flag, optimise_flag, diagnose_flag, string_flag
+11180 REMark   READ structured_flag, short_adr_gen
+11184 REMark   READ windows%, dataspace%, buffer_size%, listing_depth%
+11188 REMark  READ x_csize%, y_csize%, up_key%, down_key%, background%, string_default%
+11192 :
+11196 REMark Configuration DATA
+11200 REMark DATA '$`?0!$' : REMark Config BANNER string
+11204 REMark DATA 'ram1_test_task            ' : REMark Max 25 sig chars
+11208 REMark DATA 'ram1_test_report          '
+11212 REMark DATA 0,12287,0,0,1,0,2,1,0,0,2,2,2,190,1,0,217,209,228, 100
+11216 :
+11220 DIM res_type%(max_optrs%), priority%(max_optrs%), arg_type%(max_optrs%)
+11224 DIM type_s%(max_expr_lev%), op_s%(max_expr_lev%)
+11228 DIM coercion%(int_mask%,datatypes%)
+11232 DIM ext$(exts_max%-1,42),ext_p%(exts_max%-1,1),ext_l(exts_max%-1)
+11236 :
+11240 RESTORE 11256
+11244   FOR ii=string_mask% TO datatypes%
+11248     READ coercion%(string_mask%,ii),coercion%(float_mask%,ii),coercion%(int_mask%,ii)
+11252     END FOR ii
+11256 DATA 1,1,1, 2,2,2, 1,2,2, 4,4,4, 1,1,4, 2,2,4, 1,2,4
+11260 :
+11264   FOR ii=0 TO max_optrs% : READ priority%(ii)
+11268 DATA 0,50,50,15,15,25,25,30,30
+11272 DATA 20,20,20,20,20,20,20,5,10,5,35,45,5,10,5,30,30,40
+11276   MANIFEST : pri_relational% = 20 : REMark priority assigned to Relational operators
+11280 :
+11284   FOR ii=1 TO max_optrs% : READ arg_type%(ii),res_type%(ii)
+11288 DATA 6,6, 6,6, 4,4, 6,6
+11292   REMark Monadic - + ~~ NOT
+11296 DATA 6,6, 6,6, 6,6, 6,6
+11300   REMark Dyadic + - * /
+11304 DATA 7,2, 7,2, 7,2, 7,2, 7,2, 7,2, 7,2
+11308   REMark Comparators
+11312 DATA 4,4, 4,4, 4,4
+11316   REMark Bitwise || && ^^
+11320 DATA 2,2, 1,1
+11324   REMark Exponentiation, Concatenation
+11328 DATA 2,2, 2,2, 2,2
+11332   REMark Logical connectives OR AND XOR
+11336 DATA 4,4, 4,4, 1,4
+11340   REMark MOD DIV INSTR
+11344 :
+11348   REMark **** Misc. Initialisation
+11352   recovering=0     : REMark Flag used in Skip_Stmt & Complain
+11356   error_count%=0   : REMark Number of hard errors so far
+11360   warning_count%=0 : REMark Number of warnings so far
+11364   line_num%=0      : REMark Current program line number
+11368   data_line%=0     : REMark Latest line num containing DATA stmt
+11372   task_module_no%=0: REMark The module number of the Globals
+11376   go_slow = 1      : REMark Set on for threaded code, off for native
+11380   heap_busy=1      : REMark Set on if struct% busy during DEFine blk
+11384   in_core=1        : REMark Set if codegen stream store resident
+11388   working_on_IF=0  : REMark Set on during the eval of IF expr.
+11392   globals_defined=0: REMark Tri state 0, >0, -1 ; being before,
+11396                      REMark  during and after GLOBALS in pass 2
+11400   externals_used=0 : REMark Set on if EXTERNAL directive found
+11404   stopper=0        : REMark Set on to block code after 1st DEFine
+11408   debug_specd=0    : REMark DEBUG_LEVEL not yet seen
+11412   debug_top=0      : REMark default level
+11416   old_src = 0
+11420   ignore=0         : REMark do processing is default
+11424   ext_no% = 0      : REMark No of extension files
+11428   float1% = 0 : float2% = 0 : float3% = 0
+11432 :
+11436   REMark **** Token -> Literal translation data
+11440 DIM keyword$(31,9),symbol$(10),opsym$(22,5),separator$(5,2),monosym$(4,3)
+11444   FOR ii=key_end% TO key_mistake% : READ keyword$(ii)
+11448 DATA "END","FOR","IF","REPeat","SELect","WHEN","DEFine","PROCedure"
+11452 DATA "FuNction","GO","TO","SUB","WHEN","ERRor","EOF","INPUT"
+11456 DATA "RESTORE","NEXT","EXIT","ELSE","ON","RETurn","REMAINDER"
+11460 DATA "DATA","DIM","LOCal","LET","THEN","STEP","REMark","MISTake"
+11464   FOR ii=sym_assign% TO sym_eol%-1 : READ symbol$(ii)
+11468 DATA "=",":","#",",","(",")","{","}"," "
+11472   symbol$(sym_eol%)=CHR$(10) : REMark Cannot be READ - not a literal
+11476   FOR ii=op_add% TO op_instr% : READ opsym$(ii)
+11480 DATA "+","-","*","/",">=",">","==","=","<>","<=","<","||","&&"
+11484 DATA "^^","^","&","OR","AND","XOR","MOD","DIV","INSTR"
+11488   FOR ii=monop_minus% TO monop_lnot% : READ monosym$(ii)
+11492 DATA "-","+","~~","NOT"
+11496   FOR ii=sep_comma% TO sep_to% : READ separator$(ii)
+11500 DATA ",",";","\","!","TO"
+11504 DIM undim_manifest$(40),ext_strg$(40)
+11508   undim_manifest$ = "DIM not required for MANIFEST string"
+11512   ext_strg$="Faulty extension string"
+11516   END DEFine
+11520 :
+11524 DEFine PROCedure Init_Names
+11528 LOCal ii, jj, grp_sz%, grp_off%, no_of_grps%, j%
+11532   i = (PEEK_L(sv_ramt) - sv_ident)/1024 - 10
+11536   IF i > 9999 : i= 9999
+11540   max_data%=INT(i)
+11544   IF max_data% < 850 : max_data% = 850
+11548   REMark Reserve space for the name-type tables
+11552   max_names%=(BASIC_L(bv_ntp%)-BASIC_L(bv_ntbas%))/nt_entry%
+11556   i=(FREE_MEMORY-2400-max_names%*2)/3
+11560   IF i<280 : Complain err_too_many_structs%
+11564   max_structs% = Min_Int%(16383,i)
+11568   line_limit%=max_structs%
+11572   DIM names%(max_names%),struct%(max_structs%),used_names%(max_names%)
+11576   st_free%=1 : REMark Leave the first record empty (for convenience)
+11580   REMark Store details of ROM procedures and functions
+11584   READ no_of_grps%
+11588   FOR ii = 1 TO no_of_grps%
+11592     READ grp_id$
+11596     j% = BASIC_INDEX%(grp_id$)
+11600     IF j% >= 0:names%(j%)=st_free%
+11604     REPeat rep_lp
+11608       READ type%:IF j%>=0:Push_St type%
+11612       IF (type% && last_mask%) <> 0 : EXIT rep_lp
+11616       END REPeat rep_lp
+11620     END FOR ii
+11624   grp_id$ = "" : known_grps$ = ""
+11628 :
+11632 DATA 209
+11636 DATA "IMPLICIT%", 16936
+11640 DATA "IMPLICIT$", 16936
+11644 DATA "EXTERNAL", 16936
+11648 DATA "GLOBAL", 16936
+11652 DATA "DATA_AREA", 16936
+11656 DATA "REFERENCE", 16936
+11660 DATA "WHEN_ERROR", 16936
+11664 DATA "END_WHEN", 16936
+11668 DATA "RETRY_HERE", 16936
+11672 DATA "SNOOZE", 16936
+11676 DATA "CATNAP", 16936
+11680 DATA "THROW_AWAY", 16936
+11684 DATA "MOVE_MEMORY", 16488
+11688 DATA "POKE$", 2088, 2, 1, 19424
+11692 DATA "SET_CHANNEL", 16552
+11696 DATA "DEFAULT_DEVICE", 40, 16417
+11700 DATA "CONNECT", 40, 4, 16388
+11704 DATA "EXECUTE", 16552
+11708 DATA "EXECUTE_W", 16552
+11712 DATA "EXECUTE_A", 16552
+11716 DATA "LINK_LOAD", 16552
+11720 DATA "LINK_LOAD_W", 16552
+11724 DATA "LINK_LOAD_A", 16552
+11728 DATA "COMMAND_LINE", 16424
+11732 DATA "DEALLOCATE", 40, 16386
+11736 DATA "TYPE_IN", 40, 16385
+11740 DATA "SET_POSITION", 16552
+11744 DATA "CURSOR_ON", 16552
+11748 DATA "CURSOR_OFF", 16552
+11752 DATA "SET_PRIORITY", 16552
+11756 DATA "SUSPEND_TASK", 16552
+11760 DATA "RELEASE_TASK", 16552
+11764 DATA "REMOVE_TASK", 16552
+11768 DATA "LIST_TASKS", 16552
+11772 DATA "END_CMD", 16424
+11776 DATA "SET_FONT", 16552
+11780 DATA "IMPLICITL", 16936
+11784 DATA "IMPLICITB", 16936
+11788 DATA "IMPLICITC", 16936
+11792 DATA "IMPLICITF", 16936
+11796 DATA "IMPLICITD", 16936
+11800 DATA "IMPLICITV", 16936
+11804 DATA "DEBUG", 16936
+11808 DATA "DEBUG_LEVEL", 16936
+11812 DATA "TURBO_objfil", 16936
+11814 DATA "TURBO_list", 16936
+11816 DATA "TURBO_objdat", 16936
+11818 DATA "TURBO_sound", 16936
+11820 DATA "TURBO_repfil", 16936
+11824 DATA "TURBO_taskn", 16936
+11828 DATA "TURBO_diags", 16936
+11832 DATA "TURBO_struct", 16936
+11836 DATA "TURBO_model", 16936
+11840 DATA "TURBO_optim", 16936
+11844 DATA "TURBO_windo", 16936
+11848 DATA "TURBO_locstr", 16936
+11852 DATA "TURBO_buffersz",16936
+11854 DATA "TURBO_objstk", 16936
+11855 DATA "TURBO_ref",16936
+11856 DATA "TURBO_P",16882
+11860 DATA "TURBO_F",16882
+11864 DATA "MANIFEST", 16936
+11868 DATA "GMINFO", 40, 16386
+11872 DATA "GET_MSEC", 40, 16386
+11876 DATA "PUT_MSEC", 40, 16386
+11880 DATA "GetHEAD", 40, 20, 16386
+11884 DATA "SetHEAD", 40, 20, 16386
+11888 DATA "OPTION_CMD$", 2097, 18712
+11892 DATA "ERLIN%", 2100, 19456
+11896 DATA "ERNUM%", 2100, 19448
+11900 DATA "COMPILED", 16498
+11904 DATA "PEEK_F", 50, 16386
+11908 DATA "PEEK$", 2097, 2, 4, 19416
+11912 DATA "INTEGER$", 49, 16388
+11916 DATA "FLOAT$", 49, 16386
+11920 DATA "STRING$", 49, 16385
+11924 DATA "TK_VER$", 16433
+11928 DATA "FREE_MEMORY", 16434
+11932 DATA "CHANNEL_ID", 50, 16388
+11936 DATA "DATASPACE", 50, 16417
+11940 DATA "SEARCH_MEMORY", 16562
+11944 DATA "ALLOCATION", 16562
+11948 DATA "BASIC_B%", 16564
+11952 DATA "BASIC_W%", 16564
+11956 DATA "BASIC_ADR",16562
+11960 DATA "BASIC_L", 16562
+11964 DATA "BASIC_F", 16562
+11968 DATA "BASIC_POINTER", 16562
+11972 DATA "BASIC_NAME$", 49, 16388
+11976 DATA "BASIC_TYPE%", 52, 16388
+11980 DATA "BASIC_INDEX%", 52, 16385
+11984 DATA "EDIT$", 16561
+11988 DATA "EDITF", 16562
+11992 DATA "EDIT%", 16564
+11996 DATA "DEVICE_STATUS", 16562
+12000 DATA "DEVICE_SPACE", 50, 16388
+12004 DATA "GET%", 52, 16388
+12008 DATA "GETF", 50, 16388
+12012 DATA "GET$", 49, 16388
+12016 DATA "INPUT$", 49, 4, 16388
+12020 DATA "POSITION", 50, 16404
+12024 DATA "STRING%", 52, 16385
+12028 DATA "STRINGF", 50, 16385
+12032 DATA "SYS_VARS", 16434
+12036 DATA "PRINT", 16488
+12040 DATA "RUN", 16488
+12044 DATA "STOP", 2088, 18144
+12048 DATA "INPUT", 16488
+12052 DATA "WINDOW", 16552
+12056 DATA "BORDER", 16552
+12060 DATA "INK", 16552
+12064 DATA "STRIP", 16552
+12068 DATA "PAPER", 16552
+12072 DATA "BLOCK", 16552
+12076 DATA "PAN", 16552
+12080 DATA "SCROLL", 16552
+12084 DATA "CSIZE", 16552
+12088 DATA "FLASH", 16552
+12092 DATA "UNDER", 16552
+12096 DATA "OVER", 16552
+12100 DATA "CURSOR", 16552
+12104 DATA "AT", 16552
+12108 DATA "SCALE", 16552
+12112 DATA "POINT", 16552
+12116 DATA "LINE", 16552
+12120 DATA "ELLIPSE", 16552
+12124 DATA "CIRCLE", 16552
+12128 DATA "ARC", 16552
+12132 DATA "POINT_R", 16552
+12136 DATA "TURN", 16552
+12140 DATA "TURNTO", 16552
+12144 DATA "PENUP", 16552
+12148 DATA "PENDOWN", 16552
+12152 DATA "MOVE", 16552
+12156 DATA "OPEN", 40, 20, 16417
+12160 DATA "CLOSE", 16552
+12164 DATA "FORMAT", 40, 20, 16417
+12168 DATA "COPY", 40, 33, 16417
+12172 DATA "COPY_N", 40, 33, 16417
+12176 DATA "DELETE", 40, 16417
+12180 DATA "DIR", 40, 20, 16417
+12184 DATA "EXEC", 16552
+12188 DATA "EXEC_W", 16552
+12192 DATA "LBYTES", 40, 33, 16386
+12196 DATA "SEXEC", 40, 33, 2, 2, 16386
+12200 DATA "SBYTES", 40, 33, 2, 16386
+12204 DATA "NEW", 2088, 18144
+12208 DATA "CLEAR", 16488
+12212 DATA "OPEN_IN", 40, 20, 16417
+12216 DATA "OPEN_NEW", 40, 20, 16417
+12220 DATA "CLS", 16552
+12224 DATA "CALL", 16552
+12228 DATA "RECOL", 16552
+12232 DATA "RANDOMISE", 16552
+12236 DATA "PAUSE", 16552
+12240 DATA "POKE", 2088, 2, 2, 18608
+12244 DATA "POKE_W", 2088, 2, 2, 18616
+12248 DATA "POKE_L", 2088, 2, 2, 18624
+12252 DATA "BAUD", 16552
+12256 DATA "BEEP", 16552
+12260 DATA "CONTINUE", 16936
+12264 DATA "RETRY", 16936
+12268 DATA "READ", 16488
+12272 DATA "NET", 40, 16388
+12276 DATA "MODE", 40, 16388
+12280 DATA "SDATE", 16552
+12284 DATA "ADATE", 16552
+12288 DATA "LINE_R", 16552
+12292 DATA "ELLIPSE_R", 16552
+12296 DATA "CIRCLE_R", 16552
+12300 DATA "ARC_R", 16552
+12304 DATA "FILL", 40, 20, 16388
+12308 DATA "WIDTH", 40, 20, 16388
+12312 DATA "ACOS", 50, 16386
+12316 DATA "ACOT", 50, 16386
+12320 DATA "ASIN", 50, 16386
+12324 DATA "ATAN", 16562
+12328 DATA "COS", 50, 16386
+12332 DATA "COT", 50, 16386
+12336 DATA "EXP", 50, 16386
+12340 DATA "LN", 50, 16386
+12344 DATA "LOG10", 50, 16386
+12348 DATA "SIN", 50, 16386
+12352 DATA "SQRT", 50, 16386
+12356 DATA "TAN", 50, 16386
+12360 DATA "DEG", 50, 16386
+12364 DATA "RAD", 50, 16386
+12368 DATA "RND", 16562
+12372 DATA "INT", 50, 16386
+12376 DATA "ABS", 50, 16386
+12380 DATA "PI", 16498
+12384 DATA "PEEK", 2100, 2, 18552
+12388 DATA "PEEK_W", 2100, 2, 18560
+12392 DATA "PEEK_L", 2098, 2, 18592
+12396 DATA "RESPR", 2098, 2, 18584
+12400 DATA "EOF", 16498
+12404 DATA "INKEY$", 16561
+12408 DATA "CHR$", 2097, 4, 18568
+12412 DATA "CODE", 2100, 1, 18536
+12416 DATA "KEYROW", 50, 16388
+12420 DATA "BEEPING", 16434
+12424 DATA "LEN", 16500
+12428 DATA "DIMN", 16498
+12432 DATA "DAY$", 16561
+12436 DATA "DATE", 16562
+12440 DATA "DATE$", 16561
+12444 DATA "FILL$", 2097, 1, 4, 18576
+12448 DATA "VER$", 16561
+12452 DATA "TURBO_V",16498
+12456   END DEFine
+12460 :
+12464 DEFine PROCedure Set_Links
+12468 LOCal link_ptr, prior_link, work_ptr, watermark$(20)
+12472 REMark >>>--<<<   ----------------------------------------------------
+12476   MANIFEST : sv_objlist = 352 : comms_area_sz = 146 : REMark 2+34+20+prog$+log$+task$
+12480 REMark >>>++<<<   ----------------------------------------------------
+12484   watermark$ = "D.P.:TURBO:INTER-COM"
+12488 :
+12492 REMark This next lot links the intercom area into the
+12496 REMark Thor "objects list" - which could be considered to also exist on
+12500 REMark a QL, since no one has decided it doesn't (viz addr 164192)
+12504 :
+12508   prior_link = SYS_VARS + sv_objlist
+12512   link_ptr = PEEK_L(prior_link)
+12516   REPeat lp
+12520     IF Invalid_Address(link_ptr)
+12524       para_base = ALLOCATION(comms_area_sz,0,0)
+12528       POKE_L para_base+4, para_base+8 : REMark ptr to watermark
+12532       POKE_W para_base+8, 20          : REMark length of watermark
+12536       POKE$ para_base+10, watermark$:POKE$ para_base+140, version$
+12540       POKE_W para_base+30, 1          : REMark Work in progress
+12544       POKE_L para_base, PEEK_L(prior_link)
+12548       POKE_L prior_link, para_base    : REMark Fill in list linkage (unatomic!!)
+12552       EXIT lp : END IF
+12556     work_ptr = PEEK_L(4+link_ptr)
+12560     IF NOT Invalid_Address(work_ptr)
+12564       IF PEEK$(work_ptr+2,20) = watermark$
+12568         work_ptr = PEEK_L(link_ptr+36)
+12572         IF work_ptr > 0
+12576           IF PEEK_W(work_ptr) = 999
+12580             REMark Old codegen buffer still allocated (Startup template=999)
+12584             POKE_L work_ptr, 0 : DEALLOCATE work_ptr : Squeak
+12588             END IF : END IF
+12592         para_base = link_ptr : EXIT lp
+12596         END IF : END IF
+12600     prior_link = link_ptr
+12604     link_ptr = PEEK_L(link_ptr)
+12608     END REPeat lp
+12612   para_base = para_base + 30
+12616   END DEFine
+12620 :
+12624 DEFine FuNction Invalid_Address(addr)
+12628   RETurn addr <= sv_ident  OR  addr >= PEEK_L(sv_ramt)
+12632   END DEFine
+12636 :
+12640 DEFine PROCedure Grab_User
+12644   LOCal log$(2)
+12648   CURSOR_ON : log$=INKEY$(#1) : CURSOR_OFF
+12652   END DEFine
+12656 :
+12660 DEFine PROCedure Dialogue
+12664 LOCal w%(window_count%),d%(window_count%),winx%(window_count%),winy%(window_count%)
+12668 LOCal up%(icon_count%),down%(icon_count%)
+12672 LOCal left%(icon_count%),right%(icon_count%),offset%(icon_count%)
+12676 LOCal ii, i
+12680 :
+12684   IF COMPILED : OPEN #1,'con' : IF qram_flag : OPEN #0,'scr_512x256a0x0' : CLS #0
+12688   REMark Window #0 set up as QRAM Guardian
+12692   Grab_User : task$ = prog$(6 TO LEN(prog$))
+12696   Search_for_Directives
+12700   IF LEN(OPTION_CMD$) <> 0
+12704     IF OPTION_CMD$<>"*"
+12708       prog$ = OPTION_CMD$
+12712       IF LEN(prog$)>31:prog$=prog$(1 TO 31)
+12716       ELSE : restart_flag = 1 : END IF : END IF
+12720       REMark Set Auto if param is "*"
+12724   i=buffer_size%
+12728   IF Heap_Space(0)<i
+12732     buffer_size%=Heap_Space(0) : Squeak : REMark Don't be greedy
+12736     IF buffer_size%<1 : i=RESPR(10000) : REMark Force abort - no room!
+12740     END IF
+12744 :
+12748   IF COMPILED : SET_PRIORITY 0,0,0
+12752 :
+12756   active_chans%=(BASIC_L(52)-BASIC_L(48))/40 : REMark BV.CHBAS, BV.CHP, CH.ENTRY
+12760   windows% = Min_Int%(active_chans%, windows%)
+12764   prog$ = Stripped_Back$((prog$))
+12768   log$ = Stripped_Back$((log$))
+12772 :
+12776 REMark Establish Window Stats
+12780   RESTORE 12800:FOR ii=0 TO window_count% : READ w%(ii),d%(ii),winx%(ii),winy%(ii)
+12784   FOR ii=0 TO icon_count%
+12788     READ up%(ii),down%(ii),left%(ii),right%(ii),offset%(ii) : END FOR ii
+12792 :
+12796 REMark Display window DATA
+12800 DATA  80,15, 49,150, 264,15, 49,127, 440,15, 49, 81,   88,15,401,150
+12804 DATA  80,15,217,150,  88,15,304,150, 152,15,337,104,  144,15, 49,104
+12808 DATA 128,15,201,104, 128,15,361, 58,  88,15, 49, 58,   48,15,145, 58
+12812 DATA  96,15,201, 58,  48,15,305, 58, 168,15,321,127,   72,15,137,150
+12816 DATA 440,15, 49, 35,  80,15, 49, 12,  96,15,137, 12,  112,15,241, 12
+12820 DATA 128,15,361, 12, 440,76, 49,173
+12824 :
+12828 REMark Window selection DATA
+12832 DATA  1,-1,-1,15,0,  8, 4,-1,14, 8, 12,8,-1,-1, 8,  1,-1, 5,-1, 7
+12836 DATA  1,-1,15, 5,6,  1,-1, 4,-1, 7,  2,1, 8,-1,13,  2, 1,-1, 8,12
+12840 DATA  2, 1, 7, 6,0, -1, 2,13,-1, 3, -1,2,-1,11, 0, -1, 2,10,12, 0
+12844 DATA -1, 2,11,13,0, -1, 2,12, 9, 0,  8,4, 1,-1, 6,  1,-1, 0, 4, 0
+12848 :
+12852   WINDOW 512,256,0,0 : PAPER background% : CLS : PAPER 7 : INK 0
+12856   drawing=1 : time = 0
+12860   Window_3D 16 : CSIZE 0,0
+12864   PRINT "  1987 The Turbo Team                          2006 George Gwilt V"&version$;
+12868   WINDOW 400,25,38,34
+12872   INK 2 : CSIZE 3,0 : CURSOR 182,1 : OVER 1 : PRINT "TURBO";
+12876   CURSOR 182,2 : PRINT "TURBO"; : INK 0 : OVER 0
+12880   CSIZE 1,0
+12884   Window_3D 17 : PRINT "Pass: 0";
+12888   Window_3D 18 : PRINT "Line: 0";
+12892   Window_3D 15 : Show_Strs
+12896   Window_3D  7 : Switch_Data_Stk
+12900   Window_3D 10 : Show_Struct
+12904   Window_3D 11 : Show_Addressing
+12908   Window_3D 12 : Show_Diag
+12912   Window_3D 13 : Show_Opt
+12916   Window_3D  6 : PRINT "TURBO buffer:    K"; : Show_Count buffer_size%
+12920   Window_3D 19 : PRINT "Errors: 0";
+12924   Window_3D 20 : PRINT "Warnings: 0";
+12928   Window_3D  4 : PRINT "List:"; : Echo list_flag
+12932   Window_3D  0 : Show_Res
+12936   Window_3D  9
+12940   IF active_chans%>32
+12944     PRINT "> 32 CHANNELS!";
+12948     Squeak : dummy% = Key_from_Kbd(1) : Place_Cursor 0
+12952     windows%=32 : active_chans%=32 : END IF
+12956   PRINT "Set     windows"; : Show_Windows
+12960   Window_3D  5 : PRINT "Sound:"; : Echo sound_flag
+12964   Window_3D  2 : Show_File : prog$=Text_Response$(prog$,31)
+12968   Window_3D  1 : Show_File : log$=Text_Response$(log$,22)
+12972   Window_3D 14 : PRINT "Task: ";task$;
+12976   Window_3D  8 : PRINT " ½½ COMPILE ¼¼";
+12980   drawing=0 : PAPER 0 : INK 7
+12984   here=8 : Window_3D here
+12988   IF restart_flag<>1
+12992   REPeat options
+12996     keynum=CODE(INKEY$(#1,-1))
+13000     IF sound_flag <> 0 : BEEP 100,60
+13004     SELect ON keynum
+13008       =32
+13012           SELect ON here
+13016             =8 : End_Dialogue: EXIT options
+13020             =0 : restart_flag=restart_flag^^2 : Show_Res
+13024             =3 : pause_flag=1-pause_flag : Echo pause_flag
+13028             =4 : list_flag=1-list_flag : Echo list_flag
+13032             =5 : sound_flag=1-sound_flag : Echo sound_flag
+13034             =7 : dat_stk=1-dat_stk:Place_Cursor 0:Switch_Data_Stk
+13036             =10 : structured_flag=1-structured_flag : Show_Struct
+13040             =11 : short_adr_gen=1-short_adr_gen : Show_Addressing
+13044             =12 : diagnose_flag=(diagnose_flag+1) MOD 3 : Show_Diag
+13048             =13 : optimise_flag=(optimise_flag+1) MOD 3 : Show_Opt
+13052             =15 : string_flag=(string_flag+1) MOD 3 : Show_Strs
+13056             END SELect
+13060       =208:REMark ¾
+13064           SELect ON here
+13068             =9 : windows%=windows%+(windows%<active_chans%) : Show_Windows
+13072             =7 : IF dat_stk:dataspace%=dataspace%+(dataspace%<max_data%) : Show_Count dataspace%:ELSE stk_sze%=stk_sze%+2*(stk_sze%<(max_stk%-1)):Show_Stack stk_sze%
+13076             =6 : IF Heap_Space(0)<=buffer_size%
+13080                    Squeak
+13084                    ELSE
+13088                    buffer_size%=buffer_size%+1 : Show_Count buffer_size%
+13092                    END IF
+13096             =REMAINDER : Switch_To up%(here)
+13100             END SELect
+13104       =216:REMark ¿
+13108           SELect ON here
+13112             =9 : windows%=windows%-(windows%>0) : Show_Windows
+13116             =7 : IF dat_stk:dataspace%=dataspace%-(dataspace%>1) : Show_Count dataspace%:ELSE Down_Stk
+13120             =6 : buffer_size%=buffer_size%-(buffer_size%>1)
+13124                  Show_Count buffer_size%
+13128             =REMAINDER : Switch_To down%(here)
+13132             END SELect
+13136       =192 : Switch_To left%(here)
+13140       =200 : Switch_To right%(here)
+13144       =10,194
+13148               SELect ON here
+13152                 =0 : IF restart_flag=2 : _quit = 1 : EXIT options
+13156                 =1 : log$=Text_Response$(log$,22)
+13160                 =2 : prog$=Text_Response$(prog$,31)
+13164                 =14: task$=Text_Response$(task$,12)
+13165                 =7 : IF dat_stk
+13166                       dataspace%=Int_Response%(max_data%): Show_Count dataspace% : PRINT "K";
+13168                      ELSE
+13170                       stk_sze%=Stk_Set%(Int_Response%(max_stk%)):Show_Stack stk_sze%
+13172                      END IF
+13176                 =6 : buffer_size%=Int_Response%(Heap_Space(0))
+13180                      Show_Count buffer_size% : PRINT "K";
+13184                 END SELect
+13188               Switch_To 8
+13192       =232 : _where=here : drawing=1 : Window_3D 21 : INK 2
+13196              PRINT ,"        CURSOR-CONTROLLED MENU"
+13200              PRINT \"Press ¾¿ ¼½ arrows to "; : PAPER 0 : INK 7
+13204              PRINT " select "; : PAPER 7 : INK 2
+13208              PRINT" the option you require."\\
+13212              PRINT "Press SPACE to toggle a switch or start a compilation."\\
+13216              PRINT "Press ENTER to edit file names.  ¿ and ¾ change sizes.";
+13220              INK 7 : PAPER 0 : here=_where : drawing=0 : Switch_To here
+13224       END SELect
+13228     END REPeat options
+13232    ELSE
+13236     End_Dialogue
+13240    END IF
+13244   WINDOW 390,15,97,12 : INK 0 : PAPER 7 : REMark Status report window
+13248   SET_PRIORITY 0,0,32
+13252   END DEFine
+13256 :
+13260 DEFine FuNction Stripped_Back$(txt$)
+13264 LOCal ii
+13268   FOR ii = LEN(txt$) TO 1 STEP -1
+13272     IF txt$(ii) <> " " : RETurn txt$(1 TO ii)
+13276     END FOR ii
+13280   RETurn ""
+13284   END DEFine
+13288 :
+13292 DEFine FuNction Text_Response$(txt$,lenf)
+13296 LOCal status, wk$(50)
+13300   status=1-drawing : REMark Initially 0 if invoked during set-up phase
+13304   wk$=txt$ : REMark Use a string of known size
+13308   IF txt$="" AND here=1 : Set_Print : PRINT "        ";
+13312   REPeat outer_lp
+13316     Set_Print : IF status : wk$=EDIT$(wk$,lenf) : ELSE : PRINT wk$;
+13320     IF lenf < 15 : RETurn wk$
+13324     IF LEN(wk$)>2
+13328       IF wk$(1 TO 3)=='scr' OR wk$(1 TO 3)=='con' : wk$=""
+13332       END IF
+13336     IF here=1 AND (wk$=="display" OR wk$="") : wk$="" : EXIT outer_lp
+13340     status=DEVICE_STATUS(wk$)
+13344     IF status=-8
+13348       IF restart_flag=1:restart_flag=0:REMark If change of file Auto -> Manual
+13352       Place_Cursor 0 : PRINT "DELETE?"; : Squeak
+13356       REPeat rep_lp
+13360         status = Key_from_Kbd(1)
+13364         IF status = code_y% OR status = code_n% : EXIT rep_lp
+13368         END REPeat rep_lp
+13372       Show_File : IF status = code_y% : DELETE wk$ : EXIT outer_lp
+13376       ELSE
+13380       IF status>=0 : EXIT outer_lp
+13384       IF restart_flag=1:restart_flag=0:REMark If change of file - Auto -> Manual
+13388       Place_Cursor 0 : PRINT "PARDON?"; : Squeak
+13392       dummy% = Key_from_Kbd(1) : Show_File : END IF
+13396     END REPeat outer_lp
+13400   IF here=1
+13404     IF wk$="" : Set_Print : PRINT "DISPLAY";
+13408     IF drawing
+13412       Window_3D 3 : PRINT "Pause: ";
+13416       ELSE : Switch_To 3 : Set_Print : END IF
+13420     IF wk$=""
+13424       Echo pause_flag : right%(5)=3 : ELSE : PRINT "N/A"; : right%(5)=-1
+13428       END IF
+13432     ELSE
+13436     DELETE wk$ & "_temp" : END IF
+13440   RETurn wk$
+13444   END DEFine
+13448 :
+13452 DEFine FuNction Int_Response%(max%)
+13456 LOCal ii
+13460   REPeat rep_lp
+13464     Set_Print : PRINT "    "; : Set_Print : ii=EDIT%("",LEN(max%))
+13468     IF Within(ii,1,max%) : RETurn ii
+13472     Squeak
+13476     END REPeat rep_lp
+13480   END DEFine
+13484 :
+13488 DEFine PROCedure Switch_To(ii)
+13492   IF ii=-1 : RETurn
+13496   Window_3D here : Window_3D ii : here=ii
+13500   END DEFine
+13504 :
+13508 DEFine PROCedure Window_3D(ii)
+13512   IF drawing : Modwin 0,0,-1,-1,ii : PAPER 0 : CLS
+13516   Modwin 0,0,-4,-3,ii
+13520   IF drawing
+13524     PAPER 7 : CLS : BORDER 1,4 : here=ii
+13528     ELSE
+13532     OVER -1 : BLOCK w%(ii)-2,d%(ii)-2,1,1,7 : OVER 0 : END IF
+13536   Modwin -8,-5,0,0, ii
+13540   END DEFine
+13544 :
+13548 DEFine PROCedure Modwin(d1%,d2%,d3%,d4%,ii)
+13552   WINDOW w%(ii)+d1%,d%(ii)+d2%,winx%(ii)+d3%,winy%(ii)+d4%
+13556   END DEFine
+13560 :
+13564 DEFine PROCedure Set_Print
+13568   Place_Cursor offset%(here)
+13572   END DEFine
+13576 :
+13580 DEFine PROCedure Squeak
+13584   IF sound_flag <> 0 : BEEP 3300,0,20,100,1
+13588   END DEFine
+13592 :
+13596 DEFine PROCedure Echo(ii)
+13600   Set_Print : IF ii<>0 : PRINT "YES"; : ELSE : PRINT "NO ";
+13604   END DEFine
+13608 :
+13612 DEFine PROCedure Show_Count(ii)
+13616 LOCal wk$(10)
+13620   Set_Print : wk$="   " & ii
+13624   PRINT wk$(LEN(wk$)-3 TO LEN(wk$));
+13628   END DEFine
+13632 :
+13636 DEFine PROCedure Show_File
+13640   Place_Cursor 0
+13644   IF here=1 : PRINT "Report: "; : ELSE : PRINT "Object: ";
+13648   END DEFine
+13652 :
+13656 DEFine PROCedure Show_Windows
+13660   Show_Count windows% : Place_Cursor 14 : PRINT Cond_s$(windows%);
+13664   END DEFine
+13668 :
+13672 DEFine PROCedure Show_Addressing
+13676   Set_Print
+13680   SELect ON short_adr_gen
+13684     =0 : PRINT "> 64K";
+13688     =REMAINDER : PRINT "< 64K";  : REMark = 1
+13692     END SELect
+13696   END DEFine
+13700 :
+13704 DEFine PROCedure Show_Struct
+13708   Set_Print
+13712   SELect ON structured_flag
+13716     =0 : PRINT "Freeform  ";
+13720     =REMAINDER : PRINT "Structured";  : REMark = 1
+13724     END SELect
+13728   END DEFine
+13732 :
+13736 DEFine PROCedure Show_Opt
+13740   Set_Print
+13744   SELect ON optimise_flag
+13748     =0 : PRINT "BRIEF";
+13752     =1 : PRINT "REMs ";
+13756     =REMAINDER : PRINT "FAST ";  : REMark = 2
+13760     END SELect
+13764   END DEFine
+13768 :
+13772 DEFine PROCedure Show_Diag
+13776   Set_Print
+13780   SELect ON diagnose_flag
+13784     =0 : PRINT "Omit Nos   ";
+13788     =1 : PRINT "Display Nos";
+13792     =REMAINDER : PRINT "Include Nos";  : REMark = 2
+13796     END SELect
+13800   END DEFine
+13804 :
+13808 DEFine PROCedure Show_Strs
+13812   Set_Print
+13816   SELect ON string_flag
+13820     =0 : PRINT "Ignore $";
+13824     =1 : PRINT "Report $";
+13828     =REMAINDER : PRINT "Create $";  : REMark = 2
+13832     END SELect
+13836   END DEFine
+13840 :
+13844 DEFine PROCedure Show_Res
+13848   Set_Print
+13852   SELect ON restart_flag
+13856     =0 : PRINT "Manual   ";
+13860     =1 : PRINT "Auto     ";
+13864     =REMAINDER : PRINT "Quit now?"; : REMark = 2
+13868     END SELect
+13872   END DEFine
+13876 :
+13886 DEFine PROCedure Show_Stack(ii)
+13896  LOCal wk$(10)
+13906  IF ii<350:wk$="Dflt":ELSE :wk$=" "&ii
+13916  Set_Print:PRINT wk$(LEN(wk$)-3 TO LEN(wk$));
+13926 END DEFine
+13936 :
+13946 DEFine FuNction Stk_Set%(a$)
+13956  LOCal ii
+13966  ii=a$
+13976  IF ii<350:ii=348
+13986  RETurn Ev(ii)
+13996 END DEFine
+14006 :
+14016 DEFine PROCedure Down_Stk
+14026  stk_sze%=stk_sze%-2*(stk_sze%>348)
+14096  Show_Stack  stk_sze%
+14106 END DEFine
+14116 :
+14126 DEFine PROCedure Switch_Data_Stk
+14136  IF dat_stk: PRINT "Object data:    K"; : Show_Count dataspace%:ELSE PRINT "Stack size:      ";:Show_Stack stk_sze%
+14146 END DEFine
+14156 :
+15000 DEFine PROCedure Search_for_Directives
+15002 LOCal lp, ii
+15004   listing = 0
+15006   src=BASIC_POINTER(bv_pfbas%)+2
+15008   REPeat lp
+15010     IF src >= BASIC_POINTER(bv_pfp%) : EXIT lp
+15012     Getsym
+15014     SELect ON token
+15016       = tok_keyword% : IF tokval <> key_remark% : EXIT lp
+15018                        Skip_Stmt
+15020       = tok_name% : ii = names%(value%)
+15022                     IF ii = 0 : EXIT lp
+15024                     IF (struct%(ii) && directive_mask%) <> directive_mask% : EXIT lp
+15026                     Pre_process_Options
+15028       = tok_end_of_prog% : EXIT lp
+15030       END SELect
+15032     END REPeat lp
+15034   END DEFine
+15036 :
+15038 DEFine PROCedure Pre_process_Options
+15040 LOCal wk$(36)
+15042   wk$ = BASIC_NAME$(value%)
+15044   IF wk$ = "DATA_AREA" : wk$ = "TURBO_objdat"
+15046   IF wk$ = "TURBO_struct" : structured_flag = Argument$(1,1,"fs") : RETurn
+15048   IF wk$ = "TURBO_model" : short_adr_gen = Argument$(1,1,"><") : RETurn
+15049   IF wk$ = "TURBO_list" : list_flag = Argument$(1,1,"ny") : RETurn
+15050   IF wk$ = "TURBO_diags" : diagnose_flag = Argument$(1,2,"odi") : RETurn
+15051   IF wk$ = "TURBO_sound" : sound_flag = Argument$(1,1,"ny") : RETurn
+15052   IF wk$ = "TURBO_optim" : optimise_flag = Argument$(1,2,"brf") : RETurn
+15054   IF wk$ = "TURBO_windo" : windows% = Argument$(1,32,"") : RETurn
+15056   IF wk$ = "TURBO_objfil" : prog$ = Argument$(0,0,"") : RETurn
+15058   IF wk$ = "TURBO_objdat" : dataspace% = Argument$(1,max_data%,"") : RETurn
+15059   IF wk$ = "TURBO_objstk" : stk_sze%=Stk_Set%(Argument$(1,32000,"")) : RETurn
+15060   IF wk$ = "TURBO_repfil" : log$ = Argument$(0,0,"") : RETurn
+15062   IF wk$ = "TURBO_taskn" : task$ = Argument$(0,0,"") : RETurn
+15064   IF wk$ = "TURBO_locstr" : string_flag = Argument$(1,2,"irc") : RETurn
+15066   IF wk$ = "TURBO_buffersz" : buffer_size% = Argument$(1,Heap_Space(0),"") : RETurn
+15067   IF wk$ = "TURBO_ref" : str_ref%=1 : RETurn
+15068   Skip_Stmt
+15070   END DEFine
+15072 :
+15074 DEFine FuNction Argument$(num_type,maxval,reftxt$)
+15076 LOCal wk$(50)
+15078   wk$ = ""
+15080   Getsym
+15082   IF num_type
+15084     IF NOT Numeric
+15086       wk$ = Decoded_Option$
+15088       ELSE
+15090       IF value < 0
+15092         wk$ = "0" : ELSE
+15094         IF value > maxval
+15096           wk$ = maxval : ELSE
+15098           wk$ = value : END IF
+15100         END IF : END IF
+15102     ELSE
+15104     IF token = tok_name%
+15106       wk$ = BASIC_NAME$(value%) : ELSE
+15108       IF token = tok_string% OR token = tok_text%
+15110         wk$ = PEEK$(value+2, PEEK_W(value)) : ELSE
+15112         wk$ = "" : END IF
+15114       END IF : END IF
+15116   RETurn wk$
+15118   END DEFine
+15120 :
+15122 DEFine FuNction Decoded_Option$
+15124 LOCal ii
+15126   IF LEN(reftxt$) = 0 : RETurn "0"
+15128   IF NOT (token = tok_string% OR token = tok_text%) : RETurn "0"
+15130   ii = PEEK_W(value) : IF ii=0 : RETurn "0"
+15132   wk$ = PEEK$(value+2, ii)
+15134   ii = wk$(1) INSTR reftxt$
+15136   IF ii = 0 : RETurn "0"
+15138   RETurn ii-1
+15140   END DEFine
+15142 :
+15144 REMark DEFine FuNction Resident_Mode
+15146 REMark   IF _quit
+15148 REMark     IF NOT in_core  : CLOSE #pcode% : DELETE prog$&"_temp"
+15150 REMark     IF LEN(log$)<>0 : CLOSE #log%
+15152 REMark     POKE_W pcode_base,0 : DEALLOCATE pcode_base
+15154 REMark     END IF
+15156 REMark   IF restart_flag=1
+15158 REMark     IF LEN(log$)<>0
+15160 REMark       dummy% = Key_from_Kbd(1)
+15162 REMark       WINDOW 512,listing_depth%+66,0,0 : PAPER 0 : CLS
+15164 REMark       WINDOW 48,14,440,10 : INK 2
+15166 REMark       BORDER 1,4 : BORDER 2,128 : PRINT "TURBO" : END IF
+15168 REMark     REPeat rep_lp
+15170 REMark       SUSPEND_TASK 20
+15172 REMark       IF PEEK_W(sv_arbuf)=restart_key% : Grab_User : RETurn 1
+15174 REMark       END REPeat rep_lp
+15176 REMark     END IF
+15178 REMark   RETurn 0
+15180 REMark   END DEFine
+15182 :
+15184 REMark *************** INITIALISATION & FIRST PASS ***************
+15186 :
+15188 DEFine PROCedure Pass1
+15190 LOCal i
+15192   i=buffer_size% : i = i * 1024 : pcode_base=ALLOCATION(i,0,0)
+15194   core_ptr=pcode_base
+15196   pcode_top = pcode_base+i-10 : POKE_L para_base+6,pcode_base
+15198   pass%=1 : listing=0 : rem_plus_allowed = 1
+15200   in_defn% = 0 : in_when_block = 0 : manifest_ptr = 0
+15202   Show_Num 0,pass%
+15204   line_count%=0 : time=DATE
+15206   Codegen2 999,max_names% : REMark Entry routine
+15208   Codegen 255 : REMark Go SLOW!
+15210   Codegen2 242,10001 : REMark Jump to 10001
+15212   Codegen2 254,10000 : REMark FAST for DATA
+15214   src=BASIC_POINTER(bv_pfbas%)+2
+15216   IF src<BASIC_POINTER(bv_pfp%) : Pre_Scan
+15218   Codegen 251 : REMark Data end
+15220   END DEFine
+15222 :
+15224 DEFine PROCedure Pre_Scan
+15226 REMark var% could have been defined as LOCal, but no need
+15228   RETRY_HERE
+15230   ref_pointer = 0 : REMark REFERENCE Directive controller
+15232   IF _quit : RETurn
+15234   REPeat scan_all
+15236     Getsym
+15238     IF ignore
+15240 REMark ***** While high enough debug level set we ignore all lines *****
+15242      SELect ON token
+15244       =tok_name%
+15246        var%=names%(value%)
+15248        IF var%>0 AND (struct%(var%)&&directive_mask%)=directive_mask%
+15250           Parse_Directive
+15252        ELSE
+15254           Skip_Stmt
+15256           END IF
+15258       =tok_lineno% : line_count%=line_count%+1
+15260                      IF diagnose_flag <> 0 : Show_Num 11,line_num%
+15262                      IF ref_pointer <> 0 : Move_Ref_Table
+15264                      Record_Line 32767-line_num%-line_num%
+15266       =tok_end_of_prog%:debug_now=0:ignore=0:EXIT scan_all
+15268       =REMAINDER :Skip_Stmt
+15270       END SELect
+15272     ELSE
+15274 REMark ***** For low enough debug level process all lines *****
+15276     SELect ON token
+15278       =tok_keyword%
+15280           SELect ON tokval
+15282             =key_end% : Getsym
+15284                         IF tokval=key_repeat% OR tokval=key_for% : Get_Name
+15286             =key_next%,key_exit%,key_repeat% : Get_Name
+15288             =key_local%,key_dim% : Record_Vector(tokval)
+15290             =key_proc%,key_fctn% : Record_Params(tokval)
+15292             =key_data% : Record_Data
+15294             =key_for% : Get_Name
+15296                         IF names%(value%)=0 OR names%(value%)=local_flag%
+15298                           IF BASIC_TYPE%(value%)<>string_mask%
+15300                             names%(value%)=for_flag% : END IF : END IF
+15302                         Getsym : REMark Skip assignment symbol
+15304             =key_when% : Getsym : REMark Skip ERROR word
+15306             END SELect
+15308       =tok_name% : var% = names%(value%)
+15310                    IF var% = 0
+15312                      ii = Ident_Class
+15314                      SELect ON ii
+15316                        =mc_proc% : names%(value%)=st_free%
+15318                                    Push_St(proc_mask% || rom_ext_mask%)
+15320                        =mc_fn% : names%(value%)=st_free%
+15322                                  Push_St(fctn_mask% || rom_ext_mask% || BASIC_TYPE%(value%))
+15324                        =REMAINDER : names%(value%)=local_flag%
+15326                        END SELect
+15328                      ELSE
+15330                      IF var% > 0
+15332                        IF (struct%(var%) && directive_mask%) = directive_mask%
+15334                          Parse_Directive
+15336                          ELSE
+15338                          IF (struct%(var%) && rom_mask%) <> 0
+15340                            struct%(var%) = struct%(var%) || in_use_mask%
+15342                            END IF : END IF : END IF : END IF
+15344       =tok_lineno% : line_count%=line_count%+1
+15346                      IF diagnose_flag <> 0 : Show_Num 11,line_num%
+15348                      IF ref_pointer <> 0 : Move_Ref_Table
+15350                      Record_Line 32767-line_num%-line_num%
+15352       =tok_end_of_prog% : EXIT scan_all
+15354       END SELect
+15356       END IF
+15358     END REPeat scan_all
+15360     Set_Used_Names : REMark To set only used names in the Vector_Table
+15362   END DEFine
+15364 :
+15366 DEFine PROCedure Move_Ref_Table
+15368 LOCal jj
+15370   IF ref_pointer <= st_free% : Complain err_too_many_structs%
+15372   FOR jj=ref_pointer TO max_structs%-1
+15374     struct%(jj-1) = struct%(jj) : END FOR jj
+15376   ref_pointer = ref_pointer - 1
+15378   END DEFine
+15380 :
+15382 DEFine PROCedure Record_Data
+15384   IF pass%=1 AND line_num%<>data_line%
+15386     Record_Line 32766-line_num%-line_num%
+15388     Codegen max_structs%-line_limit%+20000 : REMark **v1.14
+15390     data_line%=line_num% : REMark Don't re-issue this label
+15392     END IF
+15394   REPeat outer_lp
+15396     monop=0 : Getsym
+15398     IF token=tok_monosym% : monop=tokval : Getsym
+15400     IF token=tok_string%
+15402       IF monop <> 0 : Defer_Moan err_data_expression%
+15404       IF pass%=1 : Litgen 171
+15406       ELSE
+15408       IF NOT Numeric : Defer_Moan err_data_expression%
+15410       SELect ON monop
+15412         =monop_minus% : value=-value
+15414                      REMark Perform F.P. negate on mantissa
+15416                      IF float3%=0
+15418                        IF float2%=16384
+15420                          float2%=-32768 : float1%=float1%-1 : REMark Worst case
+15422                          ELSE
+15424                          float2%=-float2% : END IF
+15426                        ELSE
+15428                        float2%=~~float2%
+15430                        IF float3%<>-32768 : float3%=-float3%
+15432                        END IF
+15434         =monop_lnot% : value=NOT value
+15436         =monop_bnot% : IF Num_Type%(value)=float_mask%
+15438                          Defer_Moan err_data_expression%
+15440                          ELSE
+15442                          value = ~~value : END IF
+15444         END SELect
+15446       IF pass%=1
+15448         IF Num_Type%(value)=float_mask%
+15450           Codegen2 139,float1% : Codegen2 float2%,float3%
+15452           ELSE
+15454           IF Within(value,-2998,25670)
+15456             Codegen2 358,-value-7096
+15458             ELSE
+15460             Codegen2 107,value
+15462             END IF : END IF : END IF : END IF
+15464     Getsym
+15466     IF NOT SYMBOL_is_Comma : EXIT outer_lp
+15468     END REPeat outer_lp
+15470   IF NOT End_of_Stmt : Defer_Moan err_data_expression%
+15472   Check_Struct
+15474   END DEFine
+15476 :
+15478 DEFine PROCedure Record_Vector(caller%)
+15480 LOCal st_index%
+15482   REPeat outer_lp
+15484     IF NOT Name_Located : EXIT outer_lp
+15486     st_index%=names%(value%)
+15488     IF st_index%=ambiguous_flag% : NEXT outer_lp
+15490     var%=value%
+15492     Getsym
+15494     IF Opening_Bracket
+15496       Skip_to_List_End 1
+15498       IF st_index%>0
+15500         IF (struct%(st_index%) && manifest_mask%) <> 0 : NEXT outer_lp
+15502         REMark The number of dimensions cannot be altered
+15504         IF ((struct%(st_index%) && vector_mask%)=0) OR struct%(st_index%+1)<>dims%
+15506           names%(var%)=ambiguous_flag% : NEXT outer_lp
+15508           END IF
+15510         IF Simple_String AND caller%=key_dim%
+15512           struct%(st_index%)=vecstr_mask% : END IF
+15514           REMark Remove any 'exception' curse when DIMed
+15516         IF (struct%(st_index%)&&last_mask%) <> 0
+15518           REMark Get rid of 'by-reference' marker
+15520           struct%(st_index%)=struct%(st_index%)^^last_mask% : END IF
+15522         ELSE
+15524         IF dims%=1 AND BASIC_TYPE%(var%)=string_mask%
+15526           Phantom_String
+15528           ELSE
+15530           names%(var%)=st_free%
+15532           Push_St BASIC_TYPE%(var%) || vector_mask%
+15534           Push_St dims%
+15536           END IF : END IF
+15538       ELSE
+15540       REMark Unsubscripted name: MUST be LOCAL (string or scalar)
+15542       IF BASIC_TYPE%(var%)=string_mask%
+15544         IF st_index%>0
+15546           IF NOT Simple_String : names%(var%)=ambiguous_flag%
+15548           ELSE
+15550           Phantom_String : END IF
+15552         ELSE
+15554         IF st_index% > 0
+15556           names%(var%) = ambiguous_flag%
+15558           ELSE
+15560           IF st_index% > for_flag% : names%(var%)=local_flag%
+15562           END IF
+15564         END IF : END IF
+15566     END REPeat outer_lp
+15568   END DEFine
+15570 :
+15572 DEFine PROCedure Skip_to_List_End (must_close)
+15574   dims%=1
+15576   REPeat dims_lp
+15578     Getsym
+15580     IF Separator_is_Comma : dims%=dims%+1 : NEXT dims_lp
+15582     IF token=tok_symbol%
+15584       SELect ON tokval
+15586         = sym_opbrt%
+15588             REPeat rep_lp
+15590               Getsym : IF Closing_Bracket : EXIT rep_lp
+15592               IF End_of_Stmt
+15594                 IF must_close : Defer_Moan err_syntax_error%
+15596                 EXIT rep_lp : END IF
+15598               END REPeat rep_lp
+15600         = sym_comma% : dims%=dims%+1
+15602         = sym_clbrt% : EXIT dims_lp
+15604         = sym_colon%,sym_eol% : IF must_close : Defer_Moan err_syntax_error%
+15606                                 EXIT dims_lp
+15608         END SELect
+15610       END IF
+15612     END REPeat dims_lp
+15614   END DEFine
+15616 :
+15618 DEFine PROCedure Phantom_String
+15620   names%(var%)=st_free%
+15622   IF caller%=key_dim%
+15624     Push_St vecstr_mask%
+15626     ELSE
+15628     Push_St vecstr_mask% || exception_mask% : END IF
+15630   Push_St 1
+15632   END DEFine
+15634 :
+15636 DEFine PROCedure Push_St(ii)
+15638   IF st_free%>max_structs% : Complain err_too_many_structs%
+15640   struct%(st_free%)=ii : st_free%=st_free%+1
+15642   END DEFine
+15644 :
+15646 DEFine FuNction Popped_St%
+15648   st_free%=st_free%-1 : RETurn struct%(st_free%)
+15650   END DEFine
+15652 :
+15654 DEFine PROCedure Record_Line(ii)
+15656   max_structs%=max_structs%-1
+15658   IF st_free%>max_structs% : Complain err_too_many_structs%
+15660   struct%(max_structs%)=ii
+15662   END DEFine
+15664 :
+15666 DEFine PROCedure Record_Params(caller%)
+15668 LOCal var%, phantom_link%, ok_name, global_rtn
+15670   Getsym
+15672   ok_name=(names%(value%)<>ambiguous_flag%) AND (names%(value%)<1)
+15674   global_rtn = (names%(value%)=global_rtn_flag%) * glob_dir_mask%
+15676   IF ok_name
+15678     names%(value%)=st_free%
+15680     IF caller%=key_proc%
+15682       Push_St proc_mask% || global_rtn
+15684       ELSE
+15686       Push_St fctn_mask% || global_rtn || BASIC_TYPE%(value%) : END IF
+15688     ELSE
+15690     names%(value%)=ambiguous_flag% : END IF
+15692   Getsym : phantom_link%=0 : REMark Must CREATE phantoms LATER!
+15694   IF Opening_Bracket
+15696     REPeat para_lp
+15698       Getsym
+15700       SELect ON token
+15702         =tok_name% : IF ok_name
+15704                    Push_St BASIC_TYPE%(value%) || By_Reference%(value%)
+15706                    END IF
+15708                  IF names%(value%)=0 OR names%(value%)=local_flag%
+15710                    IF BASIC_TYPE%(value%)=string_mask%
+15712                      struct%(st_free%-1)=struct%(st_free%-1)||vector_mask%||dims_offset%
+15714                      names%(value%)=phantom_link%
+15716                      phantom_link%=value% : REMark Thread names into list
+15718                      ELSE
+15720                      names%(value%)=local_flag% : END IF
+15722                    ELSE
+15724                    IF names%(value%)>0
+15726                      IF (struct%(names%(value%))&&vector_mask%) <> 0
+15728                        struct%(st_free%-1)=struct%(st_free%-1)||(struct%(names%(value%)+1)*dims_offset%)||vector_mask%
+15730                        REMark add in # dims
+15732                        ELSE
+15734                        names%(value%)=ambiguous_flag% : END IF
+15736                      END IF : END IF
+15738                  IF ok_name AND global_rtn : Push_St value%
+15740         =tok_symbol% : IF Closing_Bracket : EXIT para_lp
+15742         END SELect
+15744       END REPeat para_lp
+15746     ELSE : global_rtn = 0
+15748     END IF
+15750   IF ok_name
+15752     global_rtn = 1+(global_rtn<>0)
+15754     struct%(st_free%-global_rtn) = (struct%(st_free%-global_rtn) || last_mask%)
+15756     END IF
+15758   REPeat rep_lp
+15760     var%=phantom_link%
+15762     IF var%=0 : EXIT rep_lp
+15764     phantom_link%=names%(var%) : Phantom_String : REMark Clobbers old link
+15766     END REPeat rep_lp
+15768   ref_pointer = 0
+15770   END DEFine
+15772 :
+15774 DEFine PROCedure Parse_Directive
+15776 LOCal tmp$(40), ge_array_flag%, ge_ref_flag%, ge_para_flag%
+15778   ge_array_flag% = 32 : ge_ref_flag% = 32 : ge_para_flag% = 64
+15780   tmp$ = BASIC_NAME$((value%))
+15782   IF tmp$ = "DEBUG_LEVEL" : Parse_Debug_Level : RETurn
+15784   IF tmp$ = "DEBUG" : Parse_Debug : RETurn
+15786   IF ignore : Skip_Stmt : RETurn
+15788   IF tmp$ = "GLOBAL" : Parse_Global_External : RETurn
+15790   IF tmp$ = "EXTERNAL" : Parse_Global_External : RETurn
+15792   IF "IMPLICIT" INSTR tmp$ = 1 : Parse_Implicit : RETurn
+15794   IF tmp$ = "REFERENCE" : Parse_Reference : RETurn
+15796   IF tmp$ = "MANIFEST" : Parse_Manifest : RETurn
+15798   IF pass% = 1 : Skip_Stmt : RETurn
+15800   IF tmp$ = "DATA_AREA" : Skip_Stmt : RETurn
+15802   IF LEN(tmp$) >= 5
+15804     IF tmp$(1 TO 5) = "TURBO"
+15806       IF pass% = 2 : IF globals_defined : Warn_Dir_Misplaced "ignored."
+15808       Skip_Stmt : RETurn
+15810       END IF : END IF
+15812   Close_all_Globals
+15814   IF tmp$ = "RETRY_HERE" : Parse_Retry_Here : RETurn
+15816   IF tmp$ = "RETRY" : Parse_Retry : RETurn
+15818   IF tmp$ = "CONTINUE" : Parse_Continue : RETurn
+15820   IF tmp$ = "WHEN_ERROR" : Parse_When_Err : RETurn
+15822   IF tmp$ = "END_WHEN" : Parse_End_When : RETurn
+15824   IF tmp$ = "SNOOZE" OR tmp$ = "CATNAP" : Parse_Snooze : RETurn
+15826   Complain err_coming_soon%
+15828   END DEFine
+15830 :
+15832 DEFine PROCedure Mark_Globals_Start
+15834   IF globals_defined : RETurn
+15836   Codegen2 242, 10007
+15838   Codegen2 254, 10006
+15840   globals_defined = line_num% : globals_defined = globals_defined +1
+15842   rem_plus_allowed = 0
+15844   END DEFine
+15846 :
+15848 DEFine PROCedure Close_all_Globals
+15850 LOCal jj, st%, nd%
+15852   IF globals_defined <= 0 : RETurn
+15854   Close_Global_Defn
+15856   Codegen2 261, -1 : Codegen 0
+15858   IF go_slow : Codegen 255
+15860   rem_plus_allowed = 1
+15862   Codegen 10007 : IF line_num%=0 : RETurn
+15864   st% = Line_Pos%(32767-line_num%-line_num%)+line_limit%-10000
+15866   nd% = Line_Pos%(32767-globals_defined-globals_defined+2)+line_limit%-10000
+15868   FOR jj = st% TO nd%-1
+15870     st% = struct%(jj) : Codegen 10000+Line_Pos%(st%) : END FOR jj
+15872   IF (diagnose_flag>1) AND NOT (token=tok_end_of_prog%) : Codegen2 248, line_num%
+15874   globals_defined = -1
+15876   END DEFine
+15878 :
+15880 DEFine PROCedure Parse_Reference
+15882 LOCal name_id%
+15884   Close_Defn
+15886   REPeat outer_lp
+15888     Getsym
+15890     IF token<>tok_name% : Defer_Moan err_syntax_error%
+15892     IF NOT Program_Variable : Defer_Moan err_procfn_not_params%
+15894     name_id% = value%
+15896     IF names%(name_id%) = ambiguous_flag% : Defer_Moan err_id_ambiguous%
+15898     Look_Ahead
+15900     IF Opening_Bracket
+15902       Confirm_Look
+15904       IF (names%(name_id%) < 0) AND (names%(name_id%) <> local_flag%)
+15906         Defer_Moan err_id_redefined% : END IF
+15908       Skip_to_List_End 1
+15910       IF NOT Already_Listed(name_id%)
+15912         IF names%(name_id%) > 0
+15914           IF struct%(names%(name_id%)+1) <> dims% : Defer_Moan err_id_redefined%
+15916           ELSE
+15918           Make_Ref_Array : END IF : END IF
+15920       ELSE
+15922       Backtrack
+15924       IF NOT Already_Listed(name_id%)
+15926         IF BASIC_TYPE%(name_id%) = string_mask%
+15928           IF names%(name_id%) < 1 : dims%=1 : Make_Ref_Array
+15930           ELSE
+15932           IF names%(name_id%) = 0 OR names%(name_id%) = local_flag%
+15934             names%(name_id%) = for_flag% : END IF
+15936         END IF : END IF
+15938       END IF
+15940     Getsym : IF End_of_Stmt : EXIT outer_lp
+15942     END REPeat outer_lp
+15944   END DEFine
+15946 :
+15948 DEFine FuNction Already_Listed(name_id%)
+15950 LOCal ii
+15952   IF ref_pointer = 0 : ref_pointer = max_structs%
+15954   FOR ii = ref_pointer TO max_structs% -1
+15956     IF struct%(ii)=name_id% : RETurn 1
+15958     END FOR ii
+15960   ref_pointer = ref_pointer - 1
+15962   IF ref_pointer < st_free% : Complain err_too_many_structs%
+15964   struct%(ref_pointer) = name_id%
+15966   RETurn 0
+15968   END DEFine
+15970 :
+15972 DEFine PROCedure Make_Ref_Array
+15974   IF pass% = 1
+15976     names%(name_id%) = st_free%
+15978     Push_St BASIC_TYPE%(name_id%) || vector_mask% || last_mask%
+15980     REMark Last_mask% means that the array is 'fictional'
+15982     Push_St dims%
+15984     END IF
+15986   END DEFine
+15988 :
+15990 DEFine PROCedure Parse_Global_External
+15992 LOCal type_byte%, glb_ext_mask%, other_mask%
+15994 LOCal grp_module, proc_mkr, fn_mkr, jj
+15996   IF pass% = 2 : Mark_Globals_Start
+15998   IF globals_defined < 0
+16000     Warn_Dir_Misplaced "ignored." : Skip_Stmt : RETurn : END IF
+16002   Check_ModNo_GrpId
+16004   proc_mkr = 0 : fn_mkr = 0
+16006   REPeat outer_lp
+16008     Getsym
+16010     IF End_of_Stmt : EXIT outer_lp
+16012     IF token = tok_separator% : NEXT outer_lp
+16014     IF token<>tok_name% :Defer_Moan err_syntax_error%
+16016     type_byte% = BASIC_TYPE%(value%)
+16018     st_addr% = names%(value%)
+16020     IF st_addr% > 0
+16022       REMark Name already known to TURBO and S/B
+16024       jj = struct%(st_addr%)
+16026       IF (jj && rom_mask%) <> 0 : Do_GE_ROM : NEXT outer_lp
+16028       IF (jj && other_mask%) <> 0 : Defer_Moan err_direct_conflict%
+16030       struct%(st_addr%) = jj || glb_ext_mask%
+16032       IF (jj && proc_mask%) <> 0 : Do_GE_Proc : NEXT outer_lp
+16034       IF (jj && fctn_mask%) <> 0 : Do_GE_Fn : NEXT outer_lp
+16036       IF proc_mkr OR fn_mkr : Defer_Moan err_syntax_error%
+16038           REMark Must be an array
+16040       Do_GE_Array
+16042       ELSE
+16044           REMark Name not yet known to TURBO or local/scalar
+16046       Do_GE_Untyped
+16048       END IF
+16050     END REPeat outer_lp
+16052   END DEFine
+16054 :
+16056 DEFine PROCedure Check_ModNo_GrpId
+16058 LOCal txt$(50)
+16060 REMark Pass 1 and Pass 2 - Once per Directive stmt
+16062   IF tmp$ = "GLOBAL"
+16064     glb_ext_mask% = glob_dir_mask% : ELSE
+16066     glb_ext_mask% = extnl_dir_mask% : END IF
+16068   other_mask% = glbl_and_extnl%^^glb_ext_mask%
+16070   Getsym
+16072   IF NOT Numeric OR NOT Within(value,1,252)
+16074     Defer_Moan err_syntax_error% : END IF
+16076   IF tmp$ = "GLOBAL"
+16078     IF task_module_no% = 0 : task_module_no% = value
+16080     IF task_module_no% <> value : Defer_Moan err_mixed_modno%
+16082     ELSE
+16084     IF task_module_no% = value : Defer_Moan err_mixed_modno%
+16086     externals_used = 1
+16088     END IF
+16090   grp_module = value
+16092   Getsym : Look_Ahead
+16094   IF token=tok_string%
+16096     wk$ = PEEK$(value+2,PEEK_W(value)) : Confirm_Look : Getsym
+16098     ELSE : wk$ = "" : Backtrack : END IF
+16100   txt$ = CHR$(grp_module) & wk$
+16102   IF (txt$==grp_id$) : RETurn
+16104 REMark >>>>> 2 >>> The next line is cheap and nasty - get rid <<<<<
+16106   IF "\"&txt$&"/" INSTR known_grps$ : Defer_Moan err_dupl_grp_id%
+16108   IF pass% = 2
+16110     IF LEN(grp_id$) : Close_Global_Defn
+16112     Codegen2 261,grp_module
+16114     Codegen_Str CHR$(LEN(wk$))&wk$ : grp_id$ = txt$
+16116 REMark >>>>> 2 >>> The next line is cheap and nasty - get rid <<<<<
+16118     known_grps$ = known_grps$ &"\"&txt$&"/" : END IF
+16120   END DEFine
+16122 :
+16124 DEFine PROCedure Do_GE_ROM
+16126 REMark Pass 1 and Pass 2 - On finding a ROM name in Directive stmt
+16128   IF proc_mkr=0 AND fn_mkr=0
+16130     IF struct%(st_addr%) && fctn_mask%
+16132       wk$ = BASIC_NAME$(value%)
+16134       IF wk$ = "TURBO_P" : proc_mkr = 1 : RETurn
+16136       IF wk$ = "TURBO_F" : fn_mkr = 1 : RETurn
+16138       END IF : END IF
+16140   Defer_Moan err_syntax_error%
+16142   END DEFine
+16144 :
+16146 DEFine PROCedure Do_GE_Proc
+16148 REMark Pass 2 only - On finding a PROC name (using struct%)
+16150   IF NOT proc_mkr :Defer_Moan err_syntax_error%
+16152   proc_mkr = 0 : Do_GE_Rtn proc_mask%
+16154   END DEFine
+16156 :
+16158 DEFine PROCedure Do_GE_Fn
+16160 REMark Pass 2 only - On finding a FN name (using struct%)
+16162   IF NOT fn_mkr : Defer_Moan err_syntax_error%
+16164   fn_mkr = 0 : Do_GE_Rtn fctn_mask% || type_byte%
+16166   END DEFine
+16168 :
+16170 DEFine PROCedure Do_GE_Rtn(type%)
+16172 REMark Pass 2 only - On finding a PROC/FN name (using struct%)
+16174 REMark  IF pass% = 1
+16176 REMark    names%(value%) = global_rtn_flag% : Skip_List_if_any
+16178 REMark    ELSE
+16180     Codegen2 358,type% : Codegen2 370,used_names%(value%) : REMark v4.1i
+16182     Decode_Routine_Paras
+16184 REMark    END IF
+16186   END DEFine
+16188 :
+16190 DEFine PROCedure Do_GE_Array
+16192 REMark Pass 2 only - On finding an Array name (using struct%)
+16194   IF pass% = 2
+16196     dims%=0 : Skip_List_if_any
+16198     IF dims%=0 AND (type_byte% && string_mask%)<>0 : dims% = 1
+16200     IF tmp$="GLOBAL"
+16202       IF dims%<>struct%(st_addr%+1) : Complain err_illegal_vector%
+16204       ELSE
+16206       IF (struct%(st_addr%) && last_mask%)=0 : Complain err_illegal_vector%
+16208       END IF
+16210     Codegen2 358, ge_array_flag% || type_byte% || (dims_offset%*dims%)
+16212     Codegen2 370, used_names%(value%) : END IF
+16214   END DEFine
+16216 :
+16218 DEFine PROCedure Do_GE_Untyped
+16220 REMark Pass 1 and Pass 2 - On finding an untyped name (using names%)
+16222   IF tmp$="GLOBAL"
+16224     IF proc_mkr OR fn_mkr
+16226       proc_mkr = 0 : fn_mkr = 0
+16228       IF pass% = 2 : Complain err_syntax_error%
+16230       names%(value%) = global_rtn_flag% : Skip_List_if_any
+16232       ELSE
+16234       IF st_addr% <> ambiguous_flag%
+16236         IF type_byte% = string_mask%
+16238           names%(value%) = local_flag% : ELSE
+16240           names%(value%) = global_var_flag% : END IF : END IF
+16242       END IF
+16244     ELSE
+16246     IF proc_mkr : Build_Extnl_Rtn proc_mask% : RETurn
+16248     IF fn_mkr : Build_Extnl_Rtn type_byte% || fctn_mask% : RETurn
+16250     Look_Ahead
+16252     IF Opening_Bracket
+16254       Confirm_Look
+16256       Skip_to_List_End 1
+16258 REMark      type_byte% = ge_array_flag% || (dims% * dims_offset%) || type_byte%
+16260       Build_Extnl_Array
+16262       ELSE
+16264       Backtrack
+16266       IF type_byte%=string_mask%
+16268         dims%=1 : Build_Extnl_Array
+16270         ELSE
+16272         IF st_addr%<>ambiguous_flag% : names%(value%)=extnl_var_flag%
+16274         END IF : END IF : END IF
+16276   IF pass% = 2
+16278     Codegen2 358, type_byte% : Codegen2 370, used_names%(value%) : END IF
+16280   END DEFine
+16282 :
+16284 DEFine PROCedure Build_Extnl_Array
+16286 REMark Pass 1 only - On finding undefined Array in EXTERNAL Directive
+16288   IF pass% = 1
+16290     IF names%(value%) = 0
+16292       names%(value%) = st_free%
+16294       Push_St type_byte% || vector_mask% || last_mask%
+16296       Push_St dims%
+16298       END IF : END IF
+16300   END DEFine
+16302 :
+16304 DEFine PROCedure Build_Extnl_Rtn(type_msk%)
+16306 REMark Pass 1 only - On finding PROC/FN expected in EXTERNAL directive
+16308   IF pass% = 1
+16310     REMark set up names% and struct%
+16312     proc_mkr=0 : fn_mkr=0 : names%(value%) = st_free%
+16314     Push_St type_msk% || extnl_dir_mask%
+16316     Push_St grp_module  : REMark External module no
+16318     Decode_Routine_Paras
+16320     END IF
+16322   END DEFine
+16324 :
+16326 DEFine PROCedure Decode_Routine_Paras
+16328 REMark Pass 1 - On finding PROC/FN expected in EXTERNAL directive
+16330 REMark Pass 2 - On finding a PROC/FN name (using struct%)
+16332 LOCal ref_para
+16334   Look_Ahead
+16336   IF NOT Opening_Bracket
+16338     IF pass% = 1 : struct%(names%(value%)) = struct%(names%(value%)) || last_mask%
+16340     Backtrack : RETurn : END IF
+16342   Confirm_Look
+16344   st_addr% = names%(value%)+1 + (tmp$="EXTERNAL")
+16346   REPeat para_lp
+16348     Getsym : IF Closing_Bracket : EXIT para_lp
+16350     IF End_of_Stmt : Defer_Moan err_syntax_error%
+16352     IF Opening_Bracket
+16354       ref_para=0 : Getsym : ELSE : ref_para=ge_ref_flag% : END IF
+16356     IF token=tok_separator% : NEXT para_lp
+16358     IF token<>tok_name% : Defer_Moan err_syntax_error%
+16360     IF NOT Program_Variable : Defer_Moan err_syntax_error%
+16362     IF names%(value%) = ambiguous_flag% : Defer_Moan err_id_ambiguous%
+16364     para_byte% = BASIC_TYPE%(value%)
+16366     Look_Ahead
+16368     IF tmp$ = "GLOBAL"
+16370       Confirm_Rtn_Paras : ELSE : Create_Rtn_Paras : END IF
+16372     IF NOT ref_para
+16374       Getsym : IF NOT Closing_Bracket : Defer_Moan err_syntax_error%
+16376       END IF
+16378     END REPeat para_lp
+16380   IF pass% = 1 : struct%(st_free%-1) = struct%(st_free%-1) || last_mask%
+16382   END DEFine
+16384 :
+16386 DEFine PROCedure Create_Rtn_Paras
+16388 REMark Pass 1 - Build struct for PROC/FN entry
+16390 REMark Pass 2 - Generate Intermediate code for para
+16392   IF Opening_Bracket
+16394     Confirm_Look : Skip_to_List_End 1 : Chk_Array_param
+16396     ELSE
+16398     Backtrack : dims% = (para_byte%=string_mask%)
+16400     IF dims%=1 : Chk_Array_param
+16402     END IF
+16404   IF pass% = 2
+16406     para_byte% = para_byte% || ge_para_flag% || ge_ref_flag%*(ref_para<>0)
+16408     Codegen2 358, para_byte% : Codegen2 370, used_names%(value%)
+16410     ELSE
+16412     Push_St para_byte% || by_ref_mask%*(ref_para<>0)
+16414     END IF
+16416   END DEFine
+16418 :
+16420 DEFine PROCedure Chk_Array_param
+16422 REMark Pass 1 - Check array dimensions
+16424 REMark Pass 2 - Build pseudo-struct for array
+16426   IF names%(value%) > 0
+16428     IF dims%<>struct%(names%(value%)+1) : Defer_Moan err_id_redefined%
+16430     END IF
+16432   IF NOT ref_para
+16434     IF dims%<>1 OR para_byte%<>string_mask% : Defer_Moan err_arrays_by_ref%
+16436     END IF
+16438   IF pass% = 1
+16440     para_byte% = para_byte% || vector_mask% || (dims_offset%*dims%)
+16442     RETurn : END IF
+16444   IF names%(value%) <= 0
+16446     REMark Build a dummy entry
+16448     names%(value%) = st_free%
+16450     Push_St para_byte% || vector_mask% || last_mask%
+16452     Push_St dims%
+16454     control_base% = st_free% : END IF
+16456   para_byte% = para_byte% || (dims%*dims_offset%) || ge_array_flag%
+16458   END DEFine
+16460 :
+16462 DEFine PROCedure Confirm_Rtn_Paras
+16464 REMark Pass 2 only
+16466 REMark GLOBAL Directive only - Compare Directive paras with struct%
+16468   IF Opening_Bracket
+16470     Confirm_Look : Skip_to_List_End 1
+16472     ELSE
+16474     Backtrack : dims%=(para_byte%=string_mask%) : END IF
+16476   IF struct%(st_addr%+1) <> value% : Complain err_defdir_conflict%
+16478   IF (ref_para=0) <> ((struct%(st_addr%) && by_ref_mask%) = 0)
+16480      Complain err_defdir_conflict% : END IF
+16482   para_byte% = para_byte% || ge_para_flag% || ref_para
+16484   IF (struct%(st_addr%)&&vector_mask%)<>0
+16486     para_byte% = para_byte% || ge_array_flag%
+16488     IF dims% <> struct%(names%(value%)+1) : Complain err_id_redefined%
+16490     ELSE
+16492     IF dims% > 1 : Complain err_id_redefined%
+16494     END IF
+16496   Codegen2 358, para_byte% || (dims%*dims_offset%) : Codegen2 370, used_names%(value%)
+16498   st_addr% = st_addr% + 2
+16500   END DEFine
+16502 :
+16504 DEFine PROCedure Close_Global_Defn
+16506   IF LEN(grp_id$) <> 0 : Codegen2 358, 0
+16508   END DEFine
+16510 :
+16512 DEFine PROCedure Skip_List_if_any
+16514   Look_Ahead
+16516   IF Opening_Bracket
+16518     Confirm_Look : Skip_to_List_End 1 : ELSE : Backtrack : END IF
+16520   END DEFine
+16522 :
+16524 DEFine PROCedure Parse_Retry_Here
+16526   IF in_when_block : Warn_Dir_Misplaced "ignored." : RETurn
+16528   Getsym : IF NOT End_of_Stmt : Complain err_stmt_too_long%
+16530   Codegen2 255,326 : IF NOT go_slow : Codegen 254
+16532   END DEFine
+16534 :
+16536 DEFine PROCedure Parse_Retry
+16538   Getsym : IF NOT End_of_Stmt : Complain err_stmt_too_long%
+16540   Codegen2 255,325
+16542   IF rem_plus_allowed AND NOT go_slow : Codegen 254
+16544   END DEFine
+16546 :
+16548 DEFine PROCedure Parse_Continue
+16550   Getsym : IF NOT End_of_Stmt : Complain err_stmt_too_long%
+16552   IF NOT in_when_block
+16554     Warn_Dir_Misplaced "STOP assumed."
+16556     Codegen 220
+16558     ELSE
+16560     Codegen 364 : REMark Continue
+16562     END IF
+16564   END DEFine
+16566 :
+16568 DEFine PROCedure Parse_When_Err
+16570   Look_Ahead :                  REMark **v1.14
+16572   IF End_of_Stmt
+16574     Backtrack : Gen_When_Error 0
+16576     ELSE
+16578     Confirm_Look
+16580     IF NOT Numeric OR NOT Within(value,0,1) : Complain err_coming_soon%
+16582     Gen_When_Error (value)
+16584     END IF
+16586   END DEFine
+16588 :
+16590 DEFine PROCedure Parse_End_When
+16592   Getsym : IF NOT End_of_Stmt : Complain err_stmt_too_long%
+16594   IF NOT in_when_block : Warn_Extra_End : ELSE : Gen_End_When
+16596   END DEFine
+16598 :
+16600 DEFine PROCedure Parse_Implicit
+16602 LOCal ii, wk$(6)
+16604   wk$ = tmp$(LEN(tmp$))
+16606   ii = wk$ INSTR "$%DFLBC" : ii = ii + (ii > 1)
+16608   IF ii = 0 : Defer_Moan err_syntax_error%
+16610   IF ii > 3 : Skip_Stmt : RETurn
+16612   REPeat outer_lp
+16614     Get_Name
+16616     IF Ident_Class = 4       : Defer_Moan err_proc_in_eval%
+16618     IF NOT (Ident_Class < 8) : Defer_Moan err_id_redefined%
+16620     IF pass% = 1
+16622       IF names%(value%) <> 0
+16624         names%(value%) = ambiguous_flag%
+16626         REMark IMPLICIT placed too late in program
+16628         ELSE
+16630         POKE (BASIC_POINTER(bv_ntbas%)+value%*nt_entry%+1), ii : END IF : END IF
+16632     Getsym : IF End_of_Stmt : EXIT outer_lp
+16634     END REPeat outer_lp
+16636   END DEFine
+16638 :
+16640 DEFine PROCedure Parse_Snooze
+16642   Getsym
+16644   IF NOT End_of_Stmt : Complain err_stmt_too_long%
+16646   IF task_module_no% = 0 OR In_Global_Proc_FN
+16648     Warn_Dir_Misplaced "ignored."
+16650     ELSE
+16652     Codegen 372 + (tmp$ = "CATNAP") : END IF
+16654   END DEFine
+16656 :
+16658 DEFine PROCedure Parse_Manifest
+16660 LOCal ii, id%, wk$(60)
+16662   Getsym : IF NOT End_of_Stmt : Defer_Moan err_syntax_error%
+16664   REPeat lp
+16666     IF End_of_Line : EXIT lp
+16668     Getsym
+16670     IF token<>tok_name%
+16672       IF token=tok_keyword% AND tokval=key_remark%
+16674         Skip_Stmt : EXIT lp : END IF
+16676       Defer_Moan err_assign_expected% : END IF
+16678     IF names%(value%) <= for_flag% : Defer_Moan err_defdir_conflict%
+16680     IF names%(value%) = ambiguous_flag% : Defer_Moan err_id_ambiguous%
+16682     ii = Ident_Class
+16684     id% = value%
+16686     IF ii<>2 AND ii <> 0
+16688       REMark In SMSQE ii will be 0 until a value is given
+16690       IF ii<>3 : Defer_Moan err_simple_var%
+16692       REMark DIM of string NOT wanted ... but
+16694       IF names%(id%) < 1 : Defer_Moan err_simple_var%
+16696       REMark  ... should at least be done before MANIFEST is seen
+16698       ii = struct%(names%(id%))
+16700       IF (ii && manifest_mask%) = 0
+16702         IF ii <> vecstr_mask% : Defer_Moan err_simple_var%
+16704         REMark  ... and ONLY for a simple string
+16706         IF struct%(names%(id%)+1) <> 1 : Defer_Moan err_simple_var%
+16708         END IF
+16710       IF pass% = 2 : Warning undim_manifest$
+16712       END IF
+16714     Check_for_Assign
+16716 REMark *^* Allow simple expressions - see C-Port for code
+16718     SELect ON token
+16720       = tok_nomin% TO tok_nomax%,tok_bin%,tok_hex%, tok_short%, tok_long%
+16722              wk$ = CHR$(token) & CHR$(0) & FLOAT$(value)
+16724       = tok_text%, tok_string%
+16726              wk$ = CHR$(token) & CHR$(0) & FLOAT$(value)
+16728       = tok_monosym%
+16730              wk$ = CHR$(token) & CHR$(tokval) : Getsym
+16732              SELect ON token
+16734                = tok_nomin% TO tok_nomax%,tok_bin%,tok_hex%, tok_short%, tok_long%
+16736                     wk$ = wk$ & CHR$(token) & CHR$(0) & FLOAT$(value)
+16738                = REMAINDER : Defer_Moan err_too_complex%
+16740                END SELect
+16742       = REMAINDER : Defer_Moan err_too_complex%
+16744       END SELect
+16746     Getsym : IF NOT End_of_Stmt : Defer_Moan err_too_complex%
+16748     IF pass% = 1
+16750       names%(id%) = st_free%
+16752       Push_St BASIC_TYPE%(id%) || manifest_mask%
+16754       Push_St -1
+16756       ELSE
+16758       POKE$ manifest_ptr, STRING$(wk$)
+16760       struct%(names%(id%)+1) = manifest_ptr - manifest_base
+16762       END IF
+16764     manifest_ptr = manifest_ptr + 2 + LEN(wk$) + (LEN(wk$) && 1)
+16766     END REPeat lp
+16768   END DEFine
+16770 :
+16772 DEFine PROCedure Parse_Debug_Level
+16774   LOCal ii
+16776   IF pass%=2:Skip_Stmt:Check_Struct:RETurn
+16778   IF debug_specd : Warning "Duplicate Debug level ignored":Skip_Stmt:RETurn
+16780    Getsym: debug_specd = 1
+16782    IF End_of_Stmt
+16784     Warning "Debug level not given - 0 assumed"
+16786    ELSE
+16788     ii = Int_from_Token
+16790     IF ii=-1:Complain err_syntax_error%
+16792     IF ii>9:Warning "Debug level restricted to 9":ii=9
+16794     debug_top=ii
+16796     Set_Ignore
+16798     Getsym : IF NOT End_of_Stmt:Complain err_stmt_too_long%
+16800    END IF
+16802   END DEFine
+16804 :
+16806 DEFine FuNction Int_from_Token
+16808     LOCal ii
+16810     ii=-1
+16812     SELect ON token
+16814       = tok_nomin% TO tok_nomax%,tok_bin%,tok_hex%, tok_short%, tok_long%
+16816                     IF Within(value, 0, 2000) : ii= value:ELSE :ii=-1
+16818       END SELect
+16820     RETurn ii
+16822   END DEFine
+16824 :
+16826 DEFine PROCedure Parse_Debug
+16828   LOCal ii
+16830   Getsym
+16832   IF End_of_Stmt
+16834    debug_now=0:IF pass%=2:Warning "Debug 0 asssumed"
+16836   ELSE
+16838    ii=Int_from_Token
+16840    IF ii=-1:Defer_Moan err_syntax_error%
+16842    IF ii>9:ii=9:IF pass%=2:Warning "DEBUG restricted to 9"
+16844    debug_now=ii
+16846    IF debug_now:debug_specd=1
+16848    Set_Ignore
+16850    Getsym : IF NOT End_of_Stmt:Complain err_stmt_too_long%
+16852    END IF
+16854    Check_Struct
+16856   END DEFine
+16858 :
+16860 DEFine PROCedure Check_Struct
+16862    IF stopper AND NOT End_of_Line AND in_defn%=0
+16864     Look_Ahead
+16866     IF token=tok_keyword% AND (tokval=key_remark% OR tokval=key_data%)
+16868         in_defn% = 1 : ELSE
+16870         IF Symbol_is_Colon
+16872             Getsym : IF End_of_Line : in_defn% = 1
+16874             ELSE
+16876            IF token=tok_name% AND ((value%=BASIC_INDEX%('DEBUG')) OR (value%=BASIC_INDEX%('DEBUG_LEVEL')))
+16878             in_defn%=1:END IF :END IF :END IF
+16880             IF in_defn%=0
+16882                 Confirm_Look
+16884                 REPeat rep_lp : Getsym : IF End_of_Line : EXIT rep_lp
+16886                 Warning "Size optimised - Rest of line ignored."
+16888             ELSE : Backtrack : in_defn% = 0 : END IF
+16890     END IF
+16892 END DEFine
+16894 :
+16896 DEFine FuNction In_Global_Proc_FN
+16898   IF in_defn% = 0 : RETurn 0
+16900   RETurn ( struct%(names%(in_defn%)) && glob_dir_mask% ) <> 0
+16902   END DEFine
+16904 :
+16906 DEFine PROCedure Set_Up_Channels_Arrays_Scalars
+16908 LOCal nstd_offset, ii, jj
+16910   IF pass% = 1
+16912     w_addr = ALLOCATION(40)
+16914     Grab_Data 100 : i = 0
+16916     REPeat plug : READ ii : IF ii<>-1 : POKE w_addr+i,ii : i = i+1 : ELSE : EXIT plug
+16918     ii = 0
+16920     REPeat rep_lp
+16922       ii = ii+1
+16924       IF ii >= windows%
+16926         IF ii=windows% : Clone_Window 1-(windows%>=2)
+16928         EXIT rep_lp : END IF
+16930       Clone_Window (ii)
+16932       END REPeat rep_lp
+16934     ELSE : DEALLOCATE w_addr : END IF
+16936   var% = min_rom_words%
+16938   REPeat rep_lp
+16940     IF var%>max_names% : EXIT rep_lp
+16942     IF names%(var%)=local_flag%
+16944       IF BASIC_TYPE%(var%)=string_mask%
+16946         names%(var%)=st_free%
+16948         Push_St vecstr_mask% : Push_St 1 : Simple_Dim
+16950         ELSE
+16952         IF pass%=2 : Codegen2 114+Type_Offset%(var%),used_names%(var%)
+16954         END IF
+16956       ELSE
+16958       IF names%(var%)>0
+16960         jj = struct%(names%(var%))
+16962         IF (jj && vector_mask%) <> 0
+16964           IF (jj && last_mask%) = 0
+16966             REMark Don't create by-reference arrays (again)
+16968             IF pass%=1 : Codegen2 234,struct%(names%(var%)+1) : Codegen used_names%(var%)
+16970             END IF
+16972           IF (jj && exception_mask%) <> 0
+16974             SELect ON string_flag
+16976               =1 : Warning BASIC_NAME$(var%) &" only exists as a LOCAL."
+16978               =2 : Simple_Dim
+16980               END SELect
+16982             struct%(names%(var%))=vecstr_mask%
+16984             END IF
+16986           ELSE
+16988           IF (jj && glob_dir_mask%) <> 0 AND (jj && rom_mask%)=0 AND pass%=1
+16990             Codegen2 382, used_names%(var%) : Codegen -used_names%(var%) : END IF
+16992           END IF
+16994         ELSE
+16996         IF ( names%(var%)=for_flag% OR names%(var%)=global_var_flag% ) AND pass%=2
+16998           Codegen2 101+Type_Offset%(var%),used_names%(var%) : END IF
+17000         END IF : END IF
+17002     var%=var%+1
+17004     END REPeat rep_lp
+17006   IF pass%=2 : Codegen 267 : ELSE : Codegen2 242,10005
+17008   END DEFine
+17010 :
+17012 DEFine PROCedure Clone_Window(ii)
+17014 LOCal basic_ch_table
+17016   basic_ch_table = BASIC_L(bv_chbas%)
+17018   IF BASIC_W%(basic_ch_table+ii*40)>=0
+17020     REMark Only create copies of windows that are OPEN!
+17022     i = PEEK_L(BASIC_W%(basic_ch_table+ii*40+2)*4+PEEK_L(sv_chbas))
+17024     IF ii=1
+17026 REMark Do reference test relative to Parser #1 to get offset
+17028 REMark Can't use S/B channels 'cos Thor window mgr blocks EXTOP
+17030 REMark (and all else) for window not 'on view'
+17032       POKE_L w_addr, CHANNEL_ID(#1)
+17034       b = PEEK_L(PEEK_W(w_addr+2)*4 + PEEK_L(sv_chbas))
+17036 SUSPEND_TASK 50
+17038       CALL w_addr+4
+17040 REMark PAUSE 50
+17042       nstd_offset = PEEK_L(w_addr)-b : REMark 'base' ptr to Ch. Tab for Ch. Id
+17044       END IF
+17046     i = i + nstd_offset
+17048     Codegen2 247,ii : Codegen2 0,0 : REMark PEEK(i+71),PEEK(i+33)
+17050     Codegen2 PEEK(i+68),PEEK(i+70)
+17052     Codegen2 PEEK_W(i+28),PEEK_W(i+30)
+17054     Codegen2 PEEK_W(i+24),PEEK_W(i+26) : END IF
+17056   END DEFine
+17058 :
+17060 DEFine PROCedure Simple_Dim
+17062   IF pass% = 1 : Codegen2 262,used_names%(var%) : Dflt_Size "DIM "
+17064   END DEFine
+17066 :
+17068 DEFine PROCedure Dflt_Size(txt$)
+17070   Warning txt$ & BASIC_NAME$(var%) & "(" & string_default% & ") assumed."
+17072   END DEFine
+17074 :
+17076 REMark ****************** Expression EVALUATION *******************
+17078 :
+17080 DEFine PROCedure Eval(type%)
+17082   Exp_Init
+17084   Expression(type%)
+17086   Exp_Check
+17088   END DEFine
+17090 :
+17092 DEFine PROCedure Exp_Init
+17094   type_sp%=0 : op_sp%=0
+17096   END DEFine
+17098 :
+17100 DEFine PROCedure Exp_Check
+17102   IF op_sp%<>0 OR type_sp%<>1 : Complain err_exp_mismatch%
+17104   END DEFine
+17106 :
+17108 DEFine PROCedure Push_Op(op%)
+17110   IF op_sp%>max_expr_lev% : Complain err_too_complex%
+17112   op_s%(op_sp%)=op%
+17114   op_sp%=op_sp%+1
+17116   END DEFine
+17118 :
+17120 DEFine FuNction Popped_Op%
+17122   IF op_sp%<1 : Complain err_exp_mismatch%
+17124   op_sp%=op_sp%-1
+17126   RETurn op_s%(op_sp%)
+17128   END DEFine
+17130 :
+17132 DEFine PROCedure Push_Type(type%)
+17134   IF type_sp%>max_expr_lev% : Complain err_too_complex%
+17136   type_s%(type_sp%)=type%
+17138   type_sp%=type_sp%+1
+17140   END DEFine
+17142 :
+17144 DEFine FuNction Popped_Type%
+17146   IF type_sp%<1 :Complain err_exp_mismatch%
+17148   type_sp%=type_sp%-1
+17150   RETurn type_s%(type_sp%)
+17152   END DEFine
+17154 :
+17156 DEFine PROCedure Discard_Type
+17158   IF type_sp%<1 :Complain err_exp_mismatch%
+17160   type_sp%=type_sp%-1
+17162   END DEFine
+17164 :
+17166 DEFine PROCedure Discard_Float
+17168   Expression float_mask% : Discard_Type
+17170   END DEFine
+17172 :
+17174 DEFine PROCedure Discard_Int
+17176   LOCal ref
+17178   ref=0:Expression int_mask% : Discard_Type
+17180   END DEFine
+17182 :
+17184 DEFine FuNction Top_Type%
+17186   IF type_sp% < 1 :Complain err_exp_mismatch%
+17188   IF (type_s%(type_sp%-1) && vector_mask%) <> 0
+17190     IF NOT ref:Complain err_illegal_vector%  : REMark *^* ?? Error string_mask% ??
+17192     END IF
+17194   RETurn type_s%(type_sp%-1) && datatypes%
+17196   END DEFine
+17198 :
+17200 DEFine PROCedure Expression(type%)
+17202   Push_Op(op_start%)
+17204   REPeat exp_scan
+17206     SELect ON token
+17208       =tok_nomin% TO tok_nomax%,tok_bin%,tok_hex%, tok_short%, tok_long% : ref=0:Examine_NumLit
+17210       =tok_text%,tok_string%    : ref=0:Examine_StrLit
+17212       =tok_name%                : Set_ref:Examine_ExprName
+17214       =tok_monosym%             : ref=0:Push_Op tokval+mono_offset%
+17216       =tok_opsym%               : ref=0:Examine_Oprtr
+17218       =REMAINDER : IF NOT Opening_Bracket : EXIT exp_scan
+17220                    Getsym : Expression datatypes% : Check_Bracket
+17222       END SELect
+17224     Getsym
+17226     END REPeat exp_scan
+17228   REPeat mini_lp
+17230     IF op_s%(op_sp%-1)=op_start% : EXIT mini_lp
+17232     Apply Popped_Op%
+17234     END REPeat mini_lp
+17236   Coerce type%
+17238   dummy%=Popped_Op% : REMark Tidy operator stack
+17240   END DEFine
+17242 :
+17244 DEFine PROCedure Examine_NumLit
+17246   IF Num_Type%(value) = int_mask% : Stack_Int value : RETurn
+17248   Push_Type float_mask%
+17250   IF float3% = 0
+17252     Codegen 377 : Codegen2 float1%,float2%
+17254     ELSE
+17256     Codegen2 138, float1% : Codegen2 float2%,float3%
+17258     END IF
+17260   END DEFine
+17262 :
+17264 DEFine PROCedure Stack_Int(num)
+17266 LOCal shift%
+17268   IF type_sp%>0 AND num>=0
+17270     IF Top_Type%=float_mask%
+17272       REMark some constant coercion is called for!
+17274       Push_Type float_mask%
+17276       IF num=0
+17278         Codegen2 377,0 : Codegen 0
+17280         ELSE
+17282         shift%=INT(LOG10(num)/LOG10(2))
+17284         Codegen2 377,2049+shift% : Codegen (num*2^(14-shift%)) : END IF
+17286       RETurn : END IF : END IF
+17288   IF num<>0 : Codegen2 106,num : ELSE : Codegen 263
+17290   Push_Type int_mask%
+17292   END DEFine
+17294 :
+17296 DEFine PROCedure Examine_StrLit
+17298 LOCal k%
+17300   Push_Type string_mask%
+17302   Litgen 170-(PEEK_W(value) < short_string%)
+17304   Look_Ahead
+17306   IF NOT Opening_Bracket : Backtrack : RETurn
+17308   Confirm_Look : Getsym : k%=0
+17310   IF Separator_is_TO
+17312     k%=1 : Codegen 263 : Getsym : END IF
+17314   Discard_Int
+17316   IF Separator_is_TO
+17318     IF k%=0 : k%=1 : Getsym : ELSE : Complain err_syntax_error%
+17320     END IF
+17322   IF Closing_Bracket
+17324     IF k%=0 :  Codegen 268 : ELSE : Codegen 263
+17326     ELSE : Discard_Int : END IF
+17328   Codegen 359
+17330   END DEFine
+17332 :
+17388 DEFine PROCedure Substitute_Manifest
+17390 LOCal ii, token, tokval, manifest_ptr, wk$(60)
+17392   ii = struct%(names%(var%)+1)
+17394   IF ii < 0 : Complain err_id_ambiguous% : REMark MANIFEST too late in prog
+17396   manifest_ptr = manifest_base + ii
+17398   wk$ = PEEK$(manifest_ptr+2, PEEK_W(manifest_ptr))
+17400   ii = 0
+17402   REPeat mani_lp
+17404     ii = ii + 1 : IF ii > LEN(wk$) : EXIT mani_lp
+17406     token = CODE(wk$(ii)) : ii = ii + 1 : tokval = CODE(wk$(ii))
+17408     manifest_ptr = manifest_ptr+2+ii
+17410     SELect ON token
+17412       = tok_nomin% TO tok_nomax%,tok_bin%,tok_hex%, tok_short%, tok_long%
+17414              Decode_NumLit(manifest_ptr) : Examine_NumLit
+17416       = tok_text%, tok_string%
+17418              value = PEEK_F(manifest_ptr)
+17420              Push_Type string_mask%
+17422              Litgen 170-(PEEK_W(value) < short_string%)
+17424       = tok_monosym%
+17426              Push_Op tokval+mono_offset%
+17428              ii = ii + 1 : token = CODE(wk$(ii))
+17430              ii = ii + 1 : tokval = CODE(wk$(ii))
+17432              Decode_NumLit(manifest_ptr+2) : Examine_NumLit
+17434       END SELect
+17436     ii = ii + 6
+17438     END REPeat mani_lp
+17440   END DEFine
+17442 :
+17444 DEFine PROCedure Examine_Oprtr
+17446 LOCal sym_num
+17448   sym_num = tokval+op_offset%
+17450   SELect ON sym_num
+17452     =opind_concat%, opind_instr% : Coerce string_mask%
+17454     END SELect
+17456   REPeat mini_lp
+17458     IF priority%(sym_num) > priority%(op_s%(op_sp%-1))
+17460       Push_Op(sym_num) : EXIT mini_lp : END IF
+17462     Apply Popped_Op%
+17464     END REPeat mini_lp
+17466   END DEFine
+17468 :
+17470 DEFine PROCedure Apply(op%)
+17472 LOCal data_type%,type%
+17474   IF op%<=op_offset% AND op%>mono_offset%
+17476     REMark It must be a monadic operator
+17478     data_type%=coercion%(Top_Type%,arg_type%(op%))
+17480     Coerce data_type%
+17482     Codegen op%+Type_Factor%(data_type%)
+17484     Discard_Type
+17486     ELSE
+17488     REMark It's dyadic, find operation type
+17490     IF type_sp% < 2 :Complain err_exp_mismatch%
+17492     type% = type_s%(type_sp%-2)
+17494     data_type% = Top_Type% || type%
+17496     IF priority%(op%)<>pri_relational%
+17498       Find_Coercion_Type
+17500       ELSE
+17502       IF (data_type% && string_mask%) <> 0 AND data_type%<>string_mask%
+17504         data_type%=float_mask% : REMark String comp. bodge
+17506         ELSE : Find_Coercion_Type : END IF : END IF
+17508     IF (data_type% && type%) = 0
+17510       IF Top_Type% && (type%=string_mask%)
+17512         REMark Coercion of string NOS requires special action
+17514         Codegen 320+data_type%
+17516         ELSE
+17518         Codegen 123+Type_Factor%(Top_Type%)
+17520         type%=Popped_Type% : REMark Reveal the top-but-one type
+17522         Coerce data_type%
+17524         Push_Type type%
+17526         Codegen 124+Type_Factor%(Top_Type%)
+17528         END IF : END IF
+17530     Coerce data_type%
+17532     IF op% = opind_div%
+17534       op% = opind_divide% : REMark DIV uses same 'slot' as '/'
+17536       ELSE
+17538       IF op% = opind_mod% : op% = opind_concat% : REMark MOD uses same 'slot' as CONCAT
+17540       END IF
+17542     Codegen op%+Type_Factor%(data_type%)
+17544     Discard_Type : Discard_Type : END IF
+17546   type%=res_type%(op%)
+17548   IF type%=int_mask% OR type%=float_mask%
+17550     Push_Type type%
+17552     ELSE
+17554     Push_Type data_type% : END IF
+17556   END DEFine
+17558 :
+17560 DEFine PROCedure Find_Coercion_Type
+17562   REMark Extract least sig. set bit in data_type% {Boolean algy eh?}
+17564   data_type%=data_type% && -data_type%
+17566   data_type%=coercion%(data_type%,arg_type%(op%))
+17568   END DEFine
+17570 :
+17572 DEFine PROCedure Coerce(type%)
+17574   IF (Top_Type% && type%) <> 0 :RETurn
+17576   IF (type% && string_mask%) <> 0
+17578     Codegen 308+Top_Type%
+17580     type_s%(type_sp%-1)=string_mask%
+17582     ELSE
+17584     IF (type% && float_mask%) <> 0
+17586       Codegen 316+Top_Type%
+17588       type_s%(type_sp%-1)=float_mask%
+17590       ELSE
+17592       Codegen 332+Top_Type%
+17594       type_s%(type_sp%-1)=int_mask%
+17596       END IF : END IF
+17598   END DEFine
+17600 :
+17602 DEFine PROCedure Parse_Fns(fn_name%)
+17604 LOCal txt$(50), st_addr%, stepper%, param_list, wk$(50), type_wd%, id%
+17606   REMark Process a function-call parameter-list
+17608   wk$=CHR$(0) : REMark Default used if there are NO parameters
+17610   st_addr%=names%(fn_name%)
+17612   Look_Ahead : REMark See if there is a parameter list
+17614   param_list=Opening_Bracket
+17616   IF param_list : Confirm_Look : Getsym : ELSE : Backtrack
+17618   type_wd% = struct%(st_addr%)
+17620   IF (type_wd% && exception_mask%) <> 0 : Parse_Oddball_Functions : RETurn
+17622   IF param_list
+17624     IF (type_wd% && ad_hoc_mask%) <> 0 OR (type_wd% && last_mask%) = 0
+17626       wk$ = Parsed_Para_List$(st_addr%)
+17628       Check_Bracket
+17630       ELSE
+17632       REMark Last_mask% must be set ... so lose actual paras
+17634       Skip_xs_Paras st_addr% : END IF
+17636     ELSE
+17638     IF (type_wd% && last_mask%) = 0
+17640       IF (type_wd% && rom_mask%) = 0
+17642         stepper% = 1 + ((type_wd% && glob_dir_mask%)<>0)
+17644         Generate_xtra_Paras
+17646         ELSE
+17648         id% = struct%(st_addr%+1)
+17650         IF ((id% && last_mask%) = 0) OR ((id% && datatypes%) <> 0) OR ((type_wd% && template_mask%) = 0)
+17652           Complain err_parameter_error% : END IF
+17654         template_no = (id% ^^ last_mask%) / 8 : END IF : END IF : END IF
+17656   Push_Type type_wd% && datatypes%
+17658   IF (type_wd% && rom_mask%) <> 0
+17660     IF (type_wd% && template_mask%) <> 0
+17662       Codegen template_no
+17664       ELSE
+17666       Codegen 224
+17668       Codegen (type_wd% && datatypes%)-((type_wd% && int_mask%)<>0)
+17670       Codegen used_names%(fn_name%)
+17672       Codegen_Str wk$ : END IF
+17674     ELSE
+17676     IF (type_wd% && extnl_dir_mask%) <> 0
+17678       Codegen2 366,struct%(names%(fn_name%)+1) : Codegen used_names%(fn_name%)
+17680       ELSE
+17682       IF print_input_active : Codegen 356 : ELSE : Codegen 236
+17684       Codegen -used_names%(fn_name%) : END IF
+17686     IF BASIC_TYPE%(fn_name%) = string_mask% : Codegen 260
+17688     END IF
+17690   END DEFine
+17692 :
+17694 DEFine PROCedure Parse_Oddball_Functions
+17696   REMark Process functions which allow 'optional' parameters
+17698 REMark >>>>>  No need for scheduler locking in this group  <<<<<
+17700   wk$=BASIC_NAME$(fn_name%)
+17702   IF wk$="COMPILED"
+17704     Codegen2 377, 2049 : Codegen 16384 : Push_Type float_mask%
+17706     REMark replace with floating point 1 (Long_float template)
+17708     RETurn : END IF
+17710   IF wk$ = "PI"
+17712     Codegen2 138, 2050 : Codegen2 25735, -4783 : Push_Type float_mask%
+17714     REMark Wire in PI as a constant
+17716     RETurn : END IF
+17718   IF wk$="DIMN"
+17720     IF token<>tok_name% OR NOT param_list : Complain err_array_needed%
+17722     IF names%(value%)<1 : Complain err_array_needed%
+17724     id%=value% : Getsym
+17726     IF Separator_is_Comma
+17728       Getsym : Expression int_mask% : REMark This is a cheat for Discard/Push
+17730       ELSE
+17732       Codegen2 106,1 : Push_Type int_mask% : END IF
+17734     Codegen2 266,used_names%(id%) : Codegen struct%(names%(id%)+1)
+17736     Check_Bracket : RETurn : END IF
+17738   IF wk$="EOF"
+17740     IF param_list
+17742       param_list = Explicit_Channel (-1) : Check_Bracket : Codegen 222
+17744       ELSE : Codegen 223 : END IF
+17746     Push_Type float_mask% : RETurn : END IF
+17748   IF wk$="LEN"
+17750     IF NOT param_list : Complain err_syntax_error%
+17752     Push_Type int_mask%
+17754     IF token = tok_name%
+17756       var% = value%
+17758       IF Simple_String
+17760         Look_Ahead
+17762         IF Closing_Bracket
+17764           Confirm_Look : Codegen2 375,used_names%(var%) : RETurn : END IF
+17766         Backtrack : END IF : END IF
+17768     Expression string_mask% : Discard_Type : Codegen 270 : RETurn : END IF
+17770   IF wk$="TURBO_V"
+17772     IF NOT param_list : Complain err_syntax_error%
+17774     Push_Type float_mask%
+17776     SELect ON token
+17778      =tok_string%
+17780       var% = BASIC_INDEX%(PEEK$(value+2,PEEK_W(value)))
+17782       IF var%<0:Complain err_syntax_error%
+17784      =tok_name%:var%=value%
+17786      =REMAINDER :Complain err_syntax_error%
+17788     END SELect
+17790         Look_Ahead
+17792         IF Closing_Bracket
+17794          Confirm_Look:Codegen2 125,used_names%(var%)
+17796         ELSE
+17798          Backtrack:Complain err_syntax_error%
+17800         END IF :RETurn :END IF
+17802   Complain err_syntax_error% : REMark Theoretically impossible
+17804   END DEFine
+17806 :
+17808 DEFine FuNction Parsed_Subscript_Type%(var%,assign_flag)
+17810 LOCal old_src,old_token%,old_tokval%,old_value,old_listing
+17812 LOCal old_fl1%,old_fl2%,old_fl3%,old_val%
+17814   old_src = 0
+17816   RETurn Parsed_Subscr_Type%
+17818   END DEFine
+17820 :
+17822 DEFine FuNction Parsed_Subscr_Type%
+17824 LOCal dims%, expected%, st_addr%, sliced, ref_type%,toy
+17826   st_addr%=names%(var%) : sliced=0
+17828   IF st_addr%<1 : Complain err_array_needed%
+17830   IF (struct%(st_addr%) && vector_mask%)=0 : Complain err_array_needed%
+17832   expected%=struct%(st_addr%+1) : dims%=0 : REMark Next DIM number
+17834   ref_type% = struct%(st_addr%) && datatypes%
+17836   IF ref:toy=Is_TO
+17838   REPeat brkt_lp
+17840     Look_Ahead : IF NOT Opening_Bracket : Backtrack : EXIT brkt_lp
+17842     Confirm_Look
+17844     REPeat dims_lp
+17846       Getsym : dims%=dims%+1 : REMark We're about to read another DIM
+17848       IF Slice_Allowed
+17850         Codegen 263 : REMark Default start slice
+17852         End_Slice
+17854         ELSE
+17856         Discard_Int : IF Slice_Allowed : End_Slice:ELSE IF ref AND toy:Codegen 268
+17858         END IF
+17860       IF NOT Separator_is_Comma : Check_Bracket : EXIT dims_lp
+17862       END REPeat dims_lp
+17864     END REPeat brkt_lp
+17866   IF (ref_type% && string_mask%) <> 0
+17868     IF NOT ref
+17870       IF expected%>1 : ref_type% = vector_mask% || ref_type%
+17872       IF (NOT sliced) AND (dims%=expected%)
+17874         sliced=1 : Codegen 268 : REMark 1 character slice
+17876         END IF
+17878       IF (NOT sliced) AND (dims%+1=expected%)
+17880         IF NOT assign_flag
+17882           Codegen2 263,263 : REMark Always specify slice when fetching
+17884           sliced=1 : END IF
+17886         dims%=expected% : REMark Correct DIM count
+17888         END IF
+17890       IF sliced : ref_type%=slice_mask% || ref_type%
+17892     END IF : END IF
+17894   IF ref
+17896    FOR x=dims%+1 TO expected%: Codegen2 106,-2:IF toy:Codegen2 106,-2
+17898    dims%=expected%
+17900    IF toy:Codegen2 106,expected%:ELSE Codegen2 106,-expected%
+17902   END IF
+17904   IF dims%>expected% : Complain err_stmt_too_long%
+17906   IF dims%<expected% : Complain err_illegal_vector%
+17908   RETurn ref_type%
+17910   END DEFine
+17912 :
+17914 DEFine FuNction Slice_Allowed
+17916   REMark Only allow TO in last subscript of a string
+17918   IF NOT Separator_is_TO : RETurn 0
+17920   IF ref:Getsym:RETurn 1
+17922   IF (struct%(st_addr%) && string_mask%) <> 0
+17924     IF expected%=dims% : Getsym : RETurn 1
+17926     END IF
+17928   Complain err_illegal_vector%
+17930   END DEFine
+17932 :
+17934 DEFine PROCedure End_Slice
+17936   sliced=1
+17938   IF Separator_is_Comma OR Closing_Bracket
+17940     REMark Push maximum or current size of string 'var'
+17942     IF assign_flag : Codegen2 257,used_names%(var%) : ELSE : IF NOT (ref AND toy):Codegen 263:ELSE Codegen2 106,-1
+17944     ELSE
+17946     Discard_Int : END IF
+17948   END DEFine
+17950 :
+17952 DEFine PROCedure Check_Bracket
+17954   IF NOT Closing_Bracket : Complain err_exp_mismatch%
+17956   END DEFine
+17958 :
+17960 DEFine FuNction Explicit_Channel(default%)
+17962   IF Symbol_is_Hash
+17964     Getsym
+17966     IF NOT Numeric OR (value<32 AND value>=0)
+17968       Discard_Int : RETurn 1 : ELSE : Complain err_no_channel% : END IF
+17970     ELSE
+17972     IF default%=-1 : Complain err_no_channel%
+17974     Codegen2 106,default% : RETurn 0 : END IF
+17976   END DEFine
+17978 :
+17980 DEFine PROCedure Parse_Colour
+17982   Discard_Int
+17984   IF Separator_is_Comma
+17986     Getsym : Discard_Int
+17988     IF Separator_is_Comma
+17990       Getsym : Discard_Int
+17992       ELSE
+17994       Codegen2 106,3 : END IF
+17996     Codegen 229 : END IF
+17998   END DEFine
+18000 :
+18002 REMark ************* PASS 2 - MAIN COMPILATION PASS *************
+18004 :
+18006 DEFine PROCedure Pass2
+18008   IF _quit : RETurn
+18010   line_num%=0 : Show_Num 11,line_num% : PRINT"    "; : REMark Clear pass 1
+18012   IF manifest_ptr
+18014     manifest_base = ALLOCATION(manifest_ptr)
+18016     IF manifest_base < 0
+18018       manifest_base = RESPR(manifest_ptr) : REMark RUDE failure
+18020       END IF
+18022     manifest_ptr = manifest_base
+18024     END IF
+18026   Codegen2 255,10001
+18028   Set_Up_Channels_Arrays_Scalars
+18030   pass%=2 : Show_Num 0,pass%
+18032   Codegen2 255,10002
+18034   Codegen 326
+18036   IF optimise_flag = 2 : go_slow = 0 : Codegen 254
+18038   listing=list_flag
+18040   src=BASIC_POINTER(bv_pfbas%)+2 : known_grps$ = ""
+18042   line_repeat%=0 : line_for%=0 : line_select%=0 : line_if%=0
+18044   inline%=0 : line_when%=0
+18046   in_defn%=0 : end_defn% = 0
+18048   control%=1 : control_base%=st_free% : stmt_count = 0
+18050   Parse
+18052   END DEFine
+18054 :
+18056 DEFine PROCedure Parse
+18058   LOCal x
+18060   RETRY_HERE
+18062   IF _quit : RETurn
+18064   IF End_of_Line : Close_Inline
+18066   print_input_active = 0 : old_src = 0 : ref_pointer = 0
+18068   Exp_Init
+18070   IF src<BASIC_POINTER(bv_pfp%)
+18072     REPeat scan_all
+18074       stmt_count = stmt_count + 1
+18076       IF End_of_Line : Close_Inline
+18078       Getsym
+18080       IF ignore
+18082        SELect ON token
+18084          =tok_end_of_prog% : EXIT scan_all
+18086          =tok_name%:Parse_Tokname
+18088          =tok_lineno%  : IF diagnose_flag <> 0 : Show_Num 11,line_num%
+18090          =REMAINDER :Skip_Stmt
+18092          END SELect
+18094       ELSE
+18096       SELect ON token
+18098         =tok_keyword% : Parse_Keyword(tokval)
+18100         =tok_name%    : Parse_Name_Stmt
+18102         =tok_lineno%  : IF diagnose_flag <> 0 : Show_Num 11,line_num%
+18104                     IF stopper
+18106                       IF in_defn% = 0
+18108                         Look_Ahead
+18110                         IF token=tok_keyword% AND (tokval=key_define% OR tokval=key_remark% OR tokval=key_data%)
+18112                           in_defn% = 1 : ELSE
+18114                         IF Symbol_is_Colon
+18116                           Getsym : IF End_of_Line : in_defn% = 1
+18118                           ELSE
+18120                         IF token=tok_name% AND ((value%=BASIC_INDEX%('REFERENCE')) OR (value%=BASIC_INDEX%('DEBUG')) OR (value%=BASIC_INDEX%('DEBUG_LEVEL')))
+18122                           in_defn% = 1 : END IF : END IF : END IF
+18124                         IF in_defn%=0
+18126                           Confirm_Look
+18128                           REPeat rep_lp : Getsym : IF End_of_Line : EXIT rep_lp
+18130                           Warning "Size optimised - Line ignored."
+18132                           NEXT scan_all
+18134                           ELSE : Backtrack : in_defn% = 0 : END IF
+18136                         END IF : END IF
+18138                     IF globals_defined <= 0 : Issue_Line_Label
+18140         =tok_symbol%  : IF tokval=sym_assign% : Parse_Select_Instance
+18142         =tok_end_of_prog% : EXIT scan_all
+18144         =REMAINDER : REPeat rep_lp
+18146                        IF End_of_Stmt : EXIT rep_lp : ELSE : Getsym
+18148                        END REPeat rep_lp
+18150         END SELect
+18152     END IF
+18154       END REPeat scan_all
+18156     IF NOT go_slow:Codegen 255
+18158     Set_Exts:IF NOT go_slow:Codegen 254
+18160     Close_Inline
+18162     Close_Structs
+18164     Close_Defn : END IF
+18166   Codegen 220
+18168   Mark_Globals_Start : Close_all_Globals
+18170   Set_up_Program_Start : Dump_Name_Table
+18172   Codegen 0 : time=DATE-time
+18174   IF NOT in_core
+18176     IF error_count% = 0 : Dump_Core
+18178     CLOSE #pcode%
+18180     IF error_count% <> 0 : DELETE prog$ & "_temp"
+18182     END IF
+18184   IF NOT in_core OR error_count% <> 0
+18186     POKE_W pcode_base,0 : DEALLOCATE pcode_base
+18188     END IF
+18190   IF LEN(log$)=0 : INK #log%,0 : PAPER #log%,4
+18192   PRINT #log%;"TURBO: Parsing done, ";
+18194   IF time>0 AND line_count%>19
+18196     PRINT #log%;"at ";INT(.5+stmt_count/time*60);" statements per minute."
+18198     REMark PRINT #log%;"at ";INT(.5+line_count%/time*60);" lines per minute."
+18200     END IF
+18202   PRINT #log%;error_count%;" error";Cond_s$(error_count%);" and ";warning_count%;" warning";Cond_s$(warning_count%);"."
+18204   POKE_W para_base,error_count%
+18206   IF error_count% = 0
+18208     POKE_W para_base+2,dataspace% : POKE para_base+4,ins_fl
+18210     POKE para_base+5,short_adr_gen : POKE_L para_base+6,pcode_base*in_core
+18212     POKE_W para_base+10,LEN(log$) : core_ptr=para_base+12 : Codegen_Str log$
+18214     POKE_W core_ptr,LEN(prog$)+5 : core_ptr=core_ptr+2
+18216     Codegen_Str prog$ & "_temp"
+18218     POKE_W core_ptr,LEN(task$) : core_ptr=core_ptr+2
+18220     Codegen_Str task$ : POKE_W para_base+114,stk_sze%+str_ref%:END IF
+18222   CLOSE #log%
+18224   END DEFine
+18226 :
+18228 DEFine PROCedure Set_up_Program_Start
+18230   Codegen2 255,10005
+18232   Set_Up_Channels_Arrays_Scalars
+18234   Codegen2 237,10000
+18236   IF externals_used : Codegen 371
+18238   Codegen2 242,10002
+18240   END DEFine

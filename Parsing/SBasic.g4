@@ -11,8 +11,8 @@ stmt :
 	| 'DIM' ID parenthesizedlist (',' ID parenthesizedlist)* eol?																		#Dim
 	| ('IMPLICIT%' | 'IMPLICIT$') unparenthesizedlist																					#Implicit
 	| 'REFERENCE' unparenthesizedlist																									#Reference
-	| 'DEFine PROCedure' procedureName parenthesizedlist? terminator  localVars linelist lineNumber? 'END DEFine' ID?					#ProcDecl
-	| 'DEFine FuNction' functionName parenthesizedlist? terminator localVars linelist lineNumber? 'END DEFine' ID?						#FuncDecl
+	| 'DEFine PROCedure' procedureName parenthesizedlist? terminator linelist? localVars? linelist? lineNumber? 'END DEFine' ID?	#ProcDecl
+	| 'DEFine FuNction' functionName parenthesizedlist? terminator linelist? localVars linelist? lineNumber? 'END DEFine' ID?		#FuncDecl
 	| 'FOR' loopVar '=' expr 'TO' expr step? eol lineNumber? linelist lineNumber? ('END FOR' | 'NEXT') ID? terminator											#For
 	| 'FOR' loopVar '=' expr 'TO' expr  stmtlist																						#For
 	| 'REPeat' loopVar  stmtlist																										#Repeat
@@ -25,7 +25,7 @@ stmt :
 	| '=' unparenthesizedlist																											#Equal
 	| 'NEXT' ID?																														#Next
 	| 'DATA' unparenthesizedlist																										#Data
-	| 'PRINT' '\\'* expr? '\\'* (separator '\\'* expr '\\'* )* 																	#Print
+	| 'PRINT' '\\'* expr? '\\'* (separator '\\'* expr  )* separator? 																	#Print
 	| 'READ' unparenthesizedlist																										#Read
 	| 'RETurn' unparenthesizedlist?																										#Return
 	;
@@ -34,7 +34,7 @@ expr :
 	  '(' expr ')'																														#ParenthesizedExpr
 	| ('+' | '-') expr																													#UnaryAdditiveExpr
 	| expr ('&' | '&&') expr																											#BinaryExpr
-	| <assoc=right> (String | ID) 'INSTR' expr																							#InstrExpr
+	| <assoc=right> (identifier | String) 'INSTR' expr																							#InstrExpr
 	| <assoc=right> expr '^' expr																										#BinaryExpr
 	| expr ('*' | '/' | 'MOD' | 'DIV') expr																								#BinaryExpr
 	| expr ('+' | '-') expr																												#BinaryExpr
@@ -86,9 +86,9 @@ Comment
 ID : 
     |'GO TO'
 	| 'GO SUB'
-	| ([A-Za-z] | '_') ([0-9] | [A-Za-z] | '_')* '$'
-	| ([A-Za-z] | '_') ([0-9] | [A-Za-z] | '_')* '%'
-	| ([A-Za-z] | '_') ([0-9] | [A-Za-z] | '_')*;
+	| ([A-Za-z] | '_' | '#') ([0-9] | [A-Za-z] | '_')* '$'
+	| ([A-Za-z] | '_' | '#') ([0-9] | [A-Za-z] | '_')* '%'
+	| ([A-Za-z] | '_' | '#') ([0-9] | [A-Za-z] | '_')*;
 	
 Integer : '#'? DIGIT+;
 lineNumber : Integer;
