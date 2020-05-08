@@ -48,7 +48,7 @@
 10216 IMPLICIT% gotype, grp_module
 10220 IMPLICIT% lenf, level, maxval, ref_pointer, suffix
 10224 IMPLICIT% sym_num, debug_top, debug_now
-10228 :
+10228 IMPLICIT$ str1, str2
 10232 REMark   Extra cmds/fns: PEEK$, POKE$, MOVE_MEMORY, BASIC_POINTER
 10236 REMark                   BASIC_L, BASIC_B%, BASIC_NAME$, BASIC_TYPE%
 10240 REMark                   BASIC_W%, BASIC_INDEX%, EDIT$, EDIT%

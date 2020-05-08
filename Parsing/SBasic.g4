@@ -8,24 +8,24 @@ stmtlist : stmt? terminator? (stmt terminator?)*;
 stmt :
       Comment 																															#Comment
 	| identifier '=' expr																												#Assignment
-	| 'DIM' ID parenthesizedlist (',' ID parenthesizedlist)* eol?																		#Dim
+	| 'DIM' arrayName parenthesizedlist (',' arrayName parenthesizedlist)* eol?																		#Dim
 	| ('IMPLICIT%' | 'IMPLICIT$') unparenthesizedlist																					#Implicit
 	| 'REFERENCE' unparenthesizedlist																									#Reference
-	| 'DEFine PROCedure' procedureName parenthesizedlist? terminator linelist? localVars? linelist? lineNumber? 'END DEFine' ID?	#ProcDecl
-	| 'DEFine FuNction' functionName parenthesizedlist? terminator linelist? localVars linelist? lineNumber? 'END DEFine' ID?		#FuncDecl
-	| 'FOR' loopVar '=' expr 'TO' expr step? eol lineNumber? linelist lineNumber? ('END FOR' | 'NEXT') ID? terminator											#For
+	| 'DEFine PROCedure' procedureName parenthesizedlist? terminator linelist? localVars? linelist? lineNumber? 'END DEFine' ID?		#ProcDecl
+	| 'DEFine FuNction' functionName parenthesizedlist? terminator linelist? localVars linelist? lineNumber? 'END DEFine' ID?			#FuncDecl
+	| 'FOR' loopVar '=' expr 'TO' expr step? eol lineNumber? linelist lineNumber? ('END FOR' | 'NEXT') ID? terminator					#For
 	| 'FOR' loopVar '=' expr 'TO' expr  stmtlist																						#For
 	| 'REPeat' loopVar  stmtlist																										#Repeat
-	| 'REPeat' ID eol linelist? lineNumber? 'END REPeat' ID?																				#Repeat
-	| 'IF' expr 'THEN'? eol linelist? lineNumber? else? lineNumber? 'END IF'								#If
-	| 'IF' expr ('THEN' | ':') stmtlist else? 																			#If
-    | 'SELect ON' constexpr terminator linelist lineNumber? 'END SELect'																		#Select
+	| 'REPeat' ID eol linelist? lineNumber? 'END REPeat' ID?																			#Repeat
+	| 'IF' expr 'THEN'? eol linelist? lineNumber? else? lineNumber? 'END IF'															#If
+	| 'IF' expr ('THEN' | ':') stmtlist else? 																							#If
+    | 'SELect ON' constexpr terminator linelist lineNumber? 'END SELect'																#Select
 	| 'ON' (constexpr) '=' rangeexpr																									#Onselect
 	| ID unparenthesizedlist?																											#ProcCall
 	| '=' unparenthesizedlist																											#Equal
 	| 'NEXT' ID?																														#Next
 	| 'DATA' unparenthesizedlist																										#Data
-	| 'PRINT' '\\'* expr? '\\'* ((separator | '\\') '\\'* expr  )* separator? 																	#Print
+	| 'PRINT' '\\'* expr? '\\'* ((separator | '\\') '\\'* expr  )* separator? 															#Print
 	| 'READ' unparenthesizedlist																										#Read
 	| 'RETurn' unparenthesizedlist?																										#Return
 	;
@@ -34,14 +34,14 @@ expr :
 	  '(' expr ')'																														#ParenthesizedExpr
 	| ('+' | '-') expr																													#UnaryAdditiveExpr
 	| expr ('&' | '&&') expr																											#BinaryExpr
-	| <assoc=right> (identifier | String) 'INSTR' expr																							#InstrExpr
+	| <assoc=right> (identifier | String) 'INSTR' expr																					#InstrExpr
 	| <assoc=right> expr '^' expr																										#BinaryExpr
 	| expr ('*' | '/' | 'MOD' | 'DIV') expr																								#BinaryExpr
 	| expr ('+' | '-') expr																												#BinaryExpr
-	| expr ('=' | '==' | '<>' | '<' | '>' | '<=' | '>=') expr																		#BinaryExpr
-	| ('NOT' | '~') expr																														#NotExpr
+	| expr ('=' | '==' | '<>' | '<' | '>' | '<=' | '>=') expr																			#BinaryExpr
+	| ('NOT' | '~') expr																												#NotExpr
 	| expr ('AND' | '&&') expr																											#BinaryExpr
-	| expr ('^^' || '||' | 'OR' | 'XOR') expr																							#BinaryExpr
+	| expr ('^^' | '||' | 'OR' | 'XOR') expr																							#BinaryExpr
 	| identifier																														#IdentExpr
 	| (Integer | String | Real)																											#LiteralExpr
 	;
@@ -56,6 +56,7 @@ step : 'STEP' expr;
 functionName : ID;
 procedureName : ID;
 loopVar : ID;
+arrayName : ID;
 localVars : (lineNumber? 'LOCal' unparenthesizedlist? terminator)*;
 identifier : ID (parenthesizedlist )?;   // could be function call or array refrence
 

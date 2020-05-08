@@ -31,7 +31,6 @@ namespace SBasic
 #if DEBUG
                 DumpTree(tree, "");
 #endif
-                return;
                 SymbolTable<Symbol> symbolTable = new SymbolTable<Symbol>();
                 PrimeSymbolTable(symbolTable);
 
@@ -42,6 +41,9 @@ namespace SBasic
                 symbolTableVisitor.Visit(tree);
                 symbolTableVisitor.FirstPass = false; // Everything else
                 symbolTableVisitor.Visit(tree);
+#if DEBUG
+                symbolTable.ListScope(SymbolTable<Symbol>.Global, "");
+#endif
 
                 FindTypesVisitor<int> findTypesVisitor = new FindTypesVisitor<int>(symbolTable);
                 findTypesVisitor.Visit(tree);
@@ -70,7 +72,6 @@ namespace SBasic
         {
             using (System.IO.StreamWriter file = new System.IO.StreamWriter(@"c:\users\hcump\source\repos\SBasic\Parsing\parsetree.txt", false))
             {
-//                for (int plac = 1; plac < tree.ChildCount; plac++)
                 DumpItem(tree, indent, file);
             }
         }
