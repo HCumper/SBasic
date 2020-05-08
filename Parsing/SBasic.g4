@@ -3,7 +3,7 @@
 program : linelist EOF;
 
 linelist : ((lineNumber? stmt terminator?) | (lineNumber (':')+ eol))*;
-stmtlist : stmt? terminator (stmt terminator)*;
+stmtlist : stmt? terminator? (stmt terminator?)*;
 
 stmt :
       Comment 																															#Comment
@@ -25,7 +25,7 @@ stmt :
 	| '=' unparenthesizedlist																											#Equal
 	| 'NEXT' ID?																														#Next
 	| 'DATA' unparenthesizedlist																										#Data
-	| 'PRINT' '\\'* expr? '\\'* (separator '\\'* expr  )* separator? 																	#Print
+	| 'PRINT' '\\'* expr? '\\'* ((separator | '\\') '\\'* expr  )* separator? 																	#Print
 	| 'READ' unparenthesizedlist																										#Read
 	| 'RETurn' unparenthesizedlist?																										#Return
 	;
@@ -40,8 +40,8 @@ expr :
 	| expr ('+' | '-') expr																												#BinaryExpr
 	| expr ('=' | '==' | '<>' | '<' | '>' | '<=' | '>=') expr																		#BinaryExpr
 	| ('NOT' | '~') expr																														#NotExpr
-	| expr ('AND' | '&&') expr																													#BinaryExpr
-	| expr ('^^' || '||' | 'OR' | 'XOR') expr																											#BinaryExpr
+	| expr ('AND' | '&&') expr																											#BinaryExpr
+	| expr ('^^' || '||' | 'OR' | 'XOR') expr																							#BinaryExpr
 	| identifier																														#IdentExpr
 	| (Integer | String | Real)																											#LiteralExpr
 	;
@@ -59,7 +59,7 @@ loopVar : ID;
 localVars : (lineNumber? 'LOCal' unparenthesizedlist? terminator)*;
 identifier : ID (parenthesizedlist )?;   // could be function call or array refrence
 
-parenthesizedlist :	'(' expr (separator expr)* ')';
+parenthesizedlist :	'(' expr (separator expr?)* ')';
 unparenthesizedlist : expr (separator expr)*;
 
 separator : ',' | '!' | ';' | 'TO';
@@ -90,7 +90,7 @@ ID :
 	| ([A-Za-z] | '_' | '#') ([0-9] | [A-Za-z] | '_')* '%'
 	| ([A-Za-z] | '_' | '#') ([0-9] | [A-Za-z] | '_')*;
 	
-Integer : '#'? DIGIT+;
+Integer : ('#'? DIGIT+) | ('$' (DIGIT | [A-Z])+);
 lineNumber : Integer;
 
 Real : DIGIT* '.' DIGIT* ;

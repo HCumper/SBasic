@@ -2592,3 +2592,1784 @@
 18236   IF externals_used : Codegen 371
 18238   Codegen2 242,10002
 18240   END DEFine
+18242 :
+18244 DEFine PROCedure Issue_Line_Label
+18246   Codegen 10000+Line_Pos%(32767-line_num%-line_num%)
+18248   IF (diagnose_flag>1) : Codegen2 248,line_num%
+18250   END DEFine
+18252 :
+18254 DEFine PROCedure Parse_Name_Stmt
+18256 LOCal special_codegen, id%, type_wd%, array_ref%
+18258   REMark A name has been found at the start of a statement
+18260   heap_busy=1
+18262   id%=value%
+18264   IF names%(id%)<1
+18266     Parse_Name_Scalar
+18268     ELSE
+18270     type_wd%=struct%(names%(id%))
+18272     IF (type_wd% && proc_mask%) <> 0
+18274       Parse_Name_Proc
+18276       ELSE
+18278       Close_all_Globals
+18280       IF (type_wd% && vector_mask%) <> 0
+18282         Parse_Name_Array
+18284         ELSE
+18286         IF (type_wd% && manifest_mask%) <> 0
+18288           Complain err_assign_manifest%
+18290           ELSE
+18292           Complain err_value_needed% : END IF : END IF : END IF : END IF
+18294   IF NOT End_of_Stmt : Complain err_stmt_too_long%
+18296   END DEFine
+18298 :
+18300 DEFine PROCedure Parse_Name_Scalar
+18302   IF names%(id%)=ambiguous_flag% : Complain err_id_ambiguous%
+18304   REMark Otherwise 'local' or 'for' marker
+18306   Check_for_Assign
+18308   Close_all_Globals
+18310   Eval BASIC_TYPE%(id%)
+18312   Put_Blocker 118+Type_Offset%(id%),id%,(names%(id%)<for_flag%)
+18314   END DEFine
+18316 :
+18318 DEFine PROCedure Parse_Tokname
+18320  REMark This occurs only if ignore=1
+18322  LOCal var%
+18324  var%=names%(value%)
+18326  IF var%>0
+18328   IF (struct%(var%)&&directive_mask%)=directive_mask%:Parse_Directive:ELSE Skip_Stmt
+18330  ELSE
+18332   Skip_Stmt
+18334  END IF
+18336 END DEFine
+18338 :
+18340 DEFine PROCedure Parse_Name_Array
+18342   IF NOT Simple_Concat
+18344     Exp_Init
+18346     array_ref% = Parsed_Subscript_Type%(id%,1)
+18348     Check_for_Assign
+18350     Eval BASIC_TYPE%(id%)
+18352     Gen_Array_Ref 1,array_ref%,id% : END IF
+18354   END DEFine
+18356 :
+18358 DEFine PROCedure Parse_Name_Proc
+18360   IF (type_wd% && directive_mask%) = directive_mask% : Parse_Directive : RETurn
+18362   Close_all_Globals
+18364   Getsym : Exp_Init
+18366   IF (type_wd% && rom_mask%) <> 0
+18368     special_codegen = type_wd% && exception_mask%
+18370     ELSE
+18372     special_codegen=0 : END IF
+18374   IF special_codegen
+18376     Parse_Oddball_Procs(id%)
+18378     ELSE
+18380     IF Symbol_is_Assign : Complain err_proc_in_eval%
+18382     IF (type_wd% && rom_mask%) <> 0
+18384       IF (type_wd% && template_mask%) = 0 : Codegen 250 : REMark mark stack
+18386       END IF
+18388     wk$ = Parsed_Para_List$(names%(id%)) : END IF
+18390   IF (type_wd% && rom_mask%) <> 0
+18392     IF NOT special_codegen
+18394       IF (type_wd% && template_mask%) <> 0
+18396         Codegen template_no : ELSE
+18398         Codegen2 227,used_names%(id%) : Codegen_Str(wk$) : END IF : END IF
+18400     ELSE
+18402     IF (type_wd% && extnl_dir_mask%) <> 0
+18404       grp_module = struct%(names%(id%)+1)
+18406       Codegen2 366, grp_module : Codegen used_names%(id%)
+18408       ELSE
+18410       Codegen2 236,-used_names%(id%) : END IF : END IF
+18412   IF Symbol_is_Assign : Complain err_proc_in_eval%
+18414   END DEFine
+18416 :
+18418 DEFine FuNction Simple_Concat
+18420   Look_Ahead
+18422   IF Symbol_is_Assign
+18424     Getsym
+18426     IF token=tok_name% AND value%=id%
+18428       Getsym
+18430       IF token = tok_opsym% AND tokval = op_concat%
+18432         Getsym : Confirm_Look : Eval BASIC_TYPE%(id%)
+18434         Put_Blocker 374,id%,(type_wd% && glbl_and_extnl%) : Discard_Type
+18436         RETurn 1 : END IF : END IF : END IF
+18438   Backtrack : RETurn 0
+18440   END DEFine
+18442 :
+18444 DEFine PROCedure Put_Blocker(template_no, id%, must_close)
+18446   IF BASIC_TYPE%(id%) = int_mask% OR NOT must_close
+18448     Codegen2 template_no, used_names%(id%)
+18450     ELSE
+18452     Codegen 361 : REMark Lock Scheduler
+18454     Codegen2 template_no, used_names%(id%)
+18456     Codegen 362 : REMark Unlock Scheduler
+18458     END IF
+18460   END DEFine
+18462 :
+18464 DEFine PROCedure Check_for_Assign
+18466   Get_Check_Get tok_symbol%,sym_assign%,err_assign_expected%
+18468   END DEFine
+18470 :
+18472 DEFine PROCedure Get_Check_Get(tok%,val%,er%)
+18474   Getsym : IF tok%<>token OR val%<>tokval : Complain er%
+18476   Getsym
+18478   END DEFine
+18480 :
+18482 DEFine FuNction Name_is_Device
+18484   REMark Kludge to keep nasty 'value's out of BASIC_TYPE%
+18486   IF (struct%(st_addr%) && name_mask%) <> 0 AND token = tok_name%
+18488     RETurn BASIC_TYPE%(value%)=float_mask% : ELSE : RETurn 0
+18490     END IF
+18492   END DEFine
+18494 :
+18496 DEFine FuNction Parsed_Para_List$(st_def%)
+18498 LOCal st_addr%, basic, wk$(50), param_type, gram_type%, stepper%
+18500   wk$=""
+18502   IF (struct%(st_def%) && ad_hoc_mask%) <> 0 : wk$=Ad_Hoc_Para_List$
+18504   basic = (struct%(st_def%) && rom_mask%) = 0
+18506   IF (struct%(st_def%) && last_mask%) <> 0
+18508     IF basic : Skip_xs_Paras st_def%
+18510     RETurn CHR$(LEN(wk$)) & wk$ : END IF
+18512   st_addr%=st_def% + 1 + ((struct%(st_def%)&&extnl_dir_mask%)<>0)
+18514   stepper% = 1 + ((struct%(st_def%)&&glob_dir_mask%)<>0)
+18516   gram_type% = struct%(st_addr%)
+18518   REPeat para_lp
+18520     param_type = gram_type% && datatypes%
+18522     IF param_type <> 0 AND (gram_type% && by_ref_mask%) <> 0
+18524       Process_By_Ref_Para
+18526       ELSE
+18528       SELect ON param_type
+18530         = int_mask%    : IF (gram_type% && channel_mask%) <> 0
+18532                            dummy% = Explicit_Channel(1)
+18534                            wk$=wk$ & Sep_Type$(131)
+18536                            ELSE
+18538                            IF (gram_type% && colour_mask%) <> 0
+18540                              Parse_Colour
+18542                              wk$=wk$ & CHR$(3) : REMark Result must be last INT
+18544                              ELSE
+18546                              Resolve_Param int_mask% : END IF : END IF
+18548         = float_mask%  : Resolve_Param float_mask%
+18550         = string_mask% : IF Name_is_Device
+18552                            Codegen2 169,LEN(BASIC_NAME$(value%))
+18554                            Codegen_Str BASIC_NAME$(value%)
+18556                            Getsym : wk$=wk$ & Sep_Type$(string_mask%)
+18558                            ELSE
+18560                            Resolve_Param string_mask% : END IF
+18562         END SELect
+18564       END IF
+18566     IF Closing_Bracket OR End_of_Stmt : EXIT para_lp
+18568     IF (gram_type% && last_mask%) <> 0
+18570       IF NOT basic : Complain err_parameter_error%
+18572       Skip_xs_Paras st_def% : EXIT para_lp : END IF
+18574     IF token=tok_separator% : Getsym
+18576     Get_grammar
+18578     END REPeat para_lp
+18580   IF (struct%(st_def%) && template_mask%) <> 0
+18582     IF (gram_type% && last_mask%) = 0 : Get_grammar
+18584     template_no = (gram_type%^^last_mask%) / 8 : END IF
+18586   IF (gram_type% && last_mask%) = 0
+18588     IF NOT basic : Complain err_parameter_error%
+18590     Generate_xtra_Paras : END IF
+18592   RETurn CHR$(LEN(wk$)) & wk$
+18594   END DEFine
+18596 :
+18598 DEFine PROCedure Get_grammar
+18600   st_addr% = st_addr%+stepper%
+18602   gram_type% = struct%(st_addr%)
+18604   END DEFine
+18606 :
+18608 DEFine PROCedure Skip_xs_Paras(st_def%)
+18610   IF Closing_Bracket OR End_of_Stmt : RETurn
+18612   Warning "Excess parameter(s) ignored."
+18614   Skip_to_List_End ((struct%(st_def%)&&fctn_mask%)<>0)
+18616   END DEFine
+18618 :
+18620 DEFine PROCedure Generate_xtra_Paras
+18622   Warning "Missing parameter(s) assumed."
+18624   REPeat rep_lp
+18626     Get_grammar
+18628     IF (gram_type% && by_ref_mask%) <> 0
+18630       Complain err_expr_by_ref% : END IF
+18632     p_type = gram_type% && datatypes%
+18634     SELect ON p_type
+18636       =string_mask% : Codegen2 169,0
+18638       =float_mask%  : Codegen2 376,0
+18640       =int_mask%    : Codegen 263
+18642       END SELect
+18644     IF (gram_type% && last_mask%) : EXIT rep_lp
+18646     END REPeat rep_lp
+18648   END DEFine
+18650 :
+18652 DEFine PROCedure Resolve_Param(mask%)
+18654 LOCal sep_mask%
+18656   sep_mask% = 128 * Symbol_is_Hash
+18658   IF sep_mask% <> 0 : Getsym
+18660   Expression param_type : param_type = Popped_Type%
+18662   IF basic
+18664     IF (param_type && string_mask%) <> 0 : Codegen 259
+18666     ELSE
+18668     wk$ = wk$ & Sep_Type$(sep_mask% || (mask%-(mask%=int_mask%))) : END IF
+18670   END DEFine
+18672 :
+18674 DEFine PROCedure Process_By_Ref_Para
+18676 REMark GLOBAL/EXTERNAL variable names may not be:
+18678 REMark                 used as DIM, LOCal, formal para names
+18680 REMark                 actual by-ref parameters to a LOCal proc/fn
+18682   IF token <> tok_name% OR BASIC_TYPE%(value%) <> param_type
+18684     Complain err_expr_by_ref% : END IF
+18686   Look_Ahead
+18688   IF token<>tok_separator% AND NOT (End_of_Stmt OR Closing_Bracket)
+18690     Backtrack : Complain err_expr_by_ref% : END IF
+18692   Backtrack
+18694   IF names%(value%) < 1
+18696     IF (gram_type%&&vector_mask%)<>0 : Complain err_array_needed%
+18698     IF names%(value%) = ambiguous_flag% : Complain err_id_ambiguous%
+18700     IF names%(value%) >= for_flag%
+18702       names%(value%) = for_flag%
+18704       ELSE : Complain err_defdir_conflict% : END IF
+18706     ELSE
+18708     IF (struct%(names%(value%)) && manifest_mask%) <> 0
+18710       Complain err_expr_by_ref% : END IF
+18712     IF (gram_type%&&vector_mask%) = 0 : Complain err_illegal_vector%
+18714     gram_type% = (((gram_type%^^by_ref_mask%)^^vector_mask%) DIV dims_offset%) MOD 32
+18716     IF gram_type%<>struct%(names%(value%)+1) : Complain err_illegal_vector%
+18718     gram_type% = struct%(st_addr%)
+18720     END IF
+18722   Codegen2 246, used_names%(value%) : Getsym
+18724   END DEFine
+18726 :
+18728 DEFine FuNction Ad_Hoc_Para_List$
+18730 LOCal wk$(50),entry_code%,ref,ref1
+18732   wk$="":Set_ref1 struct%(st_def%)
+18734   REPeat ad_hoc_lp
+18736     IF End_of_Stmt OR Closing_Bracket : EXIT ad_hoc_lp
+18738     entry_code% = 128 * Symbol_is_Hash:ref=ref1
+18740     IF entry_code% <> 0 : Getsym
+18742     IF token<>tok_separator%
+18744       Expression datatypes% : REMark Any type is my type!
+18746       entry_code%=entry_code%+Popped_Type%
+18748       IF ref:IF entry_code%&&1:ref=2:REMark simple string -> array
+18750       entry_code%=entry_code%-((entry_code% && datatypes%)=int_mask%)
+18752     ELSE
+18754       ref=0
+18756       END IF
+18758     wk$=wk$ & Sep_Type$(entry_code% || (ref>0)*8 || (ref=2)*4)
+18760     IF token=tok_separator% : Getsym
+18762     END REPeat ad_hoc_lp
+18764   RETurn wk$
+18766   END DEFine
+18768 :
+18770 DEFine PROCedure Parse_Oddball_Procs(id%)
+18772 LOCal mm_rc%, mm_int%
+18774   wk$=BASIC_NAME$(id%)
+18776   IF wk$="PRINT" OR wk$="INPUT" : Decode_Print_Input wk$ : RETurn
+18778   IF wk$="CLEAR"
+18780     Codegen 277 : Warning "CLEAR destroys ALL strings."
+18782     RETurn : END IF
+18784   IF wk$="RUN"
+18786     IF End_of_Stmt
+18788       Codegen2 242,10002
+18790       ELSE
+18792       Check_Line_Reference 242
+18794       Getsym : IF NOT End_of_Stmt : Complain err_faulty_linenum%
+18796       END IF
+18798     RETurn : END IF
+18800   IF wk$="READ"
+18802     REPeat rep_lp
+18804       IF token<>tok_name% : Complain err_assign_expected%
+18806       Trick_Assign value%,113+Type_Offset%(value%)
+18808       Getsym : IF NOT Separator_is_Comma : EXIT rep_lp
+18810       Getsym
+18812       END REPeat rep_lp
+18814     RETurn : END IF
+18816   IF wk$="MOVE_MEMORY"
+18818     mm_int% = 0
+18820     Expression float_mask%  : REMark used to be: || int_mask%
+18822     IF Separator_is_TO
+18824       mm_rc% = 0
+18826       ELSE
+18828       mm_rc% = 1
+18830       IF Top_Type% = int_mask% : mm_int% = 2
+18832       IF NOT Separator_is_Comma : Complain err_syntax_error%
+18834       END IF
+18836     Discard_Type : Getsym : Discard_Float
+18838     IF NOT ((mm_rc%=0 AND Separator_is_Comma) OR (mm_rc%=1 AND Separator_is_TO)) : Complain err_syntax_error%
+18840     Getsym : Expression float_mask% || (int_mask% * (mm_rc%=0))
+18842     IF Top_Type% = int_mask% AND mm_rc% = 0 : mm_int% = 2
+18844     Codegen 351 + mm_rc% + mm_int%
+18846     RETurn : END IF
+18848   Warning "Meaningless command ignored." : Skip_Stmt
+18850   END DEFine
+18852 :
+18854 DEFine PROCedure Decode_Print_Input(wk$)
+18856 LOCal nl_flag
+18858   print_input_active = 1
+18860   IF Explicit_Channel(1)
+18862     IF NOT End_of_Stmt : Getsym
+18864     END IF
+18866   Codegen 281+(wk$="INPUT")
+18868   nl_flag=1
+18870   REPeat pi_lp
+18872     IF token=tok_separator%
+18874       nl_flag=0
+18876       SELect ON tokval
+18878         =sep_semi% : Getsym
+18880         =sep_to% : Getsym : Discard_Int : Codegen 205
+18882                    IF NOT End_of_Stmt : Getsym : REMark Get sep, if any
+18884         =sep_slash% : Codegen 203 : Getsym
+18886         =sep_pling% : Getsym : IF NOT End_of_Stmt : Codegen 204
+18888         =sep_comma% : Codegen 201 : Getsym
+18890         END SELect
+18892       ELSE
+18894       IF End_of_Stmt
+18896         IF nl_flag : Codegen 203
+18898         EXIT pi_lp : END IF
+18900       nl_flag=1
+18902       IF token=tok_name% AND wk$="INPUT"
+18904         Trick_Assign value%,116+Type_Offset%(value%)
+18906         Getsym
+18908         IF token<>tok_separator% AND NOT End_of_Stmt : Complain err_syntax_error%
+18910         ELSE
+18912         Eval string_mask% : Codegen 186 : END IF : END IF
+18914     END REPeat pi_lp
+18916   print_input_active = 0
+18918   END DEFine
+18920 :
+18922 DEFine PROCedure Trick_Assign(id%,code%)
+18924 LOCal store_type%
+18926   IF names%(id%) < 0
+18928     Codegen code%
+18930     Put_Blocker 118+Type_Offset%(id%),id%,(names%(id%)<for_flag%)
+18932     ELSE
+18934     store_type%=Parsed_Subscript_Type%(id%,1)
+18936     Codegen code%
+18938     Gen_Array_Ref 1,store_type%,id% : END IF
+18940   END DEFine
+18942 :
+18944 DEFine PROCedure Assign_To(id%)
+18946   IF names%(id%) < 0
+18948     Put_Blocker 118+Type_Offset%(id%),id%,(names%(id%)<for_flag%)
+18950     ELSE
+18952     Gen_Array_Ref 1,Parsed_Subscript_Type%(id%,1),id% : END IF
+18954   END DEFine
+18956 :
+18958 DEFine PROCedure Parse_Keyword(keynum)
+18960 LOCal data_count%,suffix
+18962   IF keynum<>key_remark% : Close_all_Globals
+18964   heap_busy=(keynum<>key_remark% AND keynum<>key_local%)
+18966   SELect ON keynum
+18968     =key_remark% : Parse_key_Remark
+18970     =key_data% : Record_Data
+18972     =key_go% : Parse_key_Go
+18974     =key_restore% : Parse_key_Restore
+18976     =key_let% : Getsym
+18978                 IF token=tok_name% : Parse_Name_Stmt : ELSE : Complain err_assign_expected%
+18980     =key_define% : Parse_key_Defn
+18982     =key_end% : Parse_key_End
+18984     =key_repeat% : Parse_key_Repeat
+18986     =key_for% : Parse_key_For
+18988     =key_if% : Parse_key_If
+18990     =key_else% : Parse_key_Else
+18992     =key_select% : Parse_key_Select
+18994     =key_on% : Parse_key_On
+18996     =key_exit% : Parse_key_Exit
+18998     =key_next% : Parse_key_Next
+19000     =key_dim%,key_local% : Parse_key_Decl(keynum)
+19002     =key_return% : Parse_key_Return
+19004     =key_mistake% : Complain err_syntax_error%
+19006     =key_when% : Getsym
+19008                  IF token=tok_keyword% AND tokval=key_error%
+19010                    Gen_When_Error 0
+19012                    ELSE : Complain err_coming_soon% : END IF
+19014     =REMAINDER : Complain err_coming_soon%
+19016     END SELect
+19018   END DEFine
+19020 :
+19022 DEFine PROCedure Parse_key_Remark
+19024   LOCal wk$(50),f_len,a%,b%,o%,fl$(50)
+19026   Getsym
+19028   IF token<>tok_text%:RETurn
+19030   IF PEEK_W(value)>11
+19032    wk$ = PEEK$(value+2, PEEK_W(value))
+19034    IF wk$(1 TO 2)<>"%%":RETurn
+19036    IF ext_no%>7:Warning "Too many extensions":RETurn
+19038    a%=',' INSTR wk$:IF a%=0 OR a%=LEN(wk$):Warning ext_strg$:RETurn
+19040    b%=',' INSTR wk$(a%+1 TO )+a%:IF b%=0:Warning ext_strg$:RETurn
+19042    fl$=wk$(a%+1 TO b%-1)
+19044    IF St_Num(fl$):o%=fl$:ELSE Warning ext_strg$:RETurn
+19046    fl$=wk$(b%+1 TO )
+19048    IF St_Num(fl$):b%=fl$:ELSE Warning ext_strg$:RETurn
+19050    fl$=wk$(3 TO a%-1)
+19052    IF DEVICE_STATUS(1,fl$)<0:Warning "File "&fl$&" can't be opened":RETurn
+19053    IF o%<>1
+19054     f_len=File_SIZE(fl$):IF o%>f_len-9 OR b%>f_len-9:Warning "Wrong extension file":RETurn
+19055    ELSE
+19056     IF ins_fl:Complain err_dup_ins_file%:ELSE ins_fl=1:f_len=LEN(fl$)+2
+19057    END IF
+19058    ext$(ext_no%)=fl$:ext_p%(ext_no%,0)=o%:ext_p%(ext_no%,1)=b%
+19060    ext_l(ext_no%)=f_len
+19062    ext_no%=ext_no%+1
+19064    RETurn
+19066   ELSE
+19068   IF optimise_flag=1 AND PEEK_W(value)=1
+19070       go_slow = (PEEK(value+2)=slow_code%)
+19072       IF rem_plus_allowed : Codegen 254+go_slow
+19074       Getsym : END IF : END IF
+19076   END DEFine
+19078 :
+19080 DEFine PROCedure Parse_key_Go
+19082   Getsym : suffix=tokval
+19084   Getsym : Check_Line_Reference 236+6*(suffix=key_to%)
+19086   Getsym : IF NOT End_of_Stmt : Complain err_faulty_linenum%
+19088   END DEFine
+19090 :
+19092 DEFine PROCedure Check_Line_Reference (gotype)
+19094   IF NOT Numeric : Complain err_faulty_linenum%
+19096   IF value<1 OR Num_Type%(value)<>int_mask% : Complain err_faulty_linenum%
+19098   Codegen2 gotype,10000+Line_Pos%(32767-value-value-(gotype=237))
+19100   END DEFine
+19102 :
+19104 DEFine PROCedure Parse_key_Restore
+19106   Getsym
+19108   IF End_of_Stmt
+19110     Codegen2 237,10000
+19112     ELSE
+19114     Check_Line_Reference 237
+19116     Getsym : IF NOT End_of_Stmt : Complain err_faulty_linenum%
+19118     END IF
+19120   END DEFine
+19122 :
+19124 DEFine PROCedure Parse_key_If
+19126   Push_St key_then% : Push_St control% : Push_St key_if%
+19128   Getsym : working_on_IF = 1
+19130   Eval float_mask%
+19132   Codegen2 239,20000+control% : working_on_IF = 0
+19134   Bump_Control
+19136   IF NOT End_of_Line
+19138     Look_Ahead : REMark skip optional THEN or ':'
+19140     IF NOT End_of_Line
+19142       line_if% = line_if% || Boosted_Ptr% : END IF
+19144     Backtrack : REMark Leave scan pointing at End_of_Stmt
+19146     END IF
+19148   END DEFine
+19150 :
+19152 DEFine PROCedure Parse_key_Else
+19154   IF Last_Struct_Begun_was(key_if%,0)
+19156     Codegen2 242,con_no%-29999 : REMark Jump to END IF label
+19158     IF data_item%=key_else%
+19160       Warning "Extra ELSE clause ignored."
+19162       ELSE
+19164       Codegen 20000+con_no% : REMark Target for IF_FALSE
+19166       END IF
+19168     Push_St key_else% : Push_St con_no% : Push_St key_if%
+19170     END IF
+19172   END DEFine
+19174 :
+19176 DEFine PROCedure Parse_key_Select
+19178   Getsym
+19180   IF token=tok_keyword% AND tokval=key_on%
+19182     Get_Name
+19184     ELSE : IF token<>tok_name% : Complain err_syntax_error%
+19186     END IF
+19188   data_item%=value%
+19190   Push_St 0 : REMark Next instance field - unused at first
+19192   Push_St data_item% : Push_St control% : Push_St key_select%
+19194   Bump_Control
+19196   Getsym
+19198   IF NOT End_of_Line : line_select% = line_select% || Boosted_Ptr%
+19200   IF NOT End_of_Stmt : Parse_Select_Instance
+19202   END DEFine
+19204 :
+19206 DEFine PROCedure Parse_key_On
+19208   Look_Ahead : REMark Could be a SELECT or a GO
+19210   data_count%=1
+19212   REPeat seek_branch
+19214     Getsym
+19216     IF End_of_Stmt OR Symbol_is_Assign : EXIT seek_branch
+19218     IF SYMBOL_is_Comma : data_count%=data_count%+1
+19220     END REPeat seek_branch
+19222   IF Symbol_is_Assign
+19224                                       REMark Must be a SELECT clause
+19226     Backtrack : Get_Name : REMark Skip name
+19228     Getsym : Parse_Select_Instance
+19230     ELSE
+19232                                       REMark A computed branch
+19234     Backtrack : Getsym : Eval int_mask%
+19236     Getsym
+19238     SELect ON tokval
+19240       =key_sub% : Codegen 241 : Codegen2 data_count%,control%-29999
+19242       =key_to% : Codegen2 240,data_count%
+19244       END SELect
+19246     Codegen 254 : REMark Use 'fast' mode to build table
+19248     REPeat line_nums
+19250       Getsym
+19252       IF token=tok_name%
+19254         IF names%(value%)>0
+19256           IF struct%(names%(value%)) = (proc_mask% || last_mask%)
+19258             Codegen2 243,-used_names%(value%)
+19260             ELSE : Complain err_faulty_linenum% : END IF
+19262           ELSE
+19264           Complain err_faulty_linenum% : END IF
+19266         ELSE
+19268         Check_Line_Reference 243 : END IF
+19270       Getsym : IF End_of_Stmt : EXIT line_nums
+19272       IF NOT SYMBOL_is_Comma : Complain err_faulty_linenum%
+19274       END REPeat line_nums
+19276     IF go_slow OR in_when_block : Codegen 255
+19278     Codegen control%-29999
+19280     Bump_Control : END IF
+19282   END DEFine
+19284 :
+19286 DEFine PROCedure Parse_key_Return
+19288   Getsym
+19290   IF NOT End_of_Stmt
+19292     IF in_defn%=0 : Complain err_proc_in_eval%
+19294     IF (struct%(names%(in_defn%)) && fctn_mask%)=0
+19296       Complain err_proc_in_eval% : END IF
+19298     Eval BASIC_TYPE%(in_defn%)
+19300     IF (BASIC_TYPE%(in_defn%) && string_mask%) <> 0 : Codegen 259
+19302     ELSE
+19304     IF in_defn%<>0
+19306       IF (struct%(names%(in_defn%)) && fctn_mask%) <> 0
+19308         Complain err_value_needed% : END IF
+19310       END IF : END IF
+19312   Codegen 244
+19314   END DEFine
+19316 :
+19318 DEFine PROCedure Parse_key_Repeat
+19320   Get_Name
+19322   Codegen 20000+control%
+19324   Push_St value% : Push_St control% : Push_St key_repeat%
+19326   Bump_Control
+19328   Getsym
+19330   IF Symbol_is_Colon : line_repeat% = line_repeat% || Boosted_Ptr%
+19332   END DEFine
+19334 :
+19336 DEFine PROCedure Parse_key_For
+19338   Get_Name
+19340   IF BASIC_TYPE%(value%)=string_mask% : Complain err_coming_soon%
+19342   data_item%=value%
+19344   Check_for_Assign
+19346   For_List
+19348   Codegen 20000+control% : REMark Loop top label
+19350   Push_St data_item% : Push_St control% : Push_St key_for%
+19352   Bump_Control
+19354   IF Symbol_is_Colon : line_for% = line_for% || Boosted_Ptr%
+19356   END DEFine
+19358 :
+19360 DEFine PROCedure Parse_key_Next
+19362   Get_Name : Identify_Loop
+19364   IF con_type=key_for%
+19366     Codegen2 234-BASIC_TYPE%(value%),used_names%(value%)
+19368     IF data_item%=value% AND struct_ct% = 1
+19370       Codegen2 378, con_no%-29999 : REMark Tentative End loop label
+19372       struct%(st_free%-3) = -value% : END IF : REMark Tentatively ended off loop
+19374     ELSE
+19376     Codegen2 238,20000+con_no% : END IF
+19378   Getsym
+19380   END DEFine
+19382 :
+19384 DEFine PROCedure Parse_key_Exit
+19386   Get_Name : Identify_Loop
+19388   Codegen2 381,con_no%-29999
+19390   Getsym
+19392   END DEFine
+19394 :
+19396 DEFine PROCedure Parse_key_End
+19398 LOCal end_type
+19400   Getsym
+19402   IF token<>tok_keyword% : Complain err_syntax_error%
+19404   IF tokval=key_define%
+19406     Close_Structs : Codegen 244
+19408     IF in_defn%=0
+19410       Warning "Extra END treated as RETurn."
+19412       ELSE
+19414       Codegen end_defn%-29999 : END IF
+19416     Getsym
+19418     IF token=tok_name% : Getsym : REMark Check name corresponds?
+19420     in_defn%=0
+19422     ELSE
+19424     end_type=tokval
+19426     IF st_free%<=control_base%
+19428       SELect ON end_type
+19430         =key_for%,key_repeat% : Getsym
+19432         END SELect
+19434       Warn_Extra_End
+19436       ELSE
+19438       SELect ON end_type
+19440         =key_if% : Gen_End_If
+19442         =key_select% : Gen_End_Select
+19444         =key_when% : Parse_End_When
+19446         =REMAINDER : Get_Name : Untangle
+19448         END SELect
+19450       END IF : END IF
+19452   END DEFine
+19454 :
+19456 DEFine PROCedure Untangle
+19458 LOCal civilization%, struct_ct%, ii
+19460   REMark This code corrects conditional END loops
+19462   civilization%=st_free% : struct_ct%=0
+19464   REPeat outer_lp
+19466     IF st_free%<=control_base% : EXIT outer_lp
+19468     Pop_Control : struct_ct%=struct_ct%+1
+19470     IF con_type=end_type AND data_item%=value%
+19472       IF struct_ct%=1 : EXIT outer_lp
+19474       Warning "END treated as NEXT."
+19476       IF con_type=key_for%
+19478         Codegen2 234-BASIC_TYPE%(value%),used_names%(value%)
+19480         ELSE
+19482         Codegen2 238,20000+con_no% : END IF
+19484       st_free%=civilization%
+19486       FOR ii=2 TO struct_ct% : Pop_Control : Assume_Block
+19488       Warning "EXIT " & BASIC_NAME$(value%) & " assumed."
+19490       Pop_Control : Assume_Block : RETurn
+19492       END IF
+19494     IF con_type=key_select% : dummy%=Popped_St% : NEXT outer_lp
+19496     IF con_type<>key_if% : EXIT outer_lp
+19498     END REPeat outer_lp
+19500   st_free%=civilization%
+19502   IF end_type=key_for% : Gen_End_For value% : ELSE : Gen_End_Repeat value%
+19504   END DEFine
+19506 :
+19508 DEFine PROCedure Close_Inline
+19510   REPeat mask_lp
+19512     IF inline% = 0 : EXIT mask_lp
+19514     IF inline% && line_if%
+19516                         Gen_End_If : ELSE
+19518     IF inline% && line_for%
+19520                         Gen_End_For(0) : ELSE
+19522     IF inline% && line_repeat%
+19524                         Gen_End_Repeat(0) : ELSE
+19526     IF inline% && line_when%
+19528                         Gen_End_When : ELSE
+19530     IF inline% && line_select%
+19532                         Gen_End_Select
+19534                         END IF : END IF : END IF : END IF : END IF
+19536     inline% = inline% DIV 2
+19538     END REPeat mask_lp
+19540   line_if%=0 : line_for%=0 : line_repeat%=0 : line_select%=0
+19542   line_when% = 0
+19544   END DEFine
+19546 :
+19548 DEFine PROCedure Gen_End_For(var%)
+19550   IF Last_Struct_Begun_was(key_for%,var%)
+19552     Codegen2 234-BASIC_TYPE%(data_item%),used_names%(data_item%)
+19554     Codegen2 378, con_no%-29999 : REMark Tentative End loop label
+19556     REMark Codegen con_no%-29999
+19558     line_for% = Reduced%(line_for%) : END IF
+19560   END DEFine
+19562 :
+19564 DEFine PROCedure Gen_End_If
+19566   IF Last_Struct_Begun_was(key_if%,0)
+19568     IF data_item%=key_then%
+19570       Codegen 20000+con_no% : REMark No code in the ELSE part
+19572       ELSE
+19574       Codegen con_no%-29999 : REMark Only needed if there's an ELSE
+19576       END IF
+19578     line_if% = Reduced%(line_if%)
+19580 END IF
+19582   END DEFine
+19584 :
+19586 DEFine PROCedure Gen_End_Repeat(var%)
+19588   IF Last_Struct_Begun_was(key_repeat%,var%)
+19590     Codegen2 242,20000+con_no%
+19592     Codegen con_no%-29999
+19594     line_repeat% = Reduced%(line_repeat%) : END IF
+19596   END DEFine
+19598 :
+19600 DEFine PROCedure Gen_End_Select
+19602   IF Last_Struct_Begun_was(key_select%,0)
+19604     next_case%=Popped_St%
+19606     Codegen 20000+next_case%
+19608     Codegen con_no%-29999
+19610     line_select% = Reduced%(line_select%) : END IF
+19612   END DEFine
+19614 :
+19616 DEFine PROCedure Gen_When_Error(level)
+19618   Getsym
+19620   IF NOT End_of_Stmt : Complain err_syntax_error%
+19622   IF in_when_block : Warning "END_WHEN assumed." : Gen_End_When
+19624   Codegen 255 : REMark Reset to threaded codegen
+19626   rem_plus_allowed = 0 : in_when_block = 1
+19628   Codegen2 327+level, 20000+control%
+19630   Push_St level : Push_St control% : Push_St key_when%
+19632   Bump_Control
+19634   IF Symbol_is_Colon : line_when% = line_when% || Boosted_Ptr%
+19636   END DEFine
+19638 :
+19640 DEFine PROCedure Gen_End_When
+19642   IF Last_Struct_Begun_was(key_when%,0)
+19644     REMark Close_Structs
+19646     rem_plus_allowed = 1 : in_when_block = 0
+19648     Codegen 364 : REMark Continue
+19650     Codegen 20000+con_no%
+19652     IF NOT go_slow : Codegen 254 : REMark Restore In-line codegen
+19654     line_when% = Reduced%(line_when%) : END IF
+19656   END DEFine
+19658 :
+19660 DEFine FuNction Boosted_Ptr%
+19662   inline% = 2*inline% + (inline%=0) : RETurn inline%
+19664   END DEFine
+19666 :
+19668 DEFine FuNction Reduced%(jj)
+19670 LOCal ii
+19672   IF jj <= 1 : RETurn 0
+19674   ii = INT(LOG10(jj)/LOG10(2))
+19676   RETurn jj && ((2^ii)-1)
+19678   END DEFine
+19680 :
+19682 DEFine PROCedure Close_Structs
+19684   REPeat rep_lp
+19686     IF st_free%<=control_base% : st_free%=control_base% : EXIT rep_lp
+19688     Pop_Control : Assume_Block
+19690     END REPeat rep_lp
+19692   END DEFine
+19694 :
+19696 DEFine PROCedure Pop_Control
+19698   IF st_free%<=control_base% : st_free%=control_base% : con_type=-1 : RETurn
+19700   st_free%=st_free%-3 : con_type=struct%(st_free%+2)
+19702   con_no%=struct%(st_free%+1) : data_item%=ABS(struct%(st_free%))
+19704   END DEFine
+19706 :
+19708 DEFine PROCedure Identify_Loop
+19710 LOCal jj
+19712   con_no%=-1 : struct_ct% = 0
+19714   jj=st_free%
+19716   REPeat rep_lp
+19718     IF jj<=control_base% : EXIT rep_lp
+19720     struct_ct% = struct_ct% + 1
+19722     IF struct%(jj-1)=key_select%
+19724       jj=jj-4 : REMark Skip back over SELECT frame
+19726       ELSE
+19728       jj=jj-3
+19730       IF ABS(struct%(jj))=value%
+19732         con_no%=struct%(jj+1) : con_type=struct%(jj+2)
+19734         data_item%=value% : EXIT rep_lp
+19736         END IF : END IF
+19738     END REPeat rep_lp
+19740   IF con_no% < 0 : Complain err_unknown_loop%
+19742   IF con_type<>key_for% AND con_type<>key_repeat%
+19744     Complain err_unknown_loop% : END IF
+19746   END DEFine
+19748 :
+19750 DEFine FuNction Last_Struct_Begun_was(keynum,tag%)
+19752 LOCal civilization%
+19754   civilization%=st_free% : REMark Save limit of known world
+19756   REPeat outer_lp
+19758     IF st_free%<=control_base%
+19760       st_free%=civilization% : Warning "Spare END or ELSE ignored."
+19762       Pop_Control : RETurn 0 : END IF
+19764     Pop_Control
+19766     IF con_type=keynum AND (tag%=0 OR data_item%=tag%) : RETurn 1
+19768     Assume_Block : REMark Try to swallow that!
+19770     END REPeat outer_lp
+19772   END DEFine
+19774 :
+19776 DEFine PROCedure Assume_Block
+19778   st_free%=st_free%+3 : REMark ALWAYS called after Pop_Control
+19780   SELect ON con_type
+19782     =key_if%     : Warning "END IF assumed." : Gen_End_If
+19784     =key_select% : Warning "END SELECT assumed." : Gen_End_Select
+19786     =key_when%   : Warning "END WHEN assumed." : Gen_End_When
+19788     =key_for%,key_repeat% : st_free%=st_free%-3 : REMark Tidy ST
+19790                    IF struct%(st_free%) > 0
+19792                      Warning "END " & keyword$(con_type) & " " & BASIC_NAME$(data_item%) & " assumed."
+19794                      Codegen con_no%-29999 : END IF
+19796                    IF con_type=key_for%
+19798                      line_for% = Reduced%(line_for%) : ELSE
+19800                      line_repeat% = Reduced%(line_repeat%) : END IF
+19802     =REMAINDER   : st_free%=st_free%-3 : REMark Tidy ST
+19804     END SELect
+19806   END DEFine
+19808 :
+19810 DEFine PROCedure For_List
+19812 LOCal list_type%, for_type%
+19814   list_type%=BASIC_TYPE%(data_item%)
+19816   REPeat for_lp
+19818     Eval list_type% : REMark Start or instance value
+19820     IF token=tok_keyword% AND tokval=key_to%
+19822       Getsym : Eval list_type% : REMark END value
+19824       for_type% = 26+Type_Offset%(data_item%) : REMark FOR range
+19826       IF token=tok_keyword% AND tokval=key_step%
+19828         Getsym : Eval list_type%
+19830         ELSE
+19832         REMark Provide a default STEP of 1
+19834         IF list_type%=float_mask%
+19836           for_type% = 360 : REMark Fast FOR .. STEP 1
+19838           ELSE
+19840           Codegen2 106,1 : END IF
+19842         END IF
+19844       Codegen2 357,control%-29999
+19846       Codegen for_type%
+19848       ELSE
+19850       Codegen 24+Type_Offset%(data_item%) : REMark FOR instance
+19852       END IF
+19854     Codegen2 used_names%(data_item%),control%+20000 : REMark Var and loop ID
+19856     IF NOT SYMBOL_is_Comma : EXIT for_lp
+19858     Getsym : END REPeat for_lp
+19860   Codegen 355 : REMark Jump to End_For label or after NEXT as reqd
+19862   END DEFine
+19864 :
+19866 DEFine PROCedure Parse_key_Defn
+19868 LOCal jj,parm_count%,var%
+19870   heap_busy=0
+19872   Close_Defn
+19874   Getsym : Get_Name
+19876   in_defn%=value%
+19878   IF names%(value%)=ambiguous_flag% : Complain err_id_redefined%
+19880   IF structured_flag
+19882     IF NOT stopper : stopper = 1 : Codegen 220
+19884     REMark STOP at the end of 'level 0' code; no more can occur
+19886     ELSE
+19888     Codegen2 242,control%-29999 : END IF
+19890   end_defn%=control%
+19892   Bump_Control
+19894   IF NOT go_slow AND (struct%(names%(value%)) && glob_dir_mask%) <> 0
+19896     Codegen2 255,-used_names%(value%) : Codegen 254
+19898     ELSE : Codegen -used_names%(value%) : END IF
+19900   Getsym
+19902   parm_count%=0
+19904   IF Opening_Bracket
+19906     REPeat para_lp
+19908       Getsym
+19910       IF token=tok_name%
+19912         IF names%(value%)=ambiguous_flag%
+19914           FOR jj=1 TO parm_count% : var%=Popped_St%
+19916           Complain err_id_redefined% : END IF
+19918         Push_St value%
+19920         parm_count%=parm_count%+1 : END IF
+19922       Getsym : IF NOT SYMBOL_is_Comma : EXIT para_lp
+19924       END REPeat para_lp
+19926     Check_Bracket : Getsym
+19928     END IF
+19930   REMark Assign the stacked values to parms * IN REVERSE ORDER *
+19932   FOR jj=1 TO parm_count%
+19934     var%=Popped_St%
+19936     IF By_Reference%(var%) <> 0
+19938       Codegen2 294,used_names%(var%) : REMark Create new reference
+19940       ELSE
+19942       IF BASIC_TYPE%(var%)=string_mask%
+19944         Codegen2 293,used_names%(var%) : REMark Fast string-passing template
+19946         ELSE
+19948         Codegen2 110+Type_Offset%(var%),used_names%(var%)
+19950         Assign_To var% : END IF : END IF
+19952     END FOR jj
+19954   IF ref_pointer <> 0
+19956     FOR jj = ref_pointer TO max_structs%-1
+19958       IF struct%(jj)<>-1
+19960         Warning "REFERENCE to "&BASIC_NAME$(struct%(jj))&" unused."
+19962         END IF
+19964       END FOR jj : END IF
+19966   st_free%=control_base% : ref_pointer = 0
+19968   END DEFine
+19970 :
+19972 DEFine FuNction By_Reference% (var%)
+19974 LOCal ii
+19976   IF ref_pointer <> 0
+19978     FOR ii = ref_pointer TO max_structs% -1
+19980       IF struct%(ii)=var% : struct%(ii) = -1 : RETurn by_ref_mask%
+19982       END FOR ii : END IF
+19984   RETurn 0
+19986   END DEFine
+19988 :
+19990 DEFine PROCedure Parse_key_Decl(keynum)
+19992 LOCal var%, st_addr%, jj
+19994   IF keynum=key_local% AND heap_busy : Complain err_misplaced_local%
+19996   REPeat outer_lp
+19998     IF NOT Name_Located : EXIT outer_lp
+20000     var%=value% : st_addr%=names%(var%)
+20002     IF st_addr%=ambiguous_flag% : Complain err_id_redefined%
+20004     IF (st_addr%<for_flag%) : Complain err_defdir_conflict%
+20006     IF st_addr%>0
+20008       jj = struct%(st_addr%)
+20010       IF (jj && manifest_mask%) <> 0
+20012         IF struct%(st_addr%+1) < 0 : NEXT outer_lp
+20014         Warning undim_manifest$ : NEXT outer_lp : END IF
+20016       IF (jj&&extnl_dir_mask%)<>0 : Complain err_defdir_conflict%
+20018       IF keynum<>key_dim% AND (jj&&glob_dir_mask%)<>0 : Complain err_defdir_conflict%
+20020       END IF
+20022     Getsym
+20024     IF Opening_Bracket
+20026       IF (st_addr%<local_flag%) : Complain err_illegal_vector%
+20028       REPeat dims_lp
+20030         Getsym : Eval int_mask%
+20032         IF Closing_Bracket : EXIT dims_lp
+20034         END REPeat dims_lp
+20036       IF keynum=key_dim%
+20038         IF Simple_String
+20040           Codegen2 253,used_names%(var%)
+20042           ELSE
+20044           Codegen 126+Type_Offset%(var%) : Gen_Array_Id var%
+20046           END IF
+20048         ELSE
+20050         IF Simple_String
+20052           Codegen2 249,used_names%(var%)
+20054           ELSE
+20056           Codegen 115+Type_Offset%(var%) : Gen_Array_Id var%
+20058           END IF : END IF
+20060       ELSE
+20062       IF st_addr%>0
+20064         Codegen2 106,string_default%
+20066         Codegen2 249,used_names%(var%)
+20068         Dflt_Size "LOCal "
+20070         ELSE
+20072         REMark Generate 102 & 134 (FOR), or 110 & 142 (simple var)
+20074         Codegen2 110-8*(names%(var%)=for_flag%)+Type_Offset%(var%),used_names%(var%)
+20076         END IF : END IF
+20078     END REPeat outer_lp
+20080   END DEFine
+20082 :
+20084 DEFine FuNction Simple_String
+20086   IF names%(var%)<1 : RETurn 0
+20088   RETurn BASIC_TYPE%(var%)=string_mask% AND struct%(names%(var%)+1)=1
+20090   END DEFine
+20092 :
+20094 DEFine PROCedure Parse_Select_Instance
+20096   Getsym
+20098   IF Last_Struct_Begun_was(key_select%,0)
+20100     next_case%=Popped_St%
+20102     IF next_case%<>0
+20104       Codegen2 242,con_no%-29999
+20106       Codegen 20000+next_case% : END IF
+20108     next_case%=control%
+20110     Bump_Control
+20112     Push_St next_case% : Push_St data_item% : Push_St con_no%
+20114     Push_St con_type
+20116     IF token=tok_keyword% AND tokval=key_remainder%
+20118       Getsym : REMark Just plough on
+20120       ELSE
+20122       REPeat case_lp
+20124         IF BASIC_TYPE%(data_item%)=string_mask%
+20126           Codegen2 265,used_names%(data_item%)
+20128           ELSE
+20130           Codegen2 109+Type_Offset%(data_item%),used_names%(data_item%) : END IF
+20132         Eval BASIC_TYPE%(data_item%)
+20134         IF token=tok_keyword% AND tokval=key_to%
+20136           Getsym : Eval BASIC_TYPE%(data_item%)
+20138           Codegen 127+Type_Offset%(data_item%)
+20140           ELSE
+20142           Codegen 11+Type_Offset%(data_item%) : END IF
+20144         Codegen2 245,control%-19999
+20146         IF End_of_Stmt : EXIT case_lp
+20148         Getsym
+20150         END REPeat case_lp
+20152       Codegen2 242,20000+next_case% : REMark All tests failed
+20154       Codegen control%-19999
+20156       Bump_Control
+20158       END IF : END IF
+20160   END DEFine
+20162 :
+20164 DEFine PROCedure Bump_Control
+20166   control%=control%+1
+20168   IF control%>9999 : Complain err_too_many_structs%
+20170   END DEFine
+20172 :
+20174 DEFine PROCedure Dump_Name_Table
+20176 LOCal ii, wk$(50)
+20178   REMark o/p rom routine names to enable vector table linkage
+20180   Codegen2 254,10003 : REMark Fast
+20182   FOR ii=0 TO max_names%
+20184     var%=names%(ii)
+20186     IF var%>0
+20188       var% = struct%(var%)
+20190       IF (var% && rom_mask%) <> 0
+20192         IF (var% && in_use_mask%) <> 0
+20194           IF (var% && exception_mask%) = 0
+20196             IF (var% && template_mask%) = 0
+20198               REMark Name actually used in program and using ROM routine
+20200               wk$=BASIC_NAME$(ii)
+20202               Codegen2 261,used_names%(ii) : Codegen_Str CHR$(LEN(wk$)) & wk$
+20204               END IF : END IF : END IF : END IF : END IF
+20206     END FOR ii
+20208   Codegen2 261,-1 : Codegen 0 : REMark End marker to rom names
+20210   Codegen2 243,10003  : REMark Address of start of Rom names
+20212   Codegen2 358, task_module_no% : REMark "Who am I"
+20214   Codegen2 243,10006  : REMark Address of Global/External lists
+20216   END DEFine
+20218 :
+20220 DEFine PROCedure Gen_Array_Ref(assign_flag,ref_type%,var%)
+20222   must_close = (struct%(names%(var%)) && glbl_and_extnl%)
+20224   IF assign_flag
+20226     IF (ref_type% && string_mask%) <> 0
+20228       IF must_close : Codegen 361 : REMark Lock Scheduler
+20230       IF (ref_type% && slice_mask%) <> 0
+20232         Codegen2 176,used_names%(var%)
+20234         ELSE
+20236         IF (ref_type% && vector_mask%) <> 0
+20238           Codegen2 182,used_names%(var%)
+20240           ELSE
+20242           Codegen2 264,used_names%(var%)
+20244           END IF : END IF
+20246       IF must_close : Codegen 362 : REMark Unlock Scheduler
+20248       ELSE
+20250       Put_Blocker 112+Type_Offset%(var%),var%,must_close : END IF
+20252     ELSE
+20254       IF NOT ref
+20256        Put_Blocker 111+Type_Offset%(var%),var%,must_close
+20258       END IF :END IF
+20260   END DEFine
+20262 :
+20264 DEFine PROCedure Close_Defn
+20266   IF in_defn%<>0
+20268     Close_Structs
+20270     Warning "END DEFINE " & BASIC_NAME$(in_defn%) & " assumed."
+20272     Codegen 244
+20274     Codegen end_defn%-29999
+20276     in_defn%=0 : END IF
+20278   END DEFine
+20280 :
+20282 :
+20284 REMark ************* GENERAL INPUT/OUTPUT ROUTINES ***************
+20286 :
+20288 DEFine PROCedure Look_Ahead
+20290   IF old_src <> 0
+20292      Squeak : Squeak : Squeak : Complain err_sys_fault% : END IF
+20294   old_src=src
+20296   old_token%=token
+20298   old_tokval%=tokval
+20300   old_value=value
+20302   old_listing=listing
+20304   old_fl1% = float1%
+20306   old_fl2% = float2%
+20308   old_fl3% = float3%
+20310   old_val% = value%
+20312   listing=0
+20314   Getsym
+20316   END DEFine
+20318 :
+20320 DEFine PROCedure Backtrack
+20322   src=old_src
+20324   old_src = 0
+20326   token=old_token%
+20328   tokval=old_tokval%
+20330   value=old_value
+20332   listing=old_listing
+20334   float1% = old_fl1%
+20336   float2% = old_fl2%
+20338   float3% = old_fl3%
+20340   value% = old_val%
+20342   END DEFine
+20344 :
+20346 DEFine PROCedure Confirm_Look
+20348 LOCal target
+20350   listing=old_listing
+20352   target=src : src=old_src : old_src = 0
+20354   REPeat adv_lp : Getsym : IF src>=target : EXIT adv_lp
+20356   END DEFine
+20358 :
+20360 DEFine PROCedure Getsym
+20362   REMark Reads the tokenised form of the source into TOKEN
+20364   REMark TOKVAL is set up for all bar Numbers and Strings
+20366   REMark VALUE is set up for Numbers and Strings
+20368   REMark VALUE% is set up for Names only.
+20370   REMark LINE_NUM% is set up for Line numbers only.
+20372   REMark Maybe there should be two routines: Getsym and LISTSYM?
+20374   Skip_Spaces
+20376   IF token<tok_name%
+20378     SELect ON token
+20380       =tok_keyword% : tokval=PEEK(src+1) : src=src+2
+20382                   IF listing : PRINT #log%;keyword$(tokval);" ";
+20384       =tok_symbol% : tokval=PEEK(src+1) : src=src+2
+20386                  IF listing : PRINT #log%;symbol$(tokval);
+20388                  IF tokval=sym_eol%
+20390                    IF listing
+20392                      new_key%=PEEK_W(sv_arbuf)
+20394                      IF new_key%=down_key%
+20396                        IF listing_depth%>10+y_csize%+y_csize%
+20398                          POKE_W sv_arbuf,0 : SCROLL #log%,-20-y_csize%*2
+20400                          listing_depth%=listing_depth%-10-y_csize%
+20402                          WINDOW #log%,432,listing_depth%,49,58
+20404                          AT #log%,INT(listing_depth%/(10+y_csize%)-1),0
+20406                          END IF : END IF
+20408                      IF new_key%=up_key%
+20410                        IF listing_depth%<190-y_csize%
+20412                          POKE_W sv_arbuf,0 : REMark SCROLL #log%,10+y_csize%
+20414                          listing_depth%=listing_depth%+10+y_csize%
+20416                          WINDOW #log%,432,listing_depth%,49,58
+20418                          AT #log%,INT(listing_depth%/(10+y_csize%)-1),0
+20420                          CLS #log%,3
+20422                          END IF : END IF : END IF
+20424                    src=src+2 : REMark Skip line length
+20426                    IF src>BASIC_POINTER(bv_pfp%) OR (restart_flag=2 AND line_num%=10000)
+20428                      token=tok_end_of_prog% : src=src-4 : listing=0
+20430                      END IF : END IF
+20432       =tok_opsym% : tokval=PEEK(src+1) : src=src+2
+20434                 IF listing : PRINT #log%;opsym$(tokval);
+20436       =tok_monosym% : tokval=PEEK(src+1) : src=src+2
+20438                   IF listing : PRINT #log%;monosym$(tokval);
+20440       =REMAINDER : Complain err_syntax_error% : src=src+2
+20442       END SELect
+20444     ELSE
+20446     SELect ON token
+20448       =tok_name% : tokval=PEEK_W(src+2) : src=src+4 : value%=tokval : IF NOT used_names%(value%):used_names%(value%) = 1 : REMark mark used name
+20450                IF listing : PRINT #log%;BASIC_NAME$(value%);
+20452       = tok_nomin% TO tok_nomax%,tok_bin%,tok_hex%
+20454                           Decode_NumLit(src) : src=src+6
+20456                           IF listing
+20458                             SELect ON token
+20460                              =tok_nomin% TO tok_nomax%:PRINT#log%,value;
+20462                              =tok_bin%:PRINT#log%,Hx$(value,2);
+20464                              =tok_hex%:PRINT#log%,Hx$(value,16);
+20466                              END SELect
+20468                             END IF
+20470       =tok_short% : Decode_Short src+1 : src=src+2
+20472                           IF listing : PRINT#log%;value;
+20474       =tok_long% : Decode_Long src+2 : src=src+4
+20476                           IF listing : PRINT#log%;value;
+20478       =tok_separator% : tokval=PEEK(src+1) : src=src+2
+20480                     IF listing : PRINT #log%;separator$(tokval);
+20482       =tok_lineno% : tokval=PEEK_W(src+2) : line_num%=tokval : src=src+4
+20484                  IF listing : PRINT #log%;line_num%;" ";
+20486       =tok_string%,tok_text% : value=src+2 : REMark Now find string address
+20488                        src=4+PEEK_W(value)+(PEEK_W(value) && 1)+src
+20490                        IF listing
+20492                          IF token=tok_string%
+20494                            PRINT #log%;CHR$(PEEK(value-1));
+20496                            END IF
+20498                          PRINT #log%;PEEK$(value+2,PEEK_W(value));
+20500                          IF token=tok_string%
+20502                            PRINT #log%;CHR$(PEEK(value-1));
+20504                            END IF : END IF
+20506       =REMAINDER : Complain err_syntax_error% : src=src+2
+20508       END SELect
+20510     END IF
+20512   END DEFine
+20514 :
+20516 DEFine PROCedure Decode_NumLit(src)
+20518  float1% = PEEK_W(src) && 4095
+20520  float2% = PEEK_W(src+2)
+20522  float3% = PEEK_W(src+4)
+20524  value = PEEK_F(src)
+20526  END DEFine
+20528 :
+20530 DEFine PROCedure Decode_Short(src)
+20532  value = Signed_Byte%(PEEK(src)) : Get_Fp value
+20534 END DEFine
+20536 :
+20538 DEFine PROCedure Decode_Long(src)
+20540  value = PEEK_W(src) : Get_Fp value
+20542 END DEFine
+20544 :
+20546 DEFine FuNction Signed_Byte%(x%)
+20548  IF x%>127:RETurn x%-256:ELSE RETurn x%
+20550 END DEFine
+20552 :
+20554 DEFine PROCedure Skip_Spaces
+20556   REPeat spc_lp
+20558     token=PEEK(src) : IF token<>tok_space% : EXIT spc_lp
+20560     IF listing : PRINT #log%;FILL$(" ",PEEK(src+1));
+20562     src=src+2 : END REPeat spc_lp
+20564   END DEFine
+20566 :
+20568 DEFine PROCedure Get_Name
+20570   Skip_Spaces
+20572   IF token<>tok_name% : Defer_Moan err_syntax_error%
+20574   tokval=PEEK_W(src+2) : src=src+4 : value%=tokval
+20576   IF listing : PRINT #log%;BASIC_NAME$(value%);
+20578   IF NOT used_names%(value%):used_names%(value%) = 1 : REMark mark used name
+20580   END DEFine
+20582 :
+20584 DEFine PROCedure Warn_Dir_Misplaced(txt$)
+20586   Warning "DIRECTIVE in the wrong place - " & txt$
+20588   END DEFine
+20590 :
+20592 DEFine PROCedure Warn_Extra_End
+20594   Warning "Extra END ignored."
+20596   END DEFine
+20598 :
+20600 DEFine PROCedure Warning(txt$)
+20602   Set_Hues 0,4
+20604   PRINT #log%\\"++++ Warning at ";line_num%;": ";txt$
+20606   Set_Hues 0,7
+20608   warning_count%=warning_count%+1
+20610   Show_Num 43,warning_count%
+20612   dummy% = Key_from_Kbd(pause_flag)
+20614   END DEFine
+20616 :
+20618 DEFine FuNction Key_from_Kbd(wanted)
+20620 LOCal ii
+20622   IF NOT wanted : RETurn 0
+20624   time = time-DATE
+20626   CURSOR_ON : ii = CODE(INKEY$(#1,-1)) : CURSOR_OFF : time = time + DATE
+20628   RETurn ii - 32*Within(ii,97,122)
+20630   END DEFine
+20632 :
+20634 DEFine PROCedure Set_Hues(ii,jj)
+20636   IF LEN(log$)=0 : INK #log%,ii : PAPER #log%,jj
+20638   END DEFine
+20640 :
+20642 DEFine PROCedure Grab_Data (er%)
+20644 LOCal ii
+20646   RESTORE
+20648   ii = 0
+20650   REPeat err_lp
+20652     ii=ii+1 : READ wk$
+20654     IF ii >= er% : EXIT err_lp
+20656     IF wk$ = "ENDMSG" : EXIT err_lp
+20658     END REPeat err_lp
+20660   END DEFine
+20662 :
+20664 DEFine PROCedure Complain(er%)
+20666   LOCal wk$(50)
+20668   IF NOT recovering
+20670     IF er% < 6 : _quit = 1
+20672     Grab_Data er%
+20674     Set_Hues 7,2
+20676     PRINT #log%\\"**** ERROR at ";line_num%;": ";wk$
+20678     error_count%=error_count%+1 : Show_Num 26,error_count%
+20680     IF LEN(log$)=0 : Squeak : dummy% = Key_from_Kbd(pause_flag)
+20682     END IF
+20684   IF _quit
+20686     PRINT #log%;"**** COMPILATION ABORTED."
+20688     ELSE
+20690     Set_Hues 0,7
+20692     IF working_on_IF
+20694       working_on_IF = 0 : Skip_THEN_Stmt
+20696       IF NOT End_of_Line : line_if% = line_if% || Boosted_Ptr%
+20698       ELSE
+20700       Skip_Stmt : END IF : END IF
+20702   RETRY
+20704   REMark IF COMPILED : RETRY
+20706   REMark IF pass%=1 : Pre_Scan : Pass2 : ELSE : Parse
+20708   REMark STOP
+20710   END DEFine
+20712 :
+20714 DEFine PROCedure Defer_Moan (er%)
+20716   IF pass%=2 : Complain er%
+20718   Skip_Stmt
+20720   RETRY
+20722   REMark IF COMPILED : RETRY
+20724   REMark IF pass%=1 : Pre_Scan : Pass2 : ELSE : Parse
+20726   REMark STOP
+20728   END DEFine
+20730 :
+20732 DEFine PROCedure Skip_Stmt
+20734   recovering=1
+20736   REPeat stmt_lp
+20738     IF End_of_Stmt : EXIT stmt_lp
+20740     Getsym :END REPeat stmt_lp
+20742   recovering=0
+20744   END DEFine
+20746 :
+20748 DEFine PROCedure Skip_THEN_Stmt
+20750   recovering=1
+20752   REPeat stmt_lp
+20754     IF End_of_Stmt : EXIT stmt_lp
+20756     IF token=tok_keyword% AND tokval=key_then% : EXIT stmt_lp
+20758     Getsym : END REPeat stmt_lp
+20760   recovering=0
+20762   END DEFine
+20764 :
+20766 DEFine PROCedure Place_Cursor (n%)
+20768   AT 0,n%
+20770   END DEFine
+20772 :
+20774 DEFine PROCedure Show_Num(t%,n%)
+20776   Place_Cursor t% : PRINT n%;
+20778   END DEFine
+20780 :
+20782 DEFine PROCedure Codegen(op1%)
+20784   IF error_count% <> 0 : RETurn
+20786   IF core_ptr>pcode_top : Dump_Core
+20788   POKE_W core_ptr,op1% : core_ptr=core_ptr+2
+20790   END DEFine
+20792 :
+20794 DEFine PROCedure Codegen2(op1%,op2%)
+20796   IF error_count% <> 0 : RETurn
+20798   IF core_ptr>pcode_top : Dump_Core
+20800   POKE_W core_ptr,op1% : POKE_W core_ptr+2,op2% : core_ptr=core_ptr+4
+20802   END DEFine
+20804 :
+20806 DEFine PROCedure Codegen_Str(txt$)
+20808 LOCal x%
+20810   IF error_count% <> 0 OR txt$="" : RETurn
+20812   x%=LEN(txt$) : Check_Space(x%)
+20814   POKE$ core_ptr,txt$ : Bump_Core_Ptr(x%)
+20816   END DEFine
+20818 :
+20820 DEFine PROCedure Litgen(op1%)
+20822   IF error_count% <> 0 : RETurn
+20824   x%=PEEK_W(value) : Codegen2 op1%,x%
+20826   Check_Space x% : MOVE_MEMORY value+2 TO core_ptr,x%
+20828   Bump_Core_Ptr x%
+20830   END DEFine
+20832 :
+20834 DEFine PROCedure Dump_Core
+20836 LOCal i
+20838   IF in_core : pcode%=4 : OPEN_NEW #pcode%,prog$ & "_temp" : in_core=0
+20840   i=pcode_base
+20842   REPeat core_lp
+20844     PRINT #pcode%;PEEK$(i,Min_Int%(128,core_ptr-i));
+20846     i=i+128 : IF i>core_ptr : EXIT core_lp
+20848     END REPeat core_lp
+20850   core_ptr=pcode_base
+20852   END DEFine
+20854 :
+20856 DEFine PROCedure Check_Space(i)
+20858   IF core_ptr+i <= pcode_top : RETurn
+20860   Dump_Core
+20862   IF core_ptr+i>pcode_top : Complain err_buffer_too_small%
+20864   END DEFine
+20866 :
+20868 DEFine PROCedure Bump_Core_Ptr(i)
+20870   core_ptr=core_ptr+i
+20872   IF i && 1 : core_ptr=core_ptr+1 : REMark POKE core_ptr,0
+20874   END DEFine
+20876 :
+20878 REMark ******************** UTILITY FUNCTIONS *********************
+20880 :
+20882 DEFine FuNction Name_Located
+20884   REPeat rep_lp
+20886     IF End_of_Stmt : RETurn 0
+20888     Getsym : IF token=tok_name% : RETurn 1
+20890     END REPeat rep_lp
+20892   END DEFine
+20894 :
+20896 DEFine FuNction Cond_s$(ii)
+20898   IF ii = 1 : RETurn " " : ELSE : RETurn "s"
+20900   END DEFine
+20902 :
+20904 DEFine FuNction Sep_Type$(x%)
+20906   RETurn CHR$((token=tok_separator%)*tokval*16+x%)
+20908   END DEFine
+20910 :
+20912 DEFine FuNction End_of_Stmt
+20914   RETurn (token=tok_symbol% AND (tokval=sym_colon% OR tokval=sym_eol%)) OR token=tok_end_of_prog%
+20916   END DEFine
+20918 :
+20920 DEFine FuNction End_of_Line
+20922   RETurn (token=tok_symbol% AND tokval=sym_eol%) OR (token=tok_end_of_prog%)
+20924   END DEFine
+20926 :
+20928 DEFine FuNction Opening_Bracket
+20930   RETurn token=tok_symbol% AND tokval=sym_opbrt%
+20932   END DEFine
+20934 :
+20936 DEFine FuNction Closing_Bracket
+20938   RETurn token=tok_symbol% AND tokval=sym_clbrt%
+20940   END DEFine
+20942 :
+20944 DEFine FuNction Symbol_is_Assign
+20946   RETurn token=tok_symbol% AND tokval=sym_assign%
+20948   END DEFine
+20950 :
+20952 DEFine FuNction Symbol_is_Colon
+20954   RETurn token=tok_symbol% AND tokval=sym_colon%
+20956   END DEFine
+20958 :
+20960 DEFine FuNction Symbol_is_Hash
+20962   RETurn token=tok_symbol% AND tokval=sym_hash%
+20964   END DEFine
+20966 :
+20968 DEFine FuNction SYMBOL_is_Comma
+20970   RETurn token=tok_symbol% AND tokval=sym_comma%
+20972   END DEFine
+20974 :
+20976 DEFine FuNction Separator_is_Comma
+20978   RETurn token=tok_separator% AND tokval=sep_comma%
+20980   END DEFine
+20982 :
+20984 DEFine FuNction Separator_is_TO
+20986   RETurn token=tok_separator% AND tokval=sep_to%
+20988   END DEFine
+20990 :
+20992 DEFine FuNction Line_Pos%(num%)
+20994 LOCal top%, bottom%, pos%, ii, jj,iii
+20996 REMark iii is fp to allow Warning below to work if struct%(pos%) < 0
+20998   bottom%=max_structs% : top%=line_limit%-1 : ii = num% : jj = 0
+21000   REPeat chop
+21002     pos%=(top%+bottom%) DIV 2
+21004     IF ii = struct%(pos%) : EXIT chop
+21006     IF ii < struct%(pos%)
+21008       top%=pos%-1 : IF top%>=bottom% : NEXT chop
+21010       pos% = top%
+21012       IF top% < max_structs% : Complain err_faulty_linenum%
+21014       ELSE
+21016       bottom%=pos%+1 : IF bottom%<=top% : NEXT chop
+21018       END IF
+21020     jj = struct%(pos%)
+21022     IF ((jj&&1) = (ii&&1)) : ii = -num% : EXIT chop
+21024     ii = ii - 2 : bottom% = max_structs%
+21026     END REPeat chop
+21028   IF num% <> ii
+21030     iii = struct%(pos%):iii=(32767-iii)/2: jj = INT(iii)
+21032     Warning "Line not found: "&jj&" assumed."
+21034     END IF
+21036   RETurn pos%-line_limit%+10000 : REMark **v1.14
+21038   END DEFine
+21040 :
+21042 DEFine FuNction Min_Int%(x%,i)
+21044   IF x% < i : RETurn x% : ELSE : RETurn i
+21046   END DEFine
+21048 :
+21050 DEFine FuNction Within(i,ii,jj)
+21052   RETurn (i >= ii AND i <= jj)
+21054   END DEFine
+21056 :
+21058 DEFine FuNction Heap_Space(o%)
+21060   LOCal ii,i
+21062   IF o%=0
+21064    IF hp_sp=0
+21066     hs_ad=ALLOCATION(46)
+21068     RESTORE 21088
+21070     REPeat plug:READ ii:IF ii<>-1:POKE_W hs_ad+i,ii:i=i+2:ELSE EXIT plug
+21072     SUSPEND_TASK 50
+21074     CALL hs_ad,0:hp_sp=PEEK_L(hs_ad+$2A)
+21076    END IF
+21078   ELSE
+21080    CALL hs_ad,1:hp_sp=PEEK_L(hs_ad+$2A)
+21082   END IF
+21084   RETurn hp_sp
+21086 :
+21088 DATA $2E01,$6602,$7E0A,$7006,$4E41,$FFFF92BC,0,$800,$FFFFEEA1
+21090 DATA $5387,$670A,$3E3C,$270F,$FFFFB287,$6F02,$2207,$41FA,8
+21092 DATA $2081,$7000,$4E75,0,0,-1
+21094 :
+21096       REMark       move.l    d1,d7         0 or 1
+21098       REMark       bne       j2
+21100       REMark       moveq     #10,d7        0 -> 10
+21102       REMark j2    moveq     #6,d0         MT_INF
+21104       REMark       trap      #1            Set free space S
+21106       REMark       sub.l     #2048,d1      A = S-2048
+21108       REMark       asr.l     d7,d1         divide by 1024 or 2
+21110       REMark       subq.l    #1,d7
+21112       REMark       beq       j1            real heap
+21114       REMark       move.w    #9999,d7      limit to 9999K
+21116       REMark       cmp.l     d7,d1
+21118       REMark       ble       j1
+21120       REMark       move.l    d7,d1
+21122       REMark j1    lea       here,a0
+21124       REMark       move.l    d1,(a0)       Move ans to here
+21126       REMark       moveq     #0,d0
+21128       REMark       rts
+21130       REMark here  dc.l      0
+21132 :
+21134  END DEFine
+21136 :
+21138 DEFine FuNction Lim(i)
+21140  IF i>max_bh:RETurn max_bh
+21142  RETurn i
+21144 END DEFine
+21146 :
+21148 DEFine FuNction Num_Type%(i)
+21150   IF Within(i,-32768,32767) : IF INT(i)=i : RETurn int_mask%
+21152   RETurn float_mask%
+	21154   END DEFine
+21156 :
+21158 DEFine FuNction Type_Offset%(ii)
+21160   RETurn Type_Factor%(BASIC_TYPE%(ii))
+21162   END DEFine
+21164 :
+21166 DEFine PROCedure Gen_Array_Id(ii)
+21168   IF names%(ii)<1 : Complain err_array_needed% : REMark Bad parameter
+21170   Codegen2 struct%(names%(ii)+1)-1-(BASIC_TYPE%(ii)=string_mask%),used_names%(ii)
+21172   END DEFine
+21174 :
+21176 DEFine FuNction Type_Factor%(ii)
+21178   IF ii=float_mask% : RETurn 32
+21180   IF ii=string_mask% : RETurn 64
+21182   RETurn 0
+21184   END DEFine
+21186 :
+21188 DEFine FuNction Numeric
+21190   RETurn token>=tok_bin% OR token=tok_short% OR token=tok_long%
+21192   END DEFine
+21194 :
+21196 DEFine FuNction Program_Variable
+21198 LOCal ii
+21200   ii = Ident_Class
+21202   SELect ON ii
+21204     = 0 TO 3, 6, 7 : RETurn 1
+21206     =REMAINDER     : RETurn 0
+21208     END SELect
+21210   END DEFine
+21212 :
+21214 DEFine FuNction Ident_Class
+21216   RETurn BASIC_B%(value%*nt_entry%+BASIC_L(bv_ntbas%))
+21218   END DEFine
+21220 :
+21222 DEFine FuNction Hx$(value,j%)
+21224  LOCal o_val,rm,a$(34),lp,ii
+21226  IF value=0:IF j%=16:RETurn "$"&0:ELSE RETurn "%"&0
+21228  IF value=-2^31:IF j%=16:RETurn "$80000000":ELSE RETurn "%10000000000000000000000000000000"
+21230  IF value<0:ii=1:value=-value:ELSE ii=0
+21232  REPeat lp
+21234   IF value=0:EXIT lp
+21236   o_val=value
+21238   value=INT(value/j%)
+21240   rm=o_val-j%*value
+21242   a$=H_v$(rm)&a$
+21244   END REPeat lp
+21246  IF ii:a$=Cmp$(a$)
+21248  IF j%=16:a$="$"&a$:ELSE a$="%"&a$
+21250  RETurn a$
+21252 END DEFine
+21254 :
+21256 DEFine FuNction H_v$(ii)
+21258  LOCal jj
+21260  jj=ii
+21262  SELect ON jj
+21264   =0 TO 9:RETurn CHR$(48+jj)
+21266   =10 TO 15:RETurn CHR$(55+jj)
+21268   =REMAINDER :RETurn ""
+21270  END SELect
+21272 END DEFine
+21274 :
+21276 DEFine FuNction Cmp$(a$)
+21278  LOCal c$(2),jj,b$(34),x,start
+21280  jj=LEN(a$):start=0
+21282  FOR x=jj TO 1 STEP -1
+21284   c$=a$(x)
+21286   IF NOT start
+21288    b$=trn1$(c$)&b$
+21290    IF c$<>"0":start=1
+21292   ELSE
+21294    b$=trn2$(c$)&b$
+21296   END IF
+21298  END FOR x
+21300  IF j%=16:b$=FILL$("F",8-jj)&b$:ELSE b$=FILL$("1",32-jj)&b$
+21302  RETurn b$
+21304 END DEFine
+21306 :
+21308 DEFine FuNction trn1$(a$)
+21310  LOCal ii
+21312  IF j%=2:RETurn a$
+21314  IF a$="0":RETurn "0"
+21316  ii=CODE(a$)
+21318  SELect ON ii
+21320   =55 TO 57:RETurn CHR$(112-ii)
+21322   =REMAINDER :RETurn CHR$(119-ii)
+21324  END SELect
+21326 END DEFine
+21328 :
+21330 DEFine FuNction trn2$(a$)
+21332  LOCal ii
+21334  ii=CODE(a$)
+21336  IF j%=2:RETurn CHR$(1^^ii)
+21338  SELect ON ii
+21340    =54 TO 56:RETurn CHR$(110-ii)
+21342    =REMAINDER :RETurn CHR$(118-ii)
+21344  END SELect
+21346 END DEFine
+21348 DEFine PROCedure Set_Used_Names
+21350  LOCal ii,name_ptr%
+21352  name_ptr%=0
+21354  FOR ii = 0 TO max_names%-1
+21356   IF used_names%(ii):name_ptr%=name_ptr%+1:used_names%(ii)=name_ptr%
+21358  END FOR ii
+21360  Set_Vec_Size
+21362 END DEFine
+21364 :
+21366 DEFine PROCedure Set_Vec_Size
+21368  LOCal posn
+21370  IF in_core
+21372   POKE_W pcode_base+2,name_ptr%+1
+21374  ELSE
+21376   posn=POSITION(#pcode%)
+21378   SET_POSITION#pcode%,2
+21380   PRINT#pcode%,INTEGER$(name_ptr%);
+21382   SET_POSITION#pcode%,posn
+21384  END IF
+21386 END DEFine
+21388 :
+21390 DEFine PROCedure Get_Fp(fval)
+21392  LOCal fv$(6)
+21394  fv$=FLOAT$(fval)
+21396  float1%=Set_Fl%(fv$,1)
+21398  float2%=Set_Fl%(fv$,3)
+21400  float3%=Set_Fl%(fv$,5)
+21402 END DEFine
+21404 :
+21406 DEFine FuNction Set_Fl%(vv$,ind%)
+21408  LOCal fzp,fzp1
+21410  fzp1 = CODE(vv$(ind%)):fzp = CODE(vv$(ind%+1))
+21412  fzp = 256 * fzp1 + fzp
+21414  IF fzp > 32767 : fzp = fzp - 65536
+21416  RETurn fzp
+21418 END DEFine
+21420 :
+21422 DEFine PROCedure Puse
+21424  LOCal a$(2)
+21426  OPEN#10,con
+21428  a$=INKEY$(#10,-1):CLOSE#10
+21430 END DEFine
+21432 :
+21434 DEFine PROCedure Set_Ignore
+21436  ignore=(debug_now AND (debug_now>debug_top))
+21438 END DEFine
+21440 :
+21442 DEFine PROCedure End_Dialogue
+21444   log%=3
+21446   IF LEN(log$)=0
+21448    winy%(2)=58 : d%(2)=195 : drawing=1 : Window_3D 2
+21450    OPEN #log%,'scr_432x' & listing_depth% & 'a49x58'
+21452    PAPER #log%,background% : CLS #log% : PAPER #log%,7
+21454    IF sound_flag <> 0 : BEEP 0,5,130,90,-2,6
+21456    FOR ii=0 TO listing_depth%-2 STEP 2
+21458     BLOCK #log%,432,2,0,ii,7 : END FOR ii
+21460    INK #log%,0 : CSIZE #log%,x_csize%,y_csize%/10 : BEEP
+21462   ELSE
+21464    WINDOW 512,201,0,55 : CLS : OPEN_NEW #log%,log$
+21466    pause_flag = 0 : listing_depth%=-10 : REMark DEPTH+65 is amount zapped
+21468   END IF
+21470 END DEFine
+21472 :
+21474 DEFine FuNction St_Num(a$)
+21476  LOCal o%,x
+21478  o%=LEN(a$)
+21480  IF o%=0:RETurn 0
+21482  FOR x=1 TO o%
+21484   IF CODE(a$(x))<CODE('0') OR CODE(a$(x))>CODE('9'):RETurn 0
+21486  END FOR x
+21488  RETurn 1
+21490 END DEFine
+21492 :
+21494 DEFine FuNction File_SIZE(filename$)
+21496  LOCal file_len
+21498  OPEN_IN #5,filename$
+21500  SET_POSITION #5,$7FFFFF0F:REMark Wind up to end of file - FOR FLP
+21502  REMark Was $7FFFFFFF, but this fails to wind on "ramx_ . ." files!!!!!
+21504  file_len=POSITION(#5):REMark Now where are we?
+21506  CLOSE #5:RETurn file_len
+21508 END DEFine File_SIZE
+21510 :
+21512 DEFine PROCedure Set_Exts
+21514  REMark *********************************************************
+21516  REMark *   This sets a long string containing any extensions   *
+21518  REMark *              which need to be embedded.               *
+21520  REMark * The format of the string is:                          *
+21522  REMark *   ((TZ>> - a 6-byte identifier                        *
+21524  REMark * followed by up to 8 sets of extensions in the form:   *
+21526  REMark *   Length     (long word)                              *
+21528  REMark *   "a"        (word)                                   *
+21530  REMark *   "b"        (word)                                   *
+21532  REMark *   Extensions File (padded to even)                    *
+21534  REMark *                                                       *
+21536  REMark * Length is the file length padded to even + 8          *
+21538  REMark * "a" is the offset to the initialisation routine or 0  *
+21540  REMark * "b" is the offset to the set of proc/fn definitions   *
+21542  REMark *                                                       *
+21544  REMark *     Finally there is an end marker of -1 (word)       *
+21546  REMark *********************************************************
+21548  LOCal x,wk$(4),tot_len,asad
+21550  IF ext_no%=0:RETurn
+21552  tot_len=8:asad=0
+21554  FOR x=0 TO ext_no%-1
+21556   tot_len=tot_len+8+Ev(ext_l(x))
+21558   IF asad<ext_l(x)+2:asad=ext_l(x)+2
+21560  END FOR x
+21562  IF Heap_Space(1)<asad:Warning "Extensions too big - not loaded":RETurn
+21564  DIM wk$(6):asad=ALLOCATION(asad)
+21566  wk$="((T"&"Z>>"
+21568  Codegen2 385,Get_x%(tot_len):Codegen Get_y%(tot_len):Codegen_Str wk$
+21570  FOR x=0 TO ext_no%-1
+21572   tot_len=Ev(ext_l(x))+8
+21574   Codegen2 Get_x%(tot_len),Get_y%(tot_len)
+21576   Codegen2 ext_p%(x,0),ext_p%(x,1)
+21577   IF ext_p%(x,0)=1:POKE_W asad,ext_l(x)-2:POKE$ asad+2,ext$(x):ELSE LBYTES ext$(x),asad
+21578   Codegen_Lstr asad,ext_l(x)
+21580  END FOR x
+21582  Codegen -1:DEALLOCATE asad
+21584 END DEFine
+21586 :
+21588 DEFine FuNction Ev(l)
+21590  IF 2*(INT(l/2))=l:RETurn l:ELSE RETurn l+1
+21592 END DEFine
+21594 :
+21596 DEFine FuNction Get_x%(d)
+21598  RETurn INT(d/2^16)
+21600 END DEFine
+21602 :
+21604 DEFine FuNction Get_y%(d)
+21606  RETurn H_Cor%( d-2^16*Get_x%(d))
+21608 END DEFine
+21610 :
+21612 DEFine FuNction H_Cor%(an)
+21614  IF an>32767:RETurn an-65536
+21616  RETurn an
+21618 END DEFine
+21620 :
+21622 DEFine PROCedure Codegen_Lstr(adr,sze)
+21624  IF sze>max_str
+21626   Codegen_Str PEEK$(adr,max_str)
+21628   Codegen_Lstr adr+max_str,sze-max_str
+21630  ELSE
+21632   Codegen_Str PEEK$(adr,sze)
+21634  END IF
+21636 END DEFine
+21638 :
+21640 DEFine PROCedure Set_ref
+21642  REMark This sets ref=0 if name is inside an expression
+21644  IF NOT ref:RETurn
+21646  Look_Ahead
+21648   IF Opening_Bracket:Find_Endbr
+21650   SELect ON token
+21652    =tok_separator%,tok_end_of_prog%,tok_lineno%
+21654    =tok_symbol%
+21656     SELect ON tokval
+21658      =sym_colon%,sym_eol%,sym_clbrt%
+21660      =REMAINDER :ref=0
+21662     END SELect
+21664    =REMAINDER :ref=0
+21666   END SELect
+21668  Backtrack
+21670 END DEFine
+21672 :
+21674 DEBUG 1
+21676 DEFine PROCedure sa
+21678  QSAVE win1_turbo_test_par502
+21680 END DEFine
+21682 DEBUG 0
+21684 :
+21686 DEFine PROCedure Set_ref1(k)
+21688  REMark set ref1=1 only if we are truly going rom
+21690  SELect ON k
+21692   =20648,20657,20658,20660:ref1=1
+21694   =REMAINDER :ref1=0
+21696  END SELect
+21698 END DEFine
+21700 :
+21702 DEFine PROCedure Set1_ref
+21704  REMark To set ref=2 for array parameters
+21705  LOCal ic
+21706  IF names%(value%)<0:RETurn
+21707  ic=struct%(names%(value%))&&vecstr_mask%:IF ic=vecstr_mask%:IF struct%(names%(value%)+1)=1:IF str_ref%=0:ref=0:RETurn
+21708  ic=Ident_Class
+21710  SELect ON ic
+21712   =0:IF struct%(names%(value%))&&vector_mask%:ref=2
+21714   =2,6,7
+21716   =3:ref=2
+21718   =REMAINDER :ref=0
+21720  END SELect
+21722 END DEFine
+21724 :
+21726 DEFine PROCedure Find_Endbr
+21728  REMark To get the symbol after last )
+21730  LOCal brno%,lp
+21732  brno%=0:REMark No ( yet
+21734  REPeat lp
+21736   Getsym
+21738   IF Closing_Bracket:brno%=brno%-1:IF brno%<0:EXIT lp
+21740   IF Opening_Bracket:brno%=brno%+1
+21742   IF End_of_Stmt:RETurn
+21744  END REPeat lp
+21746  Getsym
+21748 END DEFine
+21750 :
+21752 DEFine FuNction Is_TO
+21754  REMark Returns 1 for TO inside arrays parameters:else 0
+21756  LOCal brc_no,lp,ans,dims%
+21758  dims%=1:ans=0:brc_no=0:Look_Ahead
+21760  IF Opening_Bracket
+21762   Getsym
+21764   REPeat lp
+21766    IF Closing_Bracket:brc_no=brc_no-1:IF brc_no<0:EXIT lp
+21768    IF NOT brc_no
+21770     IF Separator_is_TO:ans=1:EXIT lp
+21772     IF Separator_is_Comma:dims%=dims%+1
+21774    END IF
+21776    IF Opening_Bracket:brc_no=brc_no+1
+21778    IF End_of_Stmt:EXIT lp
+21780    Getsym
+21782   END REPeat lp
+21784  END IF
+21786  IF dims%+((ref_type%&&string_mask%)<>0)<expected%:ans=1
+21788  Backtrack:RETurn ans
+21790 END DEFine

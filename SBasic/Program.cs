@@ -28,9 +28,9 @@ namespace SBasic
                 SBasicParser parser = new SBasicParser(tokens);
                 IParseTree tree = parser.program();
 
-                //PruneVisitor<int> pruner = new PruneVisitor<int>();
-                //pruner.Visit(tree);
+#if DEBUG
                 DumpTree(tree, "");
+#endif
                 return;
                 SymbolTable<Symbol> symbolTable = new SymbolTable<Symbol>();
                 PrimeSymbolTable(symbolTable);
@@ -45,9 +45,9 @@ namespace SBasic
 
                 FindTypesVisitor<int> findTypesVisitor = new FindTypesVisitor<int>(symbolTable);
                 findTypesVisitor.Visit(tree);
-
+#if DEBUG
                 symbolTable.ListScope(SymbolTable<Symbol>.Global, "");
-
+#endif
                 GenerateCodeVisitor<string> generateCodeVisitor = new GenerateCodeVisitor<string>(symbolTable);
 
                 CodeGenerator generator = new CodeGenerator(tree, symbolTable);
@@ -68,29 +68,37 @@ namespace SBasic
 
         private static void DumpTree(IParseTree tree, string indent)
         {
+            using (System.IO.StreamWriter file = new System.IO.StreamWriter(@"c:\users\hcump\source\repos\SBasic\Parsing\parsetree.txt", false))
+            {
+//                for (int plac = 1; plac < tree.ChildCount; plac++)
+                DumpItem(tree, indent, file);
+            }
+        }
+        private static void DumpItem(IParseTree tree, string indent, StreamWriter file)
+        {
             for (int i = 0; i < tree.ChildCount; i++)
             {
                 var child = tree.GetChild(0);
                 try
                 {
                     child = tree.GetChild(i);
-                    Console.Write(indent + child.GetType());
+                    file.Write(indent + child.GetType());
                     if (child is ParserRuleContext)
                     {
-                        Console.WriteLine("        " + ((ParserRuleContext)child).GetText());
+                        file.WriteLine("        " + ((ParserRuleContext)child).GetText());
                     }
                     else
                     {
                         if (child is TerminalNodeImpl)
-                            Console.WriteLine("        " + ((TerminalNodeImpl)child).symbol.Text);
+                            file.WriteLine("        " + ((TerminalNodeImpl)child).symbol.Text);
                         else
-                            Console.WriteLine("");
+                            file.WriteLine("");
                     }
                 }
                 catch (Exception e)
                 { };
 
-                DumpTree(child, indent + "    ");
+                DumpItem(child, indent + "    ", file);
             }
         }
     }
