@@ -1772,7 +1772,7 @@
 16542   IF rem_plus_allowed AND NOT go_slow : Codegen 254
 16544   END DEFine
 16546 :
-16548 DEFine PROCedure Parse_Continue
+16548 DEFine PROCedure Parse_Continue4
 16550   Getsym : IF NOT End_of_Stmt : Complain err_stmt_too_long%
 16552   IF NOT in_when_block
 16554     Warn_Dir_Misplaced "STOP assumed."

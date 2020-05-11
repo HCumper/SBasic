@@ -137,37 +137,40 @@ namespace SBasic
         }
         public override TResult VisitProcDecl([NotNull] ProcDeclContext context)
         {
-            //var name = GetTextByType<SBasicParser.ProcedureNameContext>(context);
-            //FunctionScopeName = name;
+            FunctionScopeName = GetTextByType<SBasicParser.ProcedureNameContext>(context);
             //activeScopes = Scopes.procedure;
             //base.VisitProcDecl(context);
             //activeScopes = Scopes.none;
             //References = new HashSet<string>();
+//            FunctionScopeName = SymbolTable<Symbol>.Global;
             return base.VisitProcDecl(context);
         }
 
         public override TResult VisitLocalVars([NotNull]LocalVarsContext context)
         {
-            var name = context.GetChild(0) as SBasicParser.IdentExprContext;
-            //var unParContext = context.GetChild(1) as SBasicParser.UnparenthesizedlistContext;
-            //for (int i = 0; i < unParContext.ChildCount; i++)
-            //{
-            //    IdentExprContext nameContext = unParContext.GetChild(i) as SBasicParser.IdentExprContext;
-            //    if (nameContext != null)
-            //    {
-            //        //var paramList = (ParenthesizedlistContext)context.children[i + 1].Payload;
-            //        //List<int> dimensions = (from node in paramList.children
-            //        //                        where node is LiteralExprContext
-            //        //                        let payload = (CommonToken)node.GetChild(0).Payload
-            //        //                        select Int32.Parse(payload.Text)).ToList();
-            //        //ArrayNameContext name = context.children[i].Payload as ArrayNameContext;
-            //        //var extracted = ExtractType(name.GetText());
-            //        //var trimmedName = extracted.Item1;
-            //        //var type = extracted.Item2;
-            //        //Symbol symbol = new ArraySymbol(trimmedName, type, SymbolTable<Symbol>.Global, dimensions);
-            //        //SymbolTable.AddSymbol(symbol.Name, symbol.Scope, symbol);
-            //    }
-            //}
+            var unParContext = context.GetChild(2) as SBasicParser.UnparenthesizedlistContext;
+            for (int i = 0; i < unParContext.ChildCount; i++)
+            {
+                IdentExprContext nameContext = unParContext.GetChild(i) as SBasicParser.IdentExprContext;
+                if (nameContext != null)
+                {
+                    var extracted = ExtractType(nameContext.GetText());
+                    var trimmedName = extracted.Item1;
+                    var type = extracted.Item2;
+                    Symbol symbol = new Symbol(trimmedName, FunctionScopeName, type);
+                    SymbolTable.AddSymbol(trimmedName, FunctionScopeName, symbol);
+                }
+                else
+                {
+                    ArrayNameContext arrayNameContext = unParContext.GetChild(i) as SBasicParser.ArrayNameContext;
+                    //List<int> dimensions = (from node in paramList.children
+                    //                        where node is LiteralExprContext
+                    //                        let payload = (CommonToken)node.GetChild(0).Payload
+                    //                        select Int32.Parse(payload.Text)).ToList();
+
+                }
+            }
+            FunctionScopeName = SymbolTable<Symbol>.Global;
             return base.VisitLocalVars(context);
         }
 
